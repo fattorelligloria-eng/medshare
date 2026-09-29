@@ -4,8 +4,14 @@
 # sai desta máquina. Em produção tudo vem de variável de ambiente (.env).
 #
 # Se a porta 5432 já estiver ocupada por um Postgres instalado na máquina,
-# troque para "5433:5432" aqui e ajuste MEDSHARE_BANCO_URL no .env. Não é
-# preciso desinstalar nada.
+# NÃO mexa aqui: ponha no .env desta pasta
+#
+#     MEDSHARE_BANCO_PORTA=5433
+#     MEDSHARE_BANCO_URL=jdbc:postgresql://localhost:5433/medshare
+#
+# O Docker Compose lê o .env da pasta dele sozinho, e a API também. Assim cada
+# máquina resolve o conflito dela sem alterar arquivo versionado — e ninguém
+# precisa desinstalar nem parar o Postgres que já usa.
 services:
   banco:
     image: postgis/postgis:16-3.4
@@ -15,7 +21,7 @@ services:
       POSTGRES_USER: medshare
       POSTGRES_PASSWORD: medshare_local
     ports:
-      - "5432:5432"
+      - "${MEDSHARE_BANCO_PORTA:-5432}:5432"
     volumes:
       - dados-medshare:/var/lib/postgresql/data
     healthcheck:
