@@ -181,7 +181,7 @@ medshare-painel/         painel da farmácia e da central
 cd medshare-api && ./gradlew test
 ```
 
-84 testes, sem banco e sem rede: cada regra de negócio é testada tentando
+85 testes, sem banco e sem rede: cada regra de negócio é testada tentando
 violá-la de propósito.
 
 ## Segurança

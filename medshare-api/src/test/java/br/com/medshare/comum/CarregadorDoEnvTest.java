@@ -4,7 +4,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.core.env.StandardEnvironment;
+
+import java.io.InputStream;
+import java.util.Properties;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -122,6 +126,36 @@ class CarregadorDoEnvTest {
         new CarregadorDoEnv(pasta).postProcessEnvironment(ambiente, null);
 
         assertThat(ambiente.getProperty("MEDSHARE_PORTA")).isEqualTo("9090");
+    }
+
+    @Test
+    @DisplayName("o Spring realmente enxerga o carregador no spring.factories")
+    void registradoNoSpringFactories() throws Exception {
+        // Este teste existe porque o erro mais provavel aqui e silencioso: se
+        // o META-INF/spring.factories tiver um nome de classe errado, ou nao
+        // for parar no jar, a aplicacao sobe normalmente e o .env simplesmente
+        // nao faz efeito. Ninguem descobre ate a chave "nao funcionar".
+        var propriedades = new Properties();
+        try (InputStream entrada = CarregadorDoEnv.class.getClassLoader()
+                .getResourceAsStream("META-INF/spring.factories")) {
+
+            assertThat(entrada)
+                    .withFailMessage("META-INF/spring.factories nao esta no classpath")
+                    .isNotNull();
+            propriedades.load(entrada);
+        }
+
+        String registrados = propriedades.getProperty(EnvironmentPostProcessor.class.getName());
+
+        assertThat(registrados)
+                .withFailMessage("nenhum EnvironmentPostProcessor registrado no spring.factories")
+                .isNotNull()
+                .contains(CarregadorDoEnv.class.getName());
+
+        // O nome esta escrito la; falta garantir que ele corresponde a uma
+        // classe que existe de verdade e que o Spring consegue instanciar.
+        assertThat(Class.forName(CarregadorDoEnv.class.getName()).getDeclaredConstructor())
+                .isNotNull();
     }
 
     @Test

@@ -15,7 +15,7 @@ on:
 
 jobs:
   backend:
-    name: back-end (84 testes)
+    name: back-end (85 testes)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
