@@ -1,31 +1,36 @@
 package br.com.medshare.app.telas
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import br.com.medshare.app.dados.PontoDeColeta
 import br.com.medshare.app.dados.Repositorio
 import br.com.medshare.app.ui.*
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+
+private val FUSO = ZoneId.of("America/Sao_Paulo")
+private val DIA = DateTimeFormatter.ofPattern("EEE dd/MM", Locale.forLanguageTag("pt-BR"))
+private val HORA = DateTimeFormatter.ofPattern("HH:mm")
 
 /**
- * Escolha da farmácia e do horário para entregar a caixa.
+ * UC02 - escolha da farmácia e do horário para entregar a caixa.
  *
- * A lista vem ordenada por distância do endereço cadastrado — quem depende de
- * transporte público não deveria atravessar a cidade para doar.
+ * A lista de farmácias vem ordenada por distância do endereço cadastrado, e os
+ * horários são só os que a farmácia atende e ainda têm vaga. A mesma tela
+ * serve para o reagendamento único (A2).
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun TelaDeAgendamento(
     repositorio: Repositorio,
@@ -40,27 +45,30 @@ fun TelaDeAgendamento(
     var erro by remember { mutableStateOf<Throwable?>(null) }
     var enviando by remember { mutableStateOf(false) }
 
-    var dia by rememberSaveable { mutableStateOf("") }
-    var mes by rememberSaveable { mutableStateOf("") }
-    var hora by rememberSaveable { mutableStateOf("") }
+    var horarios by remember { mutableStateOf<List<OffsetDateTime>>(emptyList()) }
+    var carregandoHorarios by remember { mutableStateOf(false) }
+    var dia by remember { mutableStateOf<String?>(null) }
+    var quando by remember { mutableStateOf<OffsetDateTime?>(null) }
 
     LaunchedEffect(Unit) {
         repositorio.pontosProximos().onSuccess { pontos = it }.onFailure { erro = it }
         carregando = false
     }
 
-    val quando: OffsetDateTime? = remember(dia, mes, hora) {
-        runCatching {
-            val hoje = LocalDate.now()
-            val data = LocalDate.of(hoje.year, mes.toInt(), dia.toInt())
-                .let { if (it.isBefore(hoje)) it.plusYears(1) else it }
-            data.atTime(hora.toInt(), 0)
-                .atZone(ZoneId.systemDefault())
-                .toOffsetDateTime()
-        }.getOrNull()
+    LaunchedEffect(escolhido) {
+        val ponto = escolhido ?: return@LaunchedEffect
+        carregandoHorarios = true
+        quando = null
+        repositorio.horarios(ponto.id)
+            .onSuccess { lista ->
+                horarios = lista.mapNotNull { runCatching { OffsetDateTime.parse(it) }.getOrNull() }
+                dia = horarios.firstOrNull()?.atZoneSameInstant(FUSO)?.format(DIA)
+            }
+            .onFailure { erro = it }
+        carregandoHorarios = false
     }
 
-    val podeEnviar = escolhido != null && quando != null && quando.isAfter(OffsetDateTime.now())
+    val porDia = remember(horarios) { horarios.groupBy { it.atZoneSameInstant(FUSO).format(DIA) } }
 
     fun enviar() {
         val ponto = escolhido ?: return
@@ -114,11 +122,7 @@ fun TelaDeAgendamento(
                             RadioButton(selected = selecionado, onClick = { escolhido = ponto })
                             Spacer(Modifier.width(8.dp))
                             Column {
-                                Text(
-                                    ponto.nome,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                )
+                                Text(ponto.nome, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                                 Text(
                                     "${ponto.endereco} — ${ponto.bairro}, ${ponto.municipio}",
                                     style = MaterialTheme.typography.bodyMedium,
@@ -132,31 +136,45 @@ fun TelaDeAgendamento(
                 }
             }
 
-            Spacer(Modifier.height(12.dp))
-            Text("Quando você vai levar?", style = MaterialTheme.typography.titleMedium)
-            Spacer(Modifier.height(8.dp))
-            Row {
-                CampoDeTexto(
-                    dia, { dia = it.filter(Char::isDigit).take(2) }, "Dia",
-                    tipoDeTeclado = KeyboardType.Number, modifier = Modifier.weight(1f),
-                )
-                Spacer(Modifier.width(10.dp))
-                CampoDeTexto(
-                    mes, { mes = it.filter(Char::isDigit).take(2) }, "Mês",
-                    tipoDeTeclado = KeyboardType.Number, modifier = Modifier.weight(1f),
-                )
-                Spacer(Modifier.width(10.dp))
-                CampoDeTexto(
-                    hora, { hora = it.filter(Char::isDigit).take(2) }, "Hora",
-                    dica = "14", tipoDeTeclado = KeyboardType.Number,
-                    modifier = Modifier.weight(1f),
-                )
+            if (escolhido != null) {
+                Spacer(Modifier.height(12.dp))
+                Text("Quando você vai levar?", style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(8.dp))
+                when {
+                    carregandoHorarios -> Carregando()
+                    horarios.isEmpty() -> Text(
+                        "Esta farmácia não tem horário livre nas próximas duas semanas. Escolha outra.",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    else -> {
+                        Row(Modifier.horizontalScroll(rememberScrollState())) {
+                            porDia.keys.forEach { chave ->
+                                FilterChip(
+                                    selected = dia == chave,
+                                    onClick = { dia = chave; quando = null },
+                                    label = { Text(chave) },
+                                    modifier = Modifier.padding(end = 8.dp),
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            dia?.let { porDia[it] }.orEmpty().forEach { horario ->
+                                FilterChip(
+                                    selected = quando == horario,
+                                    onClick = { quando = horario },
+                                    label = { Text(horario.atZoneSameInstant(FUSO).format(HORA)) },
+                                )
+                            }
+                        }
+                    }
+                }
             }
 
             Spacer(Modifier.height(24.dp))
             BotaoPrincipal(
                 "Confirmar agendamento", ::enviar,
-                habilitado = podeEnviar, ocupado = enviando,
+                habilitado = escolhido != null && quando != null, ocupado = enviando,
             )
             Spacer(Modifier.height(32.dp))
         }

@@ -49,6 +49,8 @@ fun TelaDeNovaDoacao(
     var dia by rememberSaveable { mutableStateOf("") }
     var mes by rememberSaveable { mutableStateOf("") }
     var ano by rememberSaveable { mutableStateOf("") }
+    var quantidade by rememberSaveable { mutableStateOf("1") }
+    var lacreDeclarado by rememberSaveable { mutableStateOf(false) }
 
     var arquivoDaFoto by remember { mutableStateOf<File?>(null) }
     var enderecoDaFoto by remember { mutableStateOf<Uri?>(null) }
@@ -81,8 +83,10 @@ fun TelaDeNovaDoacao(
     val diasDeValidade = validade?.let { ChronoUnit.DAYS.between(LocalDate.now(), it) }
     val validadeCurta = diasDeValidade != null && diasDeValidade < 30
 
+    val caixas = quantidade.toIntOrNull()?.takeIf { it in 1..10 }
     val podeEnviar = medicamento != null && lote.isNotBlank() &&
-        validade != null && !validadeCurta && arquivoDaFoto != null
+        validade != null && !validadeCurta && arquivoDaFoto != null &&
+        caixas != null && lacreDeclarado
 
     fun enviar() {
         val escolhido = medicamento ?: return
@@ -98,6 +102,7 @@ fun TelaDeNovaDoacao(
                 .onSuccess { foto ->
                     repositorio.cadastrarDoacao(
                         escolhido.id, lote, vencimento.toString(), foto.url,
+                        caixas ?: 1, lacreDeclarado,
                     ).onSuccess { enviando = false; aoConcluir() }
                         .onFailure { enviando = false; erro = it }
                 }
@@ -214,6 +219,23 @@ fun TelaDeNovaDoacao(
                         modifier = Modifier.padding(14.dp),
                     )
                 }
+            }
+
+            Spacer(Modifier.height(16.dp))
+            CampoDeTexto(
+                quantidade, { quantidade = it.filter(Char::isDigit).take(2) }, "Quantas caixas iguais?",
+                apoio = "De 1 a 10, do mesmo lote. Cada caixa ganha um código próprio.",
+                tipoDeTeclado = KeyboardType.Number,
+            )
+
+            // RN01 - só entra embalagem lacrada; o doador declara antes de enviar.
+            Spacer(Modifier.height(12.dp))
+            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                Checkbox(checked = lacreDeclarado, onCheckedChange = { lacreDeclarado = it })
+                Text(
+                    "Declaro que a embalagem está lacrada de fábrica e nunca foi aberta.",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
             }
 
             Spacer(Modifier.height(24.dp))

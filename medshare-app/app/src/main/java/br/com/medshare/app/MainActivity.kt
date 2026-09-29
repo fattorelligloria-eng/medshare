@@ -96,7 +96,12 @@ private fun AppMedShare(repositorio: Repositorio) {
                 aoNovoPedido = { navegacao.navigate(Destinos.NOVO_PEDIDO) },
                 aoEnviarReceita = { navegacao.navigate(Destinos.receita(it)) },
                 aoVerificarCadUnico = { navegacao.navigate(Destinos.CADUNICO) },
+                aoAbrirNotificacoes = { navegacao.navigate(Destinos.NOTIFICACOES) },
             )
+        }
+
+        composable(Destinos.NOTIFICACOES) {
+            TelaDeNotificacoes(repositorio = repositorio, aoVoltar = { navegacao.popBackStack() })
         }
 
         composable(Destinos.NOVA_DOACAO) {

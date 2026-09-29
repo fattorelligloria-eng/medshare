@@ -99,13 +99,33 @@ class Repositorio(contexto: Context) {
 
     // --- doador ---
 
+    /** UC01 - uma doação por caixa; [lacreDeclarado] é a declaração da RN01. */
     suspend fun cadastrarDoacao(
         medicamentoId: Long,
         lote: String,
         validade: String,
         fotoUrl: String,
-    ): Result<Doacao> =
-        chamar { it.cadastrarDoacao(PedidoDeDoacao(medicamentoId, lote.trim(), validade, fotoUrl)) }
+        quantidade: Int,
+        lacreDeclarado: Boolean,
+    ): Result<List<Doacao>> = chamar {
+        it.cadastrarDoacao(
+            PedidoDeDoacao(medicamentoId, lote.trim(), validade, fotoUrl, quantidade, lacreDeclarado),
+        )
+    }
+
+    suspend fun cancelarAgendamento(codigo: String): Result<Doacao> =
+        chamar { it.cancelarAgendamento(codigo) }
+
+    /** UC10 A2 - envia a foto nova que a central pediu. */
+    suspend fun trocarFoto(codigo: String, arquivo: File): Result<Doacao> =
+        enviarFoto(arquivo).mapCatching { foto ->
+            chamar { it.trocarFoto(codigo, PedidoDeNovaFoto(foto.url)) }.getOrThrow()
+        }
+
+    suspend fun horarios(pontoId: Long): Result<List<String>> = chamar { it.horarios(pontoId) }
+
+    suspend fun enderecoPorCep(cep: String): Result<EnderecoDoCep> =
+        chamar { it.enderecoPorCep(cep.filter(Char::isDigit)) }
 
     suspend fun minhasDoacoes(): Result<List<Doacao>> = chamar { it.minhasDoacoes().content }
 
@@ -139,11 +159,38 @@ class Repositorio(contexto: Context) {
         )
     }
 
-    suspend fun reservar(necessidadeId: Long): Result<Reserva> =
-        chamar { it.reservar(PedidoDeReserva(necessidadeId)) }
+    // UC05/UC06 - a caixa é oferecida; aceitar vira reserva.
+    suspend fun minhasOfertas(): Result<List<Oferta>> = chamar { it.minhasOfertas() }
+
+    suspend fun aceitarOferta(id: Long): Result<Reserva> = chamar { it.aceitarOferta(id) }
+
+    suspend fun recusarOferta(id: Long): Result<Oferta> = chamar { it.recusarOferta(id) }
 
     suspend fun minhasReservas(): Result<List<Reserva>> = chamar { it.minhasReservas() }
 
     suspend fun cancelarReserva(codigo: String): Result<Reserva> =
         chamar { it.cancelarReserva(codigo) }
+
+    // UC07 A3 - procuradores.
+    suspend fun procuradores(): Result<List<Procurador>> = chamar { it.procuradores() }
+
+    suspend fun cadastrarProcurador(nome: String, cpf: String): Result<Procurador> =
+        chamar { it.cadastrarProcurador(PedidoDeProcurador(nome.trim(), cpf.filter(Char::isDigit))) }
+
+    suspend fun removerProcurador(id: Long): Result<Unit> =
+        chamar { exigirSucesso(it.removerProcurador(id)) }
+
+    // --- notificações ---
+
+    suspend fun notificacoes(): Result<List<Notificacao>> = chamar { it.notificacoes().content }
+
+    suspend fun naoLidas(): Result<Long> = chamar { it.naoLidas().quantidade }
+
+    suspend fun marcarComoLida(id: Long): Result<Unit> =
+        chamar { exigirSucesso(it.marcarComoLida(id)) }
+
+    /** Resposta sem corpo (204/200 vazio) ainda precisa virar erro quando falha. */
+    private fun exigirSucesso(resposta: retrofit2.Response<Unit>) {
+        if (!resposta.isSuccessful) throw retrofit2.HttpException(resposta)
+    }
 }

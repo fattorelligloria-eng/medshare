@@ -62,6 +62,28 @@ fun TelaDeCadastro(
         repositorio.municipios().onSuccess { municipios = it }.onFailure { erro = it }
     }
 
+    // RN09 - com o CEP completo, o endereço vem do ViaCEP e já avisa se está
+    // fora da Grande São Paulo, antes de a pessoa preencher o resto.
+    var avisoDoCep by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(cep, municipios) {
+        avisoDoCep = null
+        val digitos = cep.filter(Char::isDigit)
+        if (digitos.length != 8) return@LaunchedEffect
+        repositorio.enderecoPorCep(digitos)
+            .onSuccess { e ->
+                if (e.logradouro.isNotBlank()) logradouro = e.logradouro
+                if (e.bairro.isNotBlank()) bairro = e.bairro
+                val daRegiao = municipios.firstOrNull { it.id == e.municipioId }
+                if (e.atendido && daRegiao != null) {
+                    municipioEscolhido = daRegiao
+                } else {
+                    municipioEscolhido = null
+                    avisoDoCep = "Este CEP é de ${e.municipio}/${e.uf}. O MedShare atende só os 39 municípios da Grande São Paulo."
+                }
+            }
+            .onFailure { avisoDoCep = "Não encontramos este CEP. Confira os números ou preencha o endereço à mão." }
+    }
+
     val podeEnviar = nome.isNotBlank() && cpf.filter(Char::isDigit).length == 11 &&
         email.contains('@') && senha.length >= 8 && cep.filter(Char::isDigit).length == 8 &&
         logradouro.isNotBlank() && numero.isNotBlank() && bairro.isNotBlank() &&
@@ -147,6 +169,7 @@ fun TelaDeCadastro(
             CampoDeTexto(
                 cep, { cep = it.filter(Char::isDigit).take(8) }, "CEP",
                 dica = "Somente números", tipoDeTeclado = KeyboardType.Number,
+                apoio = avisoDoCep ?: "O endereço é preenchido a partir do CEP.",
             )
             Spacer(Modifier.height(10.dp))
             CampoDeTexto(logradouro, { logradouro = it }, "Rua ou avenida")
