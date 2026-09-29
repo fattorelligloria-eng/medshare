@@ -10,7 +10,10 @@ export default defineConfig({
     // desenvolvimento.
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        // Se a API estiver em outra porta, rode com MEDSHARE_API definida:
+        //   MEDSHARE_API=http://localhost:8081 npm run dev
+        // No PowerShell:  $env:MEDSHARE_API="http://localhost:8081"; npm run dev
+        target: process.env.MEDSHARE_API ?? 'http://localhost:8080',
         changeOrigin: true,
       },
     },

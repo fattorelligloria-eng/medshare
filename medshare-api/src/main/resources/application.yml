@@ -80,7 +80,9 @@ springdoc:
     path: /swagger-ui.html
 
 server:
-  port: 8080
+  # Se a 8080 estiver ocupada na sua máquina (Apache, IIS, outro projeto),
+  # ponha MEDSHARE_PORTA=8081 no .env em vez de editar este arquivo.
+  port: ${MEDSHARE_PORTA:8080}
   error:
     include-message: always
 

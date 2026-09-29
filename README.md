@@ -181,15 +181,18 @@ medshare-painel/         painel da farmácia e da central
 cd medshare-api && ./gradlew test
 ```
 
-75 testes de domínio, sem banco e sem rede: cada regra de negócio é testada
-tentando violá-la de propósito.
+84 testes, sem banco e sem rede: cada regra de negócio é testada tentando
+violá-la de propósito.
 
 ## Segurança
 
 Nenhuma chave, senha ou certificado está neste repositório. Tudo vem de
 variável de ambiente:
 
-- `medshare-api/.env.exemplo` — copie para `.env` e preencha
+- `medshare-api/.env.exemplo` — copie para `.env` e preencha. O
+  `CarregadorDoEnv` lê esse arquivo na subida, e variável de ambiente de
+  verdade continua ganhando dele — um `.env` esquecido no servidor não
+  sobrescreve credencial de produção.
 - `medshare-app/keystore.properties.exemplo` — copie para `keystore.properties`
 
 O `.env`, o `keystore.properties` e o `medshare.keystore` estão no
