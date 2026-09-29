@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Só no build debug: libera http:// para apontar o app para a API rodando no
+     computador de quem desenvolve (ex.: http://192.168.0.10:8080). Desde o
+     Android 9 o sistema bloqueia HTTP sem criptografia por padrão. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

@@ -87,7 +87,7 @@ class DoacaoTest {
             doacao.receber(farmaceutico);
             doacao.validar(farmaceutico);
             doacao.disponibilizar(farmaceutico);
-            doacao.reservar("ABC12345", doador);
+            doacao.reservar(doador);
             doacao.entregar(farmaceutico);
 
             assertThat(doacao.getStatus()).isEqualTo(StatusDoacao.ENTREGUE);
@@ -124,11 +124,59 @@ class DoacaoTest {
             doacao.receber(farmaceutico);
             doacao.validar(farmaceutico);
             doacao.disponibilizar(farmaceutico);
-            doacao.reservar("ABC12345", doador);
+            doacao.reservar(doador);
 
             doacao.liberarReservaExpirada();
 
             assertThat(doacao.getStatus()).isEqualTo(StatusDoacao.DISPONIVEL);
+        }
+
+        @Test
+        @DisplayName("RN05: o historico nao expoe o codigo de retirada ao doador")
+        void historicoNaoExpoeCodigoDeRetirada() {
+            Doacao doacao = doacaoValida();
+            doacao.preValidar(doador);
+            doacao.agendar(farmacia, OffsetDateTime.now().plusDays(2), doador);
+            doacao.receber(farmaceutico);
+            doacao.validar(farmaceutico);
+            doacao.disponibilizar(farmaceutico);
+
+            doacao.reservar(doador);
+
+            assertThat(doacao.getHistorico())
+                    .extracting(EventoHistorico::getDescricao)
+                    .noneMatch(descricao -> descricao.contains("código"));
+        }
+
+        @Test
+        @DisplayName("reserva cancelada volta ao estoque com evento proprio no historico")
+        void reservaCanceladaTemEventoProprio() {
+            Doacao doacao = doacaoValida();
+            doacao.preValidar(doador);
+            doacao.agendar(farmacia, OffsetDateTime.now().plusDays(2), doador);
+            doacao.receber(farmaceutico);
+            doacao.validar(farmaceutico);
+            doacao.disponibilizar(farmaceutico);
+            doacao.reservar(doador);
+
+            doacao.liberarReservaCancelada(doador);
+
+            assertThat(doacao.getStatus()).isEqualTo(StatusDoacao.DISPONIVEL);
+            assertThat(doacao.getHistorico().get(doacao.getHistorico().size() - 1).getTipo())
+                    .isEqualTo(TipoEvento.CANCELAMENTO_DE_RESERVA);
+        }
+
+        @Test
+        @DisplayName("o agendamento aparece no historico no horario de Brasilia")
+        void agendamentoNoHorarioDeBrasilia() {
+            Doacao doacao = doacaoValida();
+            doacao.preValidar(doador);
+            OffsetDateTime quatorzeHorasEmBrasilia = OffsetDateTime.parse("2030-03-10T17:00:00Z");
+
+            doacao.agendar(farmacia, quatorzeHorasEmBrasilia, doador);
+
+            assertThat(doacao.getHistorico().get(doacao.getHistorico().size() - 1).getDescricao())
+                    .contains("10/03/2030 às 14:00");
         }
 
         @Test

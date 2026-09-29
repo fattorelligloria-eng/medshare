@@ -150,6 +150,7 @@ export function FilaDaCentral() {
               <span>Justificativa da decisão — fica no histórico</span>
               <textarea
                 rows={2}
+                maxLength={400}
                 value={justificativas[caso.codigo] ?? ''}
                 onChange={(e) =>
                   definirJustificativas({ ...justificativas, [caso.codigo]: e.target.value })}

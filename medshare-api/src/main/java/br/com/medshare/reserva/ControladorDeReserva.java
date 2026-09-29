@@ -49,6 +49,14 @@ public class ControladorDeReserva {
         return ReservaResumida.de(servico.cancelar(codigoRetirada, usuarioLogado.obrigatorio()));
     }
 
+    /** Balcao: antes de entregar, o farmaceutico ve o titular e a receita (RN03). */
+    @GetMapping("/{codigoRetirada}/conferencia")
+    @PreAuthorize("hasRole('FARMACEUTICO')")
+    public ConferenciaDaRetirada conferir(@PathVariable String codigoRetirada) {
+        return ConferenciaDaRetirada.de(
+                servico.buscarNoBalcao(codigoRetirada, usuarioLogado.obrigatorio()));
+    }
+
     /** Balcao: o beneficiario chegou com o codigo. RN03 aplicada aqui. */
     @PostMapping("/{codigoRetirada}/retirada")
     @PreAuthorize("hasRole('FARMACEUTICO')")

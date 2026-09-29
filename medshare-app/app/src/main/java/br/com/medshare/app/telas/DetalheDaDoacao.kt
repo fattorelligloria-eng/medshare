@@ -167,6 +167,7 @@ private fun tituloDoEvento(tipo: String) = when (tipo) {
     "DISPONIBILIZACAO" -> "Disponibilizada"
     "RESERVA" -> "Reservada"
     "EXPIRACAO_DE_RESERVA" -> "Reserva expirada"
+    "CANCELAMENTO_DE_RESERVA" -> "Reserva cancelada"
     "ENTREGA" -> "Entrega"
     "RECUSA" -> "Recusa"
     "CANCELAMENTO" -> "Cancelamento"

@@ -55,12 +55,9 @@ medshare:
     modelo: ${MEDSHARE_GEMINI_MODELO:gemini-3.5-flash}
   portal-transparencia:
     chave: ${MEDSHARE_PORTAL_CHAVE:}
-  r2:
-    endpoint: ${MEDSHARE_R2_ENDPOINT:}
-    bucket: ${MEDSHARE_R2_BUCKET:medshare-fotos}
   fotos:
-    # Usado quando nao ha R2 configurado: as fotos ficam em disco e sao
-    # servidas em /fotos-locais/<uuid>. O endereco publico precisa ser o que o
+    # As fotos ficam em disco e sao servidas em /fotos-locais/<uuid>. So URLs
+    # com este endereco sao aceitas nas doacoes e receitas. O endereco publico precisa ser o que o
     # celular consegue alcancar — nao "localhost", que no aparelho aponta para
     # o proprio aparelho.
     diretorio: ${MEDSHARE_FOTOS_DIRETORIO:./dados/fotos}

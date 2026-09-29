@@ -4,6 +4,8 @@ import br.com.medshare.comum.*;
 import br.com.medshare.integracao.ConsultaDeCadUnico;
 import br.com.medshare.medicamento.Medicamento;
 import br.com.medshare.medicamento.MedicamentoRepository;
+import br.com.medshare.notificacao.ServicoDeNotificacao;
+import br.com.medshare.notificacao.TipoNotificacao;
 import br.com.medshare.usuario.Usuario;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,13 +24,16 @@ public class ServicoDeNecessidade {
     private final VerificacaoCadUnicoRepository verificacoes;
     private final MedicamentoRepository medicamentos;
     private final ConsultaDeCadUnico consultaCadUnico;
+    private final ServicoDeNotificacao notificacoes;
     private final PropriedadesDoMedShare propriedades;
 
     public ServicoDeNecessidade(NecessidadeRepository necessidades, ReceitaRepository receitas,
                                 VerificacaoCadUnicoRepository verificacoes,
                                 MedicamentoRepository medicamentos,
                                 ConsultaDeCadUnico consultaCadUnico,
+                                ServicoDeNotificacao notificacoes,
                                 PropriedadesDoMedShare propriedades) {
+        this.notificacoes = notificacoes;
         this.necessidades = necessidades;
         this.receitas = receitas;
         this.verificacoes = verificacoes;
@@ -115,11 +120,37 @@ public class ServicoDeNecessidade {
             throw new RegraDeNegocioViolada("RN03",
                     "Esta receita venceu em %s. Envie uma dentro da validade.".formatted(validade));
         }
+        if (validade.isBefore(dataEmissao)) {
+            throw new RegraDeNegocioViolada("RN03",
+                    "A validade da receita não pode ser anterior à data de emissão");
+        }
+
+        // Receita vencida se troca por uma nova no mesmo pedido: a pessoa nao
+        // deveria perder o lugar na fila so porque renovou a receita.
+        Receita existente = necessidade.getReceita();
+        if (existente != null) {
+            existente.substituir(fotoUrl, dataEmissao, validade, crmMedico, ufCrm);
+            return existente;
+        }
 
         Receita receita = receitas.save(new Receita(necessidade, fotoUrl, dataEmissao,
                 validade, crmMedico, ufCrm));
         necessidade.anexarReceita(receita);
         return receita;
+    }
+
+    /**
+     * Avisa quem esta esperando que uma caixa do medicamento entrou no estoque.
+     * Vai para todos da fila com pedido ativo: a reserva continua valendo por
+     * ordem de quem pedir primeiro no app.
+     */
+    @Transactional
+    public void avisarFilaDeEspera(Medicamento medicamento) {
+        for (Necessidade esperando : necessidades.filaDeEsperaDoMedicamento(medicamento.getId())) {
+            notificacoes.avisar(esperando.getBeneficiario(), TipoNotificacao.DOACAO_DISPONIVEL,
+                    "Chegou %s na rede".formatted(medicamento.getNomeComercial()),
+                    "Abra o MedShare e toque em reservar para garantir a sua caixa.");
+        }
     }
 
     @Transactional

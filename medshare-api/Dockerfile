@@ -9,6 +9,9 @@ RUN ./gradlew bootJar --no-daemon -x test
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app
+# A imagem vem em UTC. O MedShare so atende a Grande Sao Paulo, e os horarios
+# que ele devolve e grava no historico precisam ser os daqui.
+ENV TZ=America/Sao_Paulo
 # Nao roda como root.
 RUN useradd --system --create-home medshare
 USER medshare

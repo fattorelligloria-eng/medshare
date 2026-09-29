@@ -1,16 +1,16 @@
 package br.com.medshare.doacao;
 
 import br.com.medshare.doacao.dto.*;
+import br.com.medshare.integracao.RepositorioDeFotos;
 import br.com.medshare.seguranca.UsuarioLogado;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/doacoes")
@@ -19,19 +19,23 @@ public class ControladorDeDoacao {
     private final ServicoDeDoacao servico;
     private final DoacaoRepository doacoes;
     private final EventoHistoricoRepository eventos;
+    private final RepositorioDeFotos fotos;
     private final UsuarioLogado usuarioLogado;
 
     public ControladorDeDoacao(ServicoDeDoacao servico, DoacaoRepository doacoes,
-                               EventoHistoricoRepository eventos, UsuarioLogado usuarioLogado) {
+                               EventoHistoricoRepository eventos, RepositorioDeFotos fotos,
+                               UsuarioLogado usuarioLogado) {
         this.servico = servico;
         this.doacoes = doacoes;
         this.eventos = eventos;
+        this.fotos = fotos;
         this.usuarioLogado = usuarioLogado;
     }
 
     @PostMapping
     @PreAuthorize("hasRole('DOADOR')")
     public ResponseEntity<DoacaoResumida> cadastrar(@Valid @RequestBody PedidoDeDoacao pedido) {
+        fotos.exigirFotoNossa(pedido.fotoUrl());
         Doacao doacao = servico.cadastrar(pedido.medicamentoId(), pedido.lote(),
                 pedido.validade(), pedido.fotoUrl(), usuarioLogado.obrigatorio());
         return ResponseEntity.status(HttpStatus.CREATED).body(DoacaoResumida.de(doacao));
@@ -45,9 +49,10 @@ public class ControladorDeDoacao {
                 .map(DoacaoResumida::de);
     }
 
+    /** RN06 - o historico, visivel so para o doador, a farmacia e a central. */
     @GetMapping("/{codigo}")
     public DoacaoDetalhada detalhar(@PathVariable String codigo) {
-        Doacao doacao = servico.buscarPorCodigo(codigo);
+        Doacao doacao = servico.detalharPara(codigo, usuarioLogado.obrigatorio());
         return DoacaoDetalhada.de(doacao,
                 eventos.findByDoacaoIdOrderByOcorridoEmAscIdAsc(doacao.getId()));
     }
@@ -65,22 +70,18 @@ public class ControladorDeDoacao {
     @PreAuthorize("hasRole('DOADOR')")
     public DoacaoResumida cancelarAgendamento(@PathVariable String codigo,
                                               @RequestParam(defaultValue = "cancelado pelo doador")
-                                              String motivo) {
+                                              @Size(max = 200) String motivo) {
         return DoacaoResumida.de(
                 servico.cancelarAgendamento(codigo, motivo, usuarioLogado.obrigatorio()));
     }
 
     // --- balcao da farmacia ---------------------------------------------------
 
+    /** A fila do ponto de coleta onde o farmaceutico logado atua. */
     @GetMapping("/fila")
     @PreAuthorize("hasRole('FARMACEUTICO')")
-    public Page<DoacaoResumida> filaDoBalcao(@RequestParam Long pontoDeColetaId, Pageable pagina) {
-        List<StatusDoacao> emAtendimento = List.of(
-                StatusDoacao.AGENDADA, StatusDoacao.RECEBIDA, StatusDoacao.VALIDADA);
-        return doacoes
-                .findByPontoDeColetaIdAndStatusInOrderByAtualizadoEmDesc(
-                        pontoDeColetaId, emAtendimento, pagina)
-                .map(DoacaoResumida::de);
+    public Page<DoacaoResumida> filaDoBalcao(Pageable pagina) {
+        return servico.filaDoBalcao(usuarioLogado.obrigatorio(), pagina).map(DoacaoResumida::de);
     }
 
     @PostMapping("/{codigo}/recebimento")

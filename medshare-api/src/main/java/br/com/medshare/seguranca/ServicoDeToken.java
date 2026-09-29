@@ -6,6 +6,8 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -26,6 +28,8 @@ import java.util.Optional;
 @Service
 public class ServicoDeToken {
 
+    private static final Logger log = LoggerFactory.getLogger(ServicoDeToken.class);
+    private static final String PREFIXO_DO_SEGREDO_DE_DESENVOLVIMENTO = "desenvolvimento-local-apenas";
     private static final String EMISSOR = "medshare-api";
     private static final String CAMPO_PAPEIS = "papeis";
     private static final String CAMPO_TIPO = "tipo";
@@ -37,6 +41,12 @@ public class ServicoDeToken {
     private final Duration validadeDaRenovacao;
 
     public ServicoDeToken(PropriedadesDoMedShare propriedades) {
+        if (propriedades.jwt().segredo().startsWith(PREFIXO_DO_SEGREDO_DE_DESENVOLVIMENTO)) {
+            // Com a chave publica do repositorio, qualquer um assina um token de
+            // ADMIN. Aceitavel na maquina de quem desenvolve; nunca num servidor.
+            log.warn("MEDSHARE_JWT_SEGREDO nao foi definido: usando a chave de desenvolvimento. "
+                    + "Defina uma chave propria antes de publicar a API.");
+        }
         this.chave = Keys.hmacShaKeyFor(
                 propriedades.jwt().segredo().getBytes(StandardCharsets.UTF_8));
         this.validadeDoAcesso = Duration.ofMinutes(propriedades.jwt().minutosDeValidade());

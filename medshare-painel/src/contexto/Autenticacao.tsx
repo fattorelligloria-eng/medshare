@@ -1,6 +1,6 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { api, guardarSessao, lerSessao } from '../api/cliente'
+import { api, EVENTO_SESSAO_ENCERRADA, guardarSessao, lerSessao } from '../api/cliente'
 import type { Papel, Sessao } from '../api/tipos'
 
 interface Autenticacao {
@@ -16,6 +16,14 @@ const Contexto = createContext<Autenticacao | null>(null)
 
 export function ProvedorDeAutenticacao({ children }: { children: ReactNode }) {
   const [sessao, definirSessao] = useState<Sessao | null>(() => lerSessao())
+
+  // Quando o cliente HTTP não consegue renovar o token, a tela volta ao login
+  // em vez de continuar mostrando telas que só vão dar erro.
+  useEffect(() => {
+    const aoEncerrar = () => definirSessao(null)
+    window.addEventListener(EVENTO_SESSAO_ENCERRADA, aoEncerrar)
+    return () => window.removeEventListener(EVENTO_SESSAO_ENCERRADA, aoEncerrar)
+  }, [])
 
   const entrar = useCallback(async (email: string, senha: string) => {
     const nova = await api.post<Sessao>('/autenticacao/login', { email, senha })

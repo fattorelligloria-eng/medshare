@@ -11,6 +11,7 @@
     <application
         android:name=".AplicacaoMedShare"
         android:allowBackup="false"
+        android:networkSecurityConfig="@xml/configuracao_de_rede"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher"

@@ -5,9 +5,6 @@ import { AvisoDeErro, AvisoDeSucesso } from '../componentes/Aviso'
 import { Status } from '../componentes/Status'
 import { data } from '../formatos'
 
-/** Enquanto não há tela de cadastro de farmácia, o balcão trabalha no ponto 1. */
-const PONTO_DE_COLETA = 1
-
 /**
  * O balcão da farmácia.
  *
@@ -29,9 +26,8 @@ export function FilaDoBalcao() {
   const carregar = useCallback(async () => {
     definirCarregando(true)
     try {
-      const pagina = await api.get<Pagina<Doacao>>(
-        `/doacoes/fila?pontoDeColetaId=${PONTO_DE_COLETA}&size=50`,
-      )
+      // O servidor sabe em qual farmácia o farmacêutico logado atua.
+      const pagina = await api.get<Pagina<Doacao>>('/doacoes/fila?size=50')
       definirDoacoes(pagina.content)
       definirErro(null)
     } catch (e) {
@@ -168,6 +164,7 @@ export function FilaDoBalcao() {
                 <span>O que impediu a aprovação?</span>
                 <textarea
                   rows={3}
+                  maxLength={400}
                   value={motivo}
                   onChange={(e) => definirMotivo(e.target.value)}
                   placeholder="Ex.: selo de segurança rompido; caixa reaberta e colada com fita."

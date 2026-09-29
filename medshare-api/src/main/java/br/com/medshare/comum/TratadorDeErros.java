@@ -5,11 +5,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.util.List;
 
@@ -65,22 +70,52 @@ public class TratadorDeErros {
     public ResponseEntity<RespostaDeErro> integridadeViolada(DataIntegrityViolationException e) {
         String causa = e.getMostSpecificCause().getMessage();
         log.warn("Restricao do banco barrou a operacao: {}", causa);
+        String regra = regraCitadaEm(causa);
+        // So a mensagem dos nossos gatilhos (que comecam com RNxx) vai para o
+        // cliente. O resto e texto do Postgres, com nome de tabela e coluna.
+        String mensagem = regra != null
+                ? primeiraLinha(causa)
+                : "Os dados enviados conflitam com um registro existente";
         return ResponseEntity.unprocessableEntity().body(RespostaDeErro.deRegra(
-                422, "Regra de negócio violada", primeiraLinha(causa), regraCitadaEm(causa)));
+                422, "Regra de negócio violada", mensagem, regra));
+    }
+
+    /** Corpo que nao e JSON valido, ou campo com tipo errado (data mal escrita, etc.). */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<RespostaDeErro> corpoIlegivel(HttpMessageNotReadableException e) {
+        return ResponseEntity.badRequest().body(RespostaDeErro.de(400, "Requisição inválida",
+                "O corpo da requisição não pôde ser lido. Confira o formato dos campos."));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<RespostaDeErro> parametroComTipoErrado(MethodArgumentTypeMismatchException e) {
+        return ResponseEntity.badRequest().body(RespostaDeErro.de(400, "Requisição inválida",
+                "O valor informado em '%s' não é válido".formatted(e.getName())));
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<RespostaDeErro> arquivoGrandeDemais(MaxUploadSizeExceededException e) {
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(RespostaDeErro.deRegra(413,
+                "Arquivo grande demais", "A foto passa de 8 MB. Tire a foto em resolução menor.", "FOTO"));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<RespostaDeErro> erroInesperado(Exception e) {
+        // Erros do proprio Spring MVC (rota inexistente, metodo nao suportado,
+        // parametro faltando...) ja sabem o status certo. Antes todos viravam 500.
+        if (e instanceof ErrorResponse respostaDoSpring) {
+            HttpStatusCode status = respostaDoSpring.getStatusCode();
+            String detalhe = respostaDoSpring.getBody().getDetail();
+            return ResponseEntity.status(status).body(RespostaDeErro.de(status.value(),
+                    "Requisição inválida", detalhe != null ? detalhe : "Requisição inválida"));
+        }
         log.error("Erro nao tratado", e);
         return ResponseEntity.internalServerError().body(RespostaDeErro.de(
                 500, "Erro interno", "Ocorreu um erro inesperado. Tente novamente."));
     }
 
     private String primeiraLinha(String mensagem) {
-        if (mensagem == null) {
-            return "Operação rejeitada pelo banco de dados";
-        }
-        return mensagem.lines().findFirst().orElse(mensagem).trim();
+        return mensagem.lines().findFirst().orElse(mensagem).replaceFirst("^ERROR:\\s*", "").trim();
     }
 
     /** Os gatilhos do banco comecam a mensagem com "RNxx:", entao da para extrair. */

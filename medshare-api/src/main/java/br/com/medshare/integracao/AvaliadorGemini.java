@@ -78,29 +78,30 @@ public class AvaliadorGemini implements AvaliadorDeEmbalagem {
             "required", java.util.List.of("classe", "certeza", "motivo"));
 
     private final RestClient gemini;
-    private final RestClient download;
+    private final RepositorioDeFotos fotos;
     private final ObjectMapper json;
-    private final String chave;
     private final String modelo;
 
     public AvaliadorGemini(@Value("${medshare.gemini.chave}") String chave,
                            @Value("${medshare.gemini.modelo:gemini-3.5-flash}") String modelo,
-                           ObjectMapper json) {
-        this.chave = chave;
+                           RepositorioDeFotos fotos, ObjectMapper json) {
         this.modelo = modelo;
+        this.fotos = fotos;
         this.json = json;
+        // A chave vai no cabecalho, e nao na URL: URL aparece em log e em
+        // mensagem de erro, cabecalho nao.
         this.gemini = RestClient.builder()
                 .baseUrl("https://generativelanguage.googleapis.com/v1beta")
+                .defaultHeader("x-goog-api-key", chave)
                 .build();
-        this.download = RestClient.create();
         log.info("Avaliador Gemini ativo, modelo {}", modelo);
     }
 
     @Override
     public LeituraDaEmbalagem avaliar(String fotoUrl) {
         try {
-            byte[] imagem = baixar(fotoUrl);
-            JsonNode resposta = chamarGemini(imagem);
+            byte[] imagem = lerDoDisco(fotoUrl);
+            JsonNode resposta = chamarGemini(imagem, fotos.tipoDa(fotoUrl));
             return interpretar(resposta);
         } catch (Exception e) {
             log.warn("Falha ao avaliar a foto {}: {}", fotoUrl, e.getMessage());
@@ -114,20 +115,27 @@ public class AvaliadorGemini implements AvaliadorDeEmbalagem {
         return modelo;
     }
 
-    private byte[] baixar(String fotoUrl) {
-        byte[] conteudo = download.get().uri(fotoUrl).retrieve().body(byte[].class);
-        if (conteudo == null || conteudo.length == 0) {
-            throw new IllegalStateException("foto vazia ou inacessivel");
+    /**
+     * So le fotos gravadas pelo proprio /api/fotos, direto do disco. Nunca
+     * baixa uma URL vinda do cliente: isso deixaria alguem usar o servidor
+     * para acessar enderecos internos da rede.
+     */
+    private byte[] lerDoDisco(String fotoUrl) throws java.io.IOException {
+        java.nio.file.Path arquivo = fotos.arquivoDa(fotoUrl)
+                .orElseThrow(() -> new IllegalStateException("foto fora do armazenamento do MedShare"));
+        byte[] conteudo = java.nio.file.Files.readAllBytes(arquivo);
+        if (conteudo.length == 0) {
+            throw new IllegalStateException("foto vazia");
         }
         return conteudo;
     }
 
-    private JsonNode chamarGemini(byte[] imagem) {
+    private JsonNode chamarGemini(byte[] imagem, String tipo) {
         Map<String, Object> corpo = Map.of(
                 "system_instruction", Map.of("parts", java.util.List.of(Map.of("text", INSTRUCOES))),
                 "contents", java.util.List.of(Map.of("parts", java.util.List.of(
                         Map.of("inline_data", Map.of(
-                                "mime_type", "image/jpeg",
+                                "mime_type", tipo,
                                 "data", Base64.getEncoder().encodeToString(imagem)))))),
                 "generationConfig", Map.of(
                         "temperature", 0.1,
@@ -135,7 +143,7 @@ public class AvaliadorGemini implements AvaliadorDeEmbalagem {
                         "responseSchema", ESQUEMA_DA_RESPOSTA));
 
         return gemini.post()
-                .uri("/models/{modelo}:generateContent?key={chave}", modelo, chave)
+                .uri("/models/{modelo}:generateContent", modelo)
                 .body(corpo)
                 .retrieve()
                 .body(JsonNode.class);

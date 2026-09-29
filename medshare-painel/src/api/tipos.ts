@@ -66,6 +66,22 @@ export interface Reserva {
   expiraEm: string
 }
 
+/** RN03 — o que o balcão vê antes de entregar: o titular e a receita. */
+export interface ConferenciaDaRetirada {
+  codigoRetirada: string
+  status: string
+  expiraEm: string
+  medicamento: string
+  principioAtivo: string
+  titular: string
+  cpfDoTitular: string
+  receitaFotoUrl: string | null
+  receitaCrm: string | null
+  receitaEmissao: string | null
+  receitaValidade: string | null
+  receitaValida: boolean
+}
+
 export interface PontoDeColeta {
   id: number
   nome: string

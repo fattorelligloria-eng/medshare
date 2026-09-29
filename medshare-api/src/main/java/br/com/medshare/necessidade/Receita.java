@@ -54,6 +54,16 @@ public class Receita {
         this.ufCrm = ufCrm;
     }
 
+    /** Troca a receita vencida por uma nova, mantendo o pedido e o lugar na fila. */
+    public void substituir(String novaFotoUrl, LocalDate novaEmissao, LocalDate novaValidade,
+                           String novoCrm, String novaUf) {
+        this.fotoUrl = novaFotoUrl;
+        this.dataEmissao = novaEmissao;
+        this.validade = novaValidade;
+        this.crmMedico = novoCrm;
+        this.ufCrm = novaUf;
+    }
+
     public boolean estaValida() {
         return !LocalDate.now().isAfter(validade);
     }

@@ -6,6 +6,7 @@ import br.com.medshare.seguranca.dto.PedidoDeCadastro;
 import br.com.medshare.seguranca.dto.PedidoDeLogin;
 import br.com.medshare.seguranca.dto.RespostaDeLogin;
 import br.com.medshare.usuario.*;
+import org.springframework.security.authentication.AccountStatusException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -13,8 +14,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Set;
+
 @Service
 public class ServicoDeAutenticacao {
+
+    private static final Set<Papel> PAPEIS_DE_AUTOCADASTRO = Set.of(Papel.DOADOR, Papel.BENEFICIARIO);
+    private static final String CONTA_DESATIVADA =
+            "Esta conta está desativada. Fale com a equipe do MedShare.";
 
     private final UsuarioRepository usuarios;
     private final MunicipioRepository municipios;
@@ -34,6 +41,7 @@ public class ServicoDeAutenticacao {
 
     @Transactional
     public RespostaDeLogin cadastrar(PedidoDeCadastro pedido) {
+        recusarPapelRestrito(pedido.papeis());
         recusarCadastroDuplicado(pedido);
 
         // RN09: se o municipio nao esta na tabela da Grande SP, nao existe cadastro.
@@ -57,6 +65,9 @@ public class ServicoDeAutenticacao {
                     new UsernamePasswordAuthenticationToken(pedido.email(), pedido.senha()));
         } catch (BadCredentialsException e) {
             throw new RegraDeNegocioViolada("AUTENTICACAO", "E-mail ou senha incorretos");
+        } catch (AccountStatusException e) {
+            // Conta desativada: sem isso a excecao subia como erro 500.
+            throw new RegraDeNegocioViolada("AUTENTICACAO", CONTA_DESATIVADA);
         }
         Usuario usuario = usuarios.findByEmail(pedido.email())
                 .orElseThrow(() -> new RecursoNaoEncontrado("Usuario", pedido.email()));
@@ -69,7 +80,23 @@ public class ServicoDeAutenticacao {
                         "Token de renovação inválido ou expirado. Faça login novamente."));
         Usuario usuario = usuarios.findByEmail(email)
                 .orElseThrow(() -> new RecursoNaoEncontrado("Usuario", email));
+        // O token de renovacao dura 14 dias; desativar a conta precisa valer antes disso.
+        if (!usuario.isAtivo()) {
+            throw new RegraDeNegocioViolada("AUTENTICACAO", CONTA_DESATIVADA);
+        }
         return montarResposta(usuario);
+    }
+
+    /**
+     * Farmaceutico e analista da central nao se cadastram sozinhos: esses
+     * papeis dao acesso a conferencia de lacre e a decisao sobre doacoes, entao
+     * so a equipe pode concede-los. Pelo app, a pessoa escolhe doar e/ou receber.
+     */
+    private void recusarPapelRestrito(Set<Papel> papeis) {
+        if (!PAPEIS_DE_AUTOCADASTRO.containsAll(papeis)) {
+            throw new RegraDeNegocioViolada("CADASTRO",
+                    "O cadastro pelo aplicativo permite apenas doar e receber medicamentos");
+        }
     }
 
     private void recusarCadastroDuplicado(PedidoDeCadastro pedido) {

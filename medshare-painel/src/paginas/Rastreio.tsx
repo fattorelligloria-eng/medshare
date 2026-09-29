@@ -17,6 +17,7 @@ const NOME_DO_EVENTO: Record<string, string> = {
   DISPONIBILIZACAO: 'Disponibilizada',
   RESERVA: 'Reservada',
   EXPIRACAO_DE_RESERVA: 'Reserva expirada',
+  CANCELAMENTO_DE_RESERVA: 'Reserva cancelada',
   ENTREGA: 'Entrega',
   RECUSA: 'Recusa',
   CANCELAMENTO: 'Cancelamento',

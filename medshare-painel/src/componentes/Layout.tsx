@@ -36,9 +36,11 @@ export function Layout() {
               Central de análise
             </NavLink>
           )}
-          <NavLink to="/painel/rastreio" className={({ isActive }) => (isActive ? 'ativo' : '')}>
-            Rastreio
-          </NavLink>
+          {(temPapel('FARMACEUTICO') || temPapel('ADMIN')) && (
+            <NavLink to="/painel/rastreio" className={({ isActive }) => (isActive ? 'ativo' : '')}>
+              Rastreio
+            </NavLink>
+          )}
           {(temPapel('DOADOR') || temPapel('BENEFICIARIO')) && (
             <NavLink to="/app/doacoes">Abrir o aplicativo</NavLink>
           )}
