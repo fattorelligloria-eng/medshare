@@ -145,8 +145,9 @@ fun TelaDeNovaDoacao(
             Spacer(Modifier.height(20.dp))
             Text("Foto da caixa", style = MaterialTheme.typography.titleMedium)
             Text(
-                "Fotografe a caixa fechada, mostrando o lacre. " +
-                    "É essa foto que o farmacêutico confere.",
+                "Fotografe a caixa fechada, mostrando o lacre e a aba onde estão " +
+                    "impressos o lote e a validade. A leitura automática confere os " +
+                    "dois com o que você digitar.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

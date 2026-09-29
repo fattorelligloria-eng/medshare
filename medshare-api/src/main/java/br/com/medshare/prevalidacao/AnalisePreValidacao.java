@@ -7,6 +7,8 @@ import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +23,8 @@ import java.util.List;
 @Entity
 @Table(name = "analise_pre_validacao")
 public class AnalisePreValidacao {
+
+    private static final DateTimeFormatter MES_E_ANO = DateTimeFormatter.ofPattern("MM/yyyy");
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -89,15 +93,28 @@ public class AnalisePreValidacao {
             encontradas.add("código de barras lido (%s) difere do medicamento cadastrado (%s)"
                     .formatted(eanLido, eanCadastrado));
         }
-        if (loteLido != null && !loteLido.equalsIgnoreCase(doacao.getLote())) {
+        if (loteLido != null && !mesmoLote(loteLido, doacao.getLote())) {
             encontradas.add("lote lido (%s) difere do informado (%s)"
                     .formatted(loteLido, doacao.getLote()));
         }
-        if (validadeLida != null && !validadeLida.equals(doacao.getValidade())) {
+        // A maioria das caixas imprime so mes e ano ("VAL 03/2027"), e o
+        // doador digita um dia qualquer. Comparar o dia geraria divergencia
+        // falsa em quase toda doacao; o que importa e o mes de vencimento.
+        if (validadeLida != null
+                && !YearMonth.from(validadeLida).equals(YearMonth.from(doacao.getValidade()))) {
             encontradas.add("validade lida (%s) difere da informada (%s)"
-                    .formatted(validadeLida, doacao.getValidade()));
+                    .formatted(MES_E_ANO.format(validadeLida), MES_E_ANO.format(doacao.getValidade())));
         }
         return encontradas;
+    }
+
+    /** "ab 12-34" e "AB1234" sao o mesmo lote: espaco, traco e caixa nao contam. */
+    static boolean mesmoLote(String lido, String informado) {
+        return normalizarLote(lido).equals(normalizarLote(informado));
+    }
+
+    private static String normalizarLote(String lote) {
+        return lote == null ? "" : lote.replaceAll("[^A-Za-z0-9]", "").toUpperCase();
     }
 
     public boolean temDivergencia() {

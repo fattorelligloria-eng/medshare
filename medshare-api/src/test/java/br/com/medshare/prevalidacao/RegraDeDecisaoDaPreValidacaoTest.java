@@ -102,6 +102,24 @@ class RegraDeDecisaoDaPreValidacaoTest {
     }
 
     @Test
+    @DisplayName("caixa com so mes e ano de validade confere com o dia que o doador digitou")
+    void validadeSoMesEAnoConfere() {
+        var ultimoDiaDoMes = java.time.YearMonth.from(VALIDADE).atEndOfMonth();
+        var analise = analise(ClasseEmbalagem.LACRADA, Certeza.ALTA, EAN, LOTE, ultimoDiaDoMes);
+
+        assertThat(analise.temDivergencia()).isFalse();
+        assertThat(regra.decidirSobre(analise)).isEqualTo(DecisaoDaPreValidacao.SEGUIR);
+    }
+
+    @Test
+    @DisplayName("espaco, traco e minuscula no lote nao sao divergencia")
+    void loteComFormatacaoDiferenteConfere() {
+        var analise = analise(ClasseEmbalagem.LACRADA, Certeza.ALTA, EAN, "alc-2026 a", VALIDADE);
+
+        assertThat(analise.temDivergencia()).isFalse();
+    }
+
+    @Test
     @DisplayName("codigo de barras de outro medicamento chama humano")
     void eanDivergenteChamaHumano() {
         var analise = analise(ClasseEmbalagem.LACRADA, Certeza.ALTA, "7899999999999",
