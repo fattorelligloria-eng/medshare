@@ -95,8 +95,9 @@ export function NovaDoacao() {
 
         <p className="rotulo">Foto da caixa</p>
         <p style={{ margin: '6px 0 12px', fontSize: 13.5, lineHeight: 1.45, color: 'var(--tinta-media)' }}>
-          Fotografe a caixa fechada, mostrando o lacre. É essa foto que o
-          farmacêutico confere.
+          Fotografe a caixa fechada, mostrando o lacre e a aba onde estão
+          impressos o lote e a validade. A leitura automática confere os dois
+          com o que você digitar.
         </p>
 
         {previa ? (
