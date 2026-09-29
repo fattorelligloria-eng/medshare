@@ -1,0 +1,64 @@
+# Roda a cada push e a cada pull request.
+#
+# O ponto não é o selo verde: é que ninguém precise acreditar em "na minha
+# máquina funciona". O GitHub clona o repositório do zero, numa máquina limpa,
+# e roda os testes. Se quebrou, quebrou para todo mundo.
+#
+# Grátis e ilimitado em repositório público.
+
+name: testes
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    name: back-end (75 testes de domínio)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Rodar os testes
+        working-directory: medshare-api
+        run: ./gradlew test --no-daemon
+
+      # Sobe o relatório mesmo quando os testes falham — é justamente aí que
+      # alguém precisa abrir e ler.
+      - name: Guardar o relatório
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-dos-testes
+          path: medshare-api/build/reports/tests/test/
+
+  painel:
+    name: painel web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: medshare-painel/package-lock.json
+
+      - name: Instalar dependências
+        working-directory: medshare-painel
+        run: npm ci
+
+      # `tsc -b` roda junto: erro de tipo derruba o build, que é o motivo de
+      # o painel ser em TypeScript.
+      - name: Compilar
+        working-directory: medshare-painel
+        run: npm run build

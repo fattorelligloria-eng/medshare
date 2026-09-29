@@ -1,0 +1,28 @@
+# Banco de desenvolvimento.
+#
+# A senha aqui é local e descartável: o banco só escuta em localhost e nunca
+# sai desta máquina. Em produção tudo vem de variável de ambiente (.env).
+#
+# Se a porta 5432 já estiver ocupada por um Postgres instalado na máquina,
+# troque para "5433:5432" aqui e ajuste MEDSHARE_BANCO_URL no .env. Não é
+# preciso desinstalar nada.
+services:
+  banco:
+    image: postgis/postgis:16-3.4
+    container_name: medshare-banco
+    environment:
+      POSTGRES_DB: medshare
+      POSTGRES_USER: medshare
+      POSTGRES_PASSWORD: medshare_local
+    ports:
+      - "5432:5432"
+    volumes:
+      - dados-medshare:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U medshare -d medshare"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  dados-medshare:

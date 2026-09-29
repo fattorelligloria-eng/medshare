@@ -1,0 +1,13 @@
+package br.com.medshare.notificacao;
+
+public enum TipoNotificacao {
+    DOACAO_PRE_VALIDADA,
+    DOACAO_EM_ANALISE,
+    DOACAO_RECUSADA,
+    DOACAO_RECEBIDA,
+    DOACAO_DISPONIVEL,
+    RESERVA_CRIADA,
+    RESERVA_EXPIRANDO,
+    RESERVA_EXPIRADA,
+    ENTREGA_CONCLUIDA
+}

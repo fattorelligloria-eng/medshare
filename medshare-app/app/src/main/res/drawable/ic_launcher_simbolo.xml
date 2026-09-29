@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A cruz da saude do logo do MedShare, centrada na area segura do icone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#FBFCFA"
+        android:pathData="M48,34h12v14h14v12h-14v14h-12v-14h-14v-12h14z" />
+</vector>

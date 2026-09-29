@@ -1,0 +1,452 @@
+/* =============================================================================
+   MedShare — linguagem visual
+
+   Duas famílias, com papéis separados:
+   - Fraunces (serifa) só no que é humano: saudação, número do impacto, nome do
+     medicamento. É o que dá calor à tela.
+   - Libre Franklin no resto: rótulos, dados, botões. É o que dá ordem.
+
+   Misturar as duas sem critério vira bagunça; a regra acima é o critério.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Libre+Franklin:wght@400;500;600;700&display=swap');
+
+:root {
+  /* tinta */
+  --tinta: #14201B;
+  --tinta-media: #4A5A52;
+  --tinta-fraca: #7A8981;
+
+  /* superfícies */
+  --branco: #FFFFFF;
+  --fundo: #FFFFFF;
+  --fundo-app: #F4F6F5;
+  --linha: #E2E8E4;
+
+  /* verde da marca */
+  --verde: #0B8C6E;
+  --verde-escuro: #07614B;
+  --verde-tenue: #F1F8F4;
+  --verde-claro: #DCEFE6;
+
+  /* terracota: só onde precisa de atenção */
+  --terracota: #B4552D;
+  --terracota-texto: #8A4423;
+  --terracota-tenue: #FBEAE0;
+
+  --raio: 12px;
+  --raio-g: 20px;
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: 'Libre Franklin', system-ui, sans-serif;
+  background: var(--fundo-app);
+  color: var(--tinta);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 { margin: 0; line-height: 1.2; letter-spacing: -0.02em; }
+
+/* A serifa é uma decisão, não um enfeite: só onde o texto fala com a pessoa. */
+.humano { font-family: Fraunces, Georgia, serif; font-weight: 600; letter-spacing: -0.01em; }
+
+/* --- rótulo de seção: caixa alta pequena, como no estilo escolhido --- */
+.rotulo {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--tinta-fraca);
+  margin: 0;
+}
+
+/* =============================================================================
+   Moldura de celular
+
+   As telas do cidadão são do APLICATIVO. No navegador elas aparecem dentro de
+   uma moldura de celular — para ninguém confundir com site, e para a
+   apresentação mostrar o app de verdade projetado na parede.
+   Em tela pequena a moldura some e a tela ocupa tudo, que é como fica no
+   aparelho.
+   ========================================================================== */
+
+.palco {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  background:
+    radial-gradient(1200px 600px at 50% -10%, #EAF2EE 0%, transparent 60%),
+    var(--fundo-app);
+}
+
+.moldura {
+  width: 390px;
+  height: 844px;
+  flex-shrink: 0;
+  background: var(--branco);
+  border-radius: 38px;
+  border: 10px solid #1B2620;
+  box-shadow: 0 24px 60px rgba(20, 32, 27, 0.22);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.moldura::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 108px;
+  height: 26px;
+  background: #1B2620;
+  border-radius: 0 0 16px 16px;
+  z-index: 5;
+}
+
+.tela {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--branco);
+}
+
+.tela::-webkit-scrollbar { width: 0; }
+
+.conteudo-app { padding: 0 26px; }
+.topo-app { padding: 52px 26px 0; }
+
+@media (max-width: 760px) {
+  .palco { padding: 0; align-items: stretch; background: var(--branco); }
+  .moldura {
+    width: 100%;
+    height: 100vh;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .moldura::before { display: none; }
+}
+
+/* --- cabeçalho do app --- */
+.cabecalho-app {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.marca { display: flex; align-items: center; gap: 10px; }
+.marca img { width: 27px; height: 27px; border-radius: 8px; display: block; }
+.marca span { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+
+/* --- o número do impacto --- */
+.impacto { display: flex; align-items: flex-end; gap: 12px; }
+.impacto .numero {
+  font-family: Fraunces, Georgia, serif;
+  font-size: 66px;
+  font-weight: 700;
+  line-height: 0.82;
+  color: var(--verde);
+}
+.impacto p { margin: 0 0 5px; font-size: 15.5px; line-height: 1.32; }
+
+/* --- faixa de boa notícia --- */
+.faixa-boa {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  padding: 14px 16px;
+  background: var(--verde-tenue);
+  border-radius: var(--raio);
+  color: #1C3A30;
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+.faixa-boa svg { flex-shrink: 0; }
+.faixa-boa p { margin: 0; }
+
+/* =============================================================================
+   Lista de itens: linhas finas, sem cartão com sombra
+   ========================================================================== */
+
+.item { padding: 18px 0; border-bottom: 1px solid var(--linha); }
+.item:last-child { border-bottom: 0; }
+.item h3 { font-family: Fraunces, Georgia, serif; font-size: 19px; font-weight: 600; }
+.item .detalhe { margin: 3px 0 0; font-size: 13.5px; color: var(--tinta-media); }
+.item .explicacao { margin: 9px 0 0; font-size: 13px; line-height: 1.45; color: #67766E; }
+
+/* --- status: bolinha + caixa alta --- */
+.status { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.status .ponto { width: 7px; height: 7px; border-radius: 999px; flex-shrink: 0; }
+.status .texto {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+.status.andamento .ponto { background: var(--verde); }
+.status.andamento .texto { color: var(--verde-escuro); }
+.status.atencao .ponto { background: var(--terracota); }
+.status.atencao .texto { color: var(--terracota-texto); }
+.status.neutro .ponto { background: var(--tinta-fraca); }
+.status.neutro .texto { color: #5C6B63; }
+
+/* --- linha com ícone (endereço, horário) --- */
+.linha-icone { display: flex; gap: 7px; align-items: center; margin-top: 10px; font-size: 13.5px; }
+.linha-icone svg { flex-shrink: 0; }
+
+/* =============================================================================
+   Controles
+   ========================================================================== */
+
+button, .botao {
+  font: inherit;
+  cursor: pointer;
+  border: 0;
+  border-radius: var(--raio);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 16px;
+  font-size: 15.5px;
+  font-weight: 700;
+}
+button:disabled, .botao[aria-disabled='true'] { opacity: .45; cursor: not-allowed; }
+
+.principal { background: var(--verde); color: var(--branco); width: 100%; }
+.principal:hover:not(:disabled) { background: var(--verde-escuro); }
+
+.secundario {
+  background: var(--branco);
+  color: var(--tinta);
+  border: 1px solid var(--linha);
+  width: 100%;
+}
+.secundario:hover:not(:disabled) { background: #F7F9F8; }
+
+.perigo { background: var(--branco); color: var(--terracota-texto); border: 1px solid var(--terracota); width: 100%; }
+.perigo:hover:not(:disabled) { background: var(--terracota-tenue); }
+
+.texto-botao {
+  background: none; padding: 8px 0; color: var(--verde-escuro);
+  font-size: 14px; font-weight: 600; width: auto;
+}
+
+.icone-botao {
+  width: 34px; height: 34px; padding: 0; background: none;
+  border-radius: 999px; flex-shrink: 0;
+}
+.icone-botao:hover { background: #F2F5F3; }
+
+/* --- campos --- */
+label.campo { display: block; margin-bottom: 14px; }
+label.campo > span {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--tinta-media);
+  margin-bottom: 6px;
+}
+label.campo .apoio { font-weight: 400; font-size: 12px; color: var(--tinta-fraca); margin-top: 5px; }
+
+input[type='text'], input[type='email'], input[type='password'],
+input[type='tel'], input[type='date'], input[type='number'], select, textarea {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  font: inherit;
+  color: var(--tinta);
+  background: var(--branco);
+}
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid var(--verde);
+  outline-offset: -1px;
+  border-color: var(--verde);
+}
+input::placeholder, textarea::placeholder { color: #A4B1AA; }
+
+/* --- escolha grande (doador / beneficiário) --- */
+.escolha {
+  display: block;
+  padding: 18px;
+  border: 1.5px solid var(--linha);
+  border-radius: var(--raio-g);
+  margin-bottom: 12px;
+  cursor: pointer;
+  background: var(--branco);
+}
+.escolha:hover { border-color: var(--verde); }
+.escolha.marcada { border-color: var(--verde); background: var(--verde-tenue); }
+.escolha input { position: absolute; opacity: 0; pointer-events: none; }
+.escolha .titulo { font-family: Fraunces, Georgia, serif; font-size: 18px; font-weight: 600; }
+.escolha .sub { margin: 5px 0 0; font-size: 13.5px; line-height: 1.45; color: var(--tinta-media); }
+
+/* --- caixa de marcar --- */
+.marcar { display: flex; gap: 11px; align-items: flex-start; margin-bottom: 12px; cursor: pointer; }
+.marcar input { width: 19px; height: 19px; margin: 2px 0 0; flex-shrink: 0; accent-color: var(--verde); }
+.marcar span { font-size: 14px; line-height: 1.45; }
+
+/* =============================================================================
+   Avisos
+   ========================================================================== */
+
+.aviso { border-radius: var(--raio); padding: 13px 15px; margin-bottom: 16px; font-size: 13.5px; line-height: 1.45; }
+.aviso.erro { background: var(--terracota-tenue); color: #6E3319; }
+.aviso.erro .regra {
+  display: inline-block;
+  font-family: ui-monospace, Menlo, monospace;
+  font-weight: 700;
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  margin-right: 7px;
+}
+.aviso.ok { background: var(--verde-tenue); color: #1C3A30; }
+
+.vazio { padding: 48px 26px; text-align: center; color: var(--tinta-media); }
+.vazio h3 { font-family: Fraunces, Georgia, serif; font-size: 19px; margin-bottom: 7px; color: var(--tinta); }
+.vazio p { margin: 0; font-size: 14px; line-height: 1.5; }
+
+/* =============================================================================
+   Navegação de baixo (app)
+   ========================================================================== */
+
+.nav-app {
+  padding: 10px 26px calc(22px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  justify-content: space-around;
+  border-top: 1px solid var(--linha);
+  background: var(--branco);
+  flex-shrink: 0;
+}
+.nav-app a {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  font-size: 11px; color: var(--tinta-fraca); text-decoration: none; font-weight: 500;
+}
+.nav-app a.ativo { color: var(--verde); font-weight: 700; }
+
+/* O botão principal fica colado embaixo enquanto a lista rola: a ação mais
+   importante da tela não pode depender de a pessoa rolar até o fim. */
+.rodape-acao {
+  position: sticky;
+  bottom: 0;
+  padding: 14px 26px 16px;
+  flex-shrink: 0;
+  background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, var(--branco) 26%);
+}
+
+/* =============================================================================
+   Código de retirada — o que o beneficiário mostra no balcão
+   ========================================================================== */
+
+.codigo-grande {
+  padding: 22px;
+  background: var(--verde-tenue);
+  border-radius: var(--raio-g);
+  text-align: center;
+}
+.codigo-grande .rotulo { margin-bottom: 6px; color: var(--verde-escuro); }
+.codigo-grande .valor {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--verde-escuro);
+}
+
+/* =============================================================================
+   Painel da farmácia e da central — tela de computador, mesma linguagem
+   ========================================================================== */
+
+.painel { display: flex; min-height: 100vh; background: var(--fundo-app); }
+
+.lateral {
+  width: 244px;
+  flex-shrink: 0;
+  background: var(--branco);
+  border-right: 1px solid var(--linha);
+  padding: 26px 18px;
+  display: flex;
+  flex-direction: column;
+}
+.lateral .marca { margin-bottom: 30px; }
+.lateral nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.lateral nav a {
+  padding: 10px 13px;
+  border-radius: 9px;
+  color: var(--tinta-media);
+  text-decoration: none;
+  font-size: 14.5px;
+  font-weight: 500;
+}
+.lateral nav a:hover { background: #F4F7F5; color: var(--tinta); }
+.lateral nav a.ativo { background: var(--verde-tenue); color: var(--verde-escuro); font-weight: 700; }
+.lateral .rodape { border-top: 1px solid var(--linha); padding-top: 16px; }
+.lateral .quem { font-size: 13px; color: var(--tinta-media); margin-bottom: 11px; line-height: 1.4; }
+
+.area { flex: 1; padding: 34px 40px; max-width: 980px; }
+.titulo-area { margin-bottom: 26px; }
+.titulo-area h1 { font-family: Fraunces, Georgia, serif; font-size: 29px; font-weight: 600; }
+.titulo-area p { margin: 7px 0 0; color: var(--tinta-media); font-size: 14.5px; max-width: 62ch; }
+
+.bloco {
+  background: var(--branco);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio-g);
+  padding: 22px 24px;
+  margin-bottom: 14px;
+}
+.bloco-topo { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 14px; }
+.bloco h2 { font-family: Fraunces, Georgia, serif; font-size: 21px; font-weight: 600; }
+.codigo { font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: var(--tinta-media); letter-spacing: 0.03em; }
+
+.grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; }
+.dado .rotulo { margin-bottom: 3px; }
+.dado .valor { font-size: 15px; }
+.dado .valor.divergente { color: var(--terracota-texto); font-weight: 600; }
+
+.acoes { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+.acoes button, .acoes .botao { width: auto; padding: 12px 20px; font-size: 14.5px; }
+
+/* --- linha do tempo do rastreio --- */
+.tempo { list-style: none; padding: 0; margin: 0; }
+.tempo li { position: relative; padding: 0 0 20px 24px; }
+.tempo li::before {
+  content: '';
+  position: absolute; left: 0; top: 6px;
+  width: 9px; height: 9px; border-radius: 999px;
+  background: var(--verde);
+}
+.tempo li::after {
+  content: '';
+  position: absolute; left: 4px; top: 19px; bottom: 0;
+  width: 1px; background: var(--linha);
+}
+.tempo li:last-child { padding-bottom: 0; }
+.tempo li:last-child::after { display: none; }
+.tempo .quando { font-size: 12px; color: var(--tinta-fraca); }
+.tempo .titulo { font-weight: 600; font-size: 14.5px; }
+.tempo .descricao { font-size: 13.5px; color: var(--tinta-media); line-height: 1.45; }
+
+@media (max-width: 860px) {
+  .painel { flex-direction: column; }
+  .lateral { width: 100%; border-right: 0; border-bottom: 1px solid var(--linha); }
+  .lateral nav { flex-direction: row; flex-wrap: wrap; }
+  .area { padding: 22px 18px; }
+}

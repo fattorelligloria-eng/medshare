@@ -1,0 +1,43 @@
+# ---------------------------------------------------------------------------
+# MedShare — o que nunca entra no Git.
+#
+# A regra que vale para tudo aqui: se o arquivo tem senha, chave ou é gerado
+# pela máquina, ele fica de fora. Quem clonar o repositório gera o dele.
+# ---------------------------------------------------------------------------
+
+# --- Segredos -------------------------------------------------------------
+.env
+.env.local
+*.env.local
+keystore.properties
+*.keystore
+*.jks
+*.p12
+*.pem
+
+# --- Coisas que a máquina gera --------------------------------------------
+build/
+dist/
+node_modules/
+.gradle/
+.kotlin/
+*.tsbuildinfo
+local.properties
+
+# --- Fotos enviadas em desenvolvimento ------------------------------------
+# São receitas e caixas de remédio: dado de saúde de pessoa real, mesmo em
+# teste. Nunca versionar.
+dados/
+
+# --- O APK ----------------------------------------------------------------
+# Ele sai pela aba Releases, não pelo repositório: binário de 12 MB dentro do
+# histórico deixa o clone pesado para sempre, e o Git não sabe versionar isso.
+*.apk
+*.aab
+
+# --- IDE e sistema --------------------------------------------------------
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
