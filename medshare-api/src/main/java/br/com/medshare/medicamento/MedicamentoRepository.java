@@ -10,17 +10,32 @@ import java.util.Optional;
 
 public interface MedicamentoRepository extends JpaRepository<Medicamento, Long> {
 
-    Optional<Medicamento> findByRegistroAnvisa(String registroAnvisa);
+    /** O registro se repete entre apresentacoes; serve para os dados de demonstracao. */
+    Optional<Medicamento> findFirstByRegistroAnvisa(String registroAnvisa);
 
-    Optional<Medicamento> findByEan(String ean);
+    /** O mesmo EAN pode aparecer em mais de uma linha antiga da lista. */
+    Optional<Medicamento> findFirstByEanOrderByIdDesc(String ean);
 
-    /** Busca do app: o usuario digita parte do nome ou do principio ativo. */
-    @Query("""
-            SELECT m FROM Medicamento m
-            WHERE m.altoCusto = TRUE
-              AND (LOWER(m.nomeComercial)  LIKE LOWER(CONCAT('%', :termo, '%'))
-                OR LOWER(m.principioAtivo) LIKE LOWER(CONCAT('%', :termo, '%')))
-            ORDER BY m.nomeComercial
-            """)
+    /**
+     * Busca do app: o usuario digita parte do nome ou do principio ativo.
+     *
+     * Ignora acento e maiusculas dos dois lados — a lista da CMED vem em
+     * maiusculas acentuadas ("ÁCIDO"), e ninguem digita assim no celular.
+     * A funcao sem_acento esta na migration V2.
+     */
+    @Query(value = """
+            SELECT m.* FROM medicamento m
+            WHERE m.alto_custo
+              AND (sem_acento(m.nome_comercial)  LIKE '%' || sem_acento(:termo) || '%'
+                OR sem_acento(m.principio_ativo) LIKE '%' || sem_acento(:termo) || '%')
+            ORDER BY m.nome_comercial, m.apresentacao
+            """,
+            countQuery = """
+            SELECT count(*) FROM medicamento m
+            WHERE m.alto_custo
+              AND (sem_acento(m.nome_comercial)  LIKE '%' || sem_acento(:termo) || '%'
+                OR sem_acento(m.principio_ativo) LIKE '%' || sem_acento(:termo) || '%')
+            """,
+            nativeQuery = true)
     Page<Medicamento> buscarDeAltoCusto(@Param("termo") String termo, Pageable pagina);
 }

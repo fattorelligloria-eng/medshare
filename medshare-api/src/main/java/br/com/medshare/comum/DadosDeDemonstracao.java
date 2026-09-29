@@ -151,9 +151,9 @@ public class DadosDeDemonstracao implements CommandLineRunner {
         Usuario ana = usuarios.findByEmail("ana@medshare.test").orElseThrow();
         Usuario carla = usuarios.findByEmail("carla@medshare.test").orElseThrow();
         Usuario diego = usuarios.findByEmail("diego@medshare.test").orElseThrow();
-        Long alecensa = medicamentos.findByRegistroAnvisa("125518005").orElseThrow().getId();
-        Long sovaldi = medicamentos.findByRegistroAnvisa("158900012").orElseThrow().getId();
-        Long tivicay = medicamentos.findByRegistroAnvisa("134090023").orElseThrow().getId();
+        Long alecensa = medicamentos.findFirstByRegistroAnvisa("125518005").orElseThrow().getId();
+        Long sovaldi = medicamentos.findFirstByRegistroAnvisa("158900012").orElseThrow().getId();
+        Long tivicay = medicamentos.findFirstByRegistroAnvisa("134090023").orElseThrow().getId();
 
         // 1) Fica na fila da central: o avaliador simulado nunca aprova sozinho.
         doacoes.cadastrar(alecensa, "ALC2026A", LocalDate.now().plusMonths(8),

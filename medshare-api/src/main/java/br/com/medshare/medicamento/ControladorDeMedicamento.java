@@ -23,7 +23,7 @@ public class ControladorDeMedicamento {
     @GetMapping
     public Page<MedicamentoResumido> buscar(@RequestParam(defaultValue = "") String termo,
                                             Pageable pagina) {
-        return medicamentos.buscarDeAltoCusto(termo, pagina).map(MedicamentoResumido::de);
+        return medicamentos.buscarDeAltoCusto(termo.trim(), pagina).map(MedicamentoResumido::de);
     }
 
     @GetMapping("/{id}")
@@ -36,7 +36,7 @@ public class ControladorDeMedicamento {
     /** Usado pelo app quando o doador bipa o codigo de barras da caixa. */
     @GetMapping("/por-ean/{ean}")
     public MedicamentoResumido porCodigoDeBarras(@PathVariable String ean) {
-        return medicamentos.findByEan(ean)
+        return medicamentos.findFirstByEanOrderByIdDesc(ean)
                 .map(MedicamentoResumido::de)
                 .orElseThrow(() -> new RecursoNaoEncontrado("Medicamento com EAN", ean));
     }

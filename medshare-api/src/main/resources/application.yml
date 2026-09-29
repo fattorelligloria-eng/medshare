@@ -55,6 +55,12 @@ medshare:
     modelo: ${MEDSHARE_GEMINI_MODELO:gemini-3.5-flash}
   portal-transparencia:
     chave: ${MEDSHARE_PORTAL_CHAVE:}
+  cmed:
+    # Lista de precos "PMC - xls" da CMED/ANVISA. Com o caminho preenchido, a
+    # API importa o catalogo ao subir (e seguro repetir: so atualiza).
+    arquivo: ${MEDSHARE_CMED_ARQUIVO:}
+    # ICMS de Sao Paulo, onde a rede atua.
+    coluna-pmc: ${MEDSHARE_CMED_COLUNA_PMC:PMC 18 %}
   fotos:
     # As fotos ficam em disco e sao servidas em /fotos-locais/<uuid>. So URLs
     # com este endereco sao aceitas nas doacoes e receitas. O endereco publico precisa ser o que o
