@@ -21,6 +21,8 @@ import { FilaDoBalcao } from './paginas/FilaDoBalcao'
 import { Retirada } from './paginas/Retirada'
 import { FilaDaCentral } from './paginas/FilaDaCentral'
 import { Rastreio } from './paginas/Rastreio'
+import { Farmacias } from './paginas/Farmacias'
+import { Notificacoes } from './paginas/Notificacoes'
 
 /**
  * Duas áreas, propositalmente diferentes:
@@ -67,6 +69,7 @@ export function App() {
 
       {/* --- telas internas do aplicativo, sem navegação de baixo --- */}
       <Route element={<TelaDoApp />}>
+        <Route path="/app/notificacoes" element={<Notificacoes />} />
         {temPapel('DOADOR') && (
           <>
             <Route path="/app/doacoes/nova" element={<NovaDoacao />} />
@@ -91,7 +94,13 @@ export function App() {
             <Route path="/painel/retirada" element={<Retirada />} />
           </>
         )}
-        {temPapel('ADMIN') && <Route path="/painel/central" element={<FilaDaCentral />} />}
+        {temPapel('ADMIN') && (
+          <>
+            <Route path="/painel/central" element={<FilaDaCentral />} />
+            <Route path="/painel/farmacias" element={<Farmacias />} />
+          </>
+        )}
+        <Route path="/painel/notificacoes" element={<Notificacoes noPainel />} />
         {(temPapel('FARMACEUTICO') || temPapel('ADMIN')) && (
           <Route path="/painel/rastreio" element={<Rastreio />} />
         )}

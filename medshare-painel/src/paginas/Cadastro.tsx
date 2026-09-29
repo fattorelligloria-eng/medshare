@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api/cliente'
-import type { Municipio, Sessao } from '../api/tipos'
+import type { EnderecoDoCep, Municipio, Sessao } from '../api/tipos'
 import { useAutenticacao } from '../contexto/Autenticacao'
 import { AvisoDeErro } from '../componentes/Aviso'
 import { Logo } from '../componentes/Logo'
@@ -49,6 +49,29 @@ export function Cadastro() {
       .then(definirMunicipios)
       .catch(definirErro)
   }, [])
+
+  // RN09 — com o CEP completo, o endereço vem do ViaCEP e já avisa se está
+  // fora da Grande São Paulo, antes de a pessoa preencher o resto.
+  const [avisoDoCep, definirAvisoDoCep] = useState<string | null>(null)
+  useEffect(() => {
+    definirAvisoDoCep(null)
+    if (cep.length !== 8) return
+    let atual = true
+    api.get<EnderecoDoCep>(`/enderecos/${cep}`)
+      .then((e) => {
+        if (!atual) return
+        if (e.logradouro) definirLogradouro(e.logradouro)
+        if (e.bairro) definirBairro(e.bairro)
+        if (e.atendido && e.municipioId) {
+          definirMunicipioId(String(e.municipioId))
+        } else {
+          definirMunicipioId('')
+          definirAvisoDoCep(`Este CEP é de ${e.municipio}/${e.uf}. O MedShare atende só os 39 municípios da Grande São Paulo.`)
+        }
+      })
+      .catch(() => { if (atual) definirAvisoDoCep('Não encontramos este CEP. Confira os números ou preencha o endereço à mão.') })
+    return () => { atual = false }
+  }, [cep])
 
   const passo1Ok = querDoar || querReceber
   const passo2Ok =
@@ -234,6 +257,7 @@ export function Cadastro() {
                     onChange={(e) => definirCep(e.target.value.replace(/\D/g, '').slice(0, 8))}
                     placeholder="Somente números"
                   />
+                  {avisoDoCep && <span className="apoio" style={{ color: 'var(--terracota-texto)' }}>{avisoDoCep}</span>}
                 </label>
 
                 <label className="campo">

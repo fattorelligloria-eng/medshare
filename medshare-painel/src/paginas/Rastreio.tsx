@@ -4,26 +4,8 @@ import { api } from '../api/cliente'
 import type { DoacaoDetalhada } from '../api/tipos'
 import { AvisoDeErro } from '../componentes/Aviso'
 import { Status, explicar } from '../componentes/Status'
+import { NOME_DO_EVENTO } from '../componentes/Eventos'
 import { data, dataComHora } from '../formatos'
-
-const NOME_DO_EVENTO: Record<string, string> = {
-  CADASTRO: 'Cadastro',
-  PRE_VALIDACAO: 'Pré-validação',
-  ENVIO_PARA_CENTRAL: 'Enviada para a central',
-  DECISAO_DA_CENTRAL: 'Decisão da central',
-  AGENDAMENTO: 'Agendamento',
-  RECEBIMENTO: 'Recebimento',
-  VALIDACAO: 'Conferência do farmacêutico',
-  DISPONIBILIZACAO: 'Disponibilizada',
-  RESERVA: 'Reservada',
-  EXPIRACAO_DE_RESERVA: 'Reserva expirada',
-  CANCELAMENTO_DE_RESERVA: 'Reserva cancelada',
-  ENTREGA: 'Entrega',
-  RECUSA: 'Recusa',
-  CANCELAMENTO: 'Cancelamento',
-  REJEICAO: 'Rejeição',
-  DESCARTE: 'Descarte',
-}
 
 /**
  * RN06 — o percurso completo de uma unidade doada.

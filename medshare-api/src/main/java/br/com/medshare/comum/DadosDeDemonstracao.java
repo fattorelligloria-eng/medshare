@@ -126,6 +126,13 @@ public class DadosDeDemonstracao implements CommandLineRunner {
                         -23.5324, -46.7916),
                 semana, LocalTime.of(8, 0), LocalTime.of(18, 0), 4));
 
+        // UC08: so a farmacia com farmaceutico fica ativa. Na demonstracao so a
+        // da Se tem (a Carla); as outras aparecem inativas no painel do admin,
+        // prontas para vincular alguem e ver a ativacao acontecer.
+        pontos.findAll().stream()
+                .filter(ponto -> !ponto.getId().equals(centro.getId()))
+                .forEach(PontoDeColeta::desativar);
+
         return centro;
     }
 

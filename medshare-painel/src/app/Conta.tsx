@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useAutenticacao } from '../contexto/Autenticacao'
 import { Marca } from '../componentes/Logo'
+import { Procuradores } from '../componentes/Procuradores'
 
 const NOME_DO_PAPEL: Record<string, string> = {
   DOADOR: 'doadora',
@@ -30,11 +31,13 @@ export function Conta() {
           <div style={{ marginTop: 28, paddingTop: 22, borderTop: '1px solid var(--linha)' }}>
             <h2 className="humano" style={{ fontSize: 19 }}>Verificação no CadÚnico</h2>
             <p style={{ margin: '8px 0 14px', fontSize: 14, lineHeight: 1.5, color: 'var(--tinta-media)' }}>
-              Necessária para reservar medicamentos. Vale por 12 meses.
+              Necessária para pedir medicamentos. Vale por 12 meses.
             </p>
             <Link to="/app/cadunico" className="botao secundario">Informar meu NIS</Link>
           </div>
         )}
+
+        {temPapel('BENEFICIARIO') && <Procuradores />}
 
         {(temPapel('FARMACEUTICO') || temPapel('ADMIN')) && (
           <div style={{ marginTop: 28, paddingTop: 22, borderTop: '1px solid var(--linha)' }}>

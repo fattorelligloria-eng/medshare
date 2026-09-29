@@ -1,30 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { api } from '../api/cliente'
-import type { DoacaoDetalhada } from '../api/tipos'
+import type { DoacaoDetalhada, FotoEnviada } from '../api/tipos'
 import { AvisoDeErro } from '../componentes/Aviso'
 import { CabecalhoInterno } from '../componentes/CabecalhoInterno'
+import { Camera } from '../componentes/Icones'
 import { Status, explicar } from '../componentes/Status'
+import { NOME_DO_EVENTO } from '../componentes/Eventos'
 import { data, dataComHora } from '../formatos'
-
-const NOME_DO_EVENTO: Record<string, string> = {
-  CADASTRO: 'Cadastro',
-  PRE_VALIDACAO: 'Pré-validação',
-  ENVIO_PARA_CENTRAL: 'Enviada para a central',
-  DECISAO_DA_CENTRAL: 'Decisão da central',
-  AGENDAMENTO: 'Agendamento',
-  RECEBIMENTO: 'Recebimento',
-  VALIDACAO: 'Conferência do farmacêutico',
-  DISPONIBILIZACAO: 'Disponibilizada',
-  RESERVA: 'Reservada',
-  EXPIRACAO_DE_RESERVA: 'Reserva expirada',
-  CANCELAMENTO_DE_RESERVA: 'Reserva cancelada',
-  ENTREGA: 'Entrega',
-  RECUSA: 'Recusa',
-  CANCELAMENTO: 'Cancelamento',
-  REJEICAO: 'Rejeição',
-  DESCARTE: 'Descarte',
-}
 
 /** RN06 — o percurso completo da caixa, do cadastro até onde ela está agora. */
 export function DetalheDaDoacao() {
@@ -33,13 +16,48 @@ export function DetalheDaDoacao() {
   const [erro, definirErro] = useState<unknown>(null)
   const [carregando, definirCarregando] = useState(true)
 
-  useEffect(() => {
+  const [enviandoFoto, definirEnviandoFoto] = useState(false)
+
+  const carregar = useCallback(() => {
     definirCarregando(true)
     api.get<DoacaoDetalhada>(`/doacoes/${codigo}`)
       .then(definirDetalhe)
       .catch(definirErro)
       .finally(() => definirCarregando(false))
   }, [codigo])
+
+  useEffect(carregar, [carregar])
+
+  /** UC10 A2 — a central pediu outra foto: envia e a pré-validação roda de novo. */
+  async function enviarNovaFoto(evento: React.ChangeEvent<HTMLInputElement>) {
+    const arquivo = evento.target.files?.[0]
+    if (!arquivo) return
+    definirErro(null)
+    definirEnviandoFoto(true)
+    try {
+      const foto = await api.enviarArquivo<FotoEnviada>('/fotos', arquivo)
+      await api.post(`/doacoes/${codigo}/foto`, { fotoUrl: foto.url })
+      carregar()
+    } catch (e) {
+      definirErro(e)
+    } finally {
+      definirEnviandoFoto(false)
+    }
+  }
+
+  async function cancelarAgendamento() {
+    if (!window.confirm('Cancelar o agendamento? Você poderá reagendar uma única vez.')) return
+    definirErro(null)
+    try {
+      await api.delete(`/doacoes/${codigo}/agendamento`)
+      carregar()
+    } catch (e) {
+      definirErro(e)
+    }
+  }
+
+  const ultimoEvento = detalhe?.historico[detalhe.historico.length - 1]
+  const centralPediuFoto = detalhe?.doacao.status === 'CADASTRADA' && ultimoEvento?.tipo === 'NOVA_FOTO_SOLICITADA'
 
   return (
     <>
@@ -84,6 +102,40 @@ export function DetalheDaDoacao() {
               <Link to={`/app/doacoes/${codigo}/agendar`} className="botao principal" style={{ marginBottom: 24 }}>
                 Escolher farmácia e horário
               </Link>
+            )}
+
+            {detalhe.doacao.status === 'AGENDADA' && detalhe.agendamento && (
+              <div style={{ marginBottom: 24 }}>
+                <div className="codigo-grande">
+                  <p className="rotulo">Código de entrega</p>
+                  <p className="valor">{detalhe.agendamento.codigoEntrega}</p>
+                </div>
+                <p style={{ margin: '12px 0 0', fontSize: 14, fontWeight: 600 }}>
+                  {dataComHora(detalhe.agendamento.dataHora)} — {detalhe.agendamento.pontoDeColeta}
+                </p>
+                <p style={{ margin: '4px 0 12px', fontSize: 13.5, color: 'var(--tinta-media)' }}>
+                  {detalhe.agendamento.endereco}. Mostre este código no balcão.
+                </p>
+                <button type="button" className="texto-botao" onClick={cancelarAgendamento}>
+                  Cancelar agendamento
+                </button>
+              </div>
+            )}
+
+            {detalhe.podeReagendar && (
+              <Link to={`/app/doacoes/${codigo}/agendar`} className="botao principal" style={{ marginBottom: 24 }}>
+                Reagendar entrega (uma vez)
+              </Link>
+            )}
+
+            {centralPediuFoto && (
+              <div className="aviso erro" style={{ marginBottom: 24 }}>
+                <strong>A equipe pediu uma nova foto.</strong> {ultimoEvento?.descricao}
+                <label className="botao secundario" style={{ marginTop: 12 }}>
+                  <Camera /> {enviandoFoto ? 'Enviando…' : 'Tirar nova foto'}
+                  <input type="file" accept="image/*" capture="environment" onChange={enviarNovaFoto} hidden disabled={enviandoFoto} />
+                </label>
+              </div>
             )}
 
             <p className="rotulo" style={{ marginBottom: 4 }}>Por onde passou</p>

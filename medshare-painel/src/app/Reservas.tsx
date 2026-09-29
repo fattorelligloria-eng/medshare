@@ -5,7 +5,8 @@ import type { Reserva } from '../api/tipos'
 import { AvisoDeErro, AvisoDeSucesso } from '../componentes/Aviso'
 import { Status } from '../componentes/Status'
 import { Marca } from '../componentes/Logo'
-import { Lugar, Sino } from '../componentes/Icones'
+import { BotaoDeNotificacoes } from '../componentes/BotaoDeNotificacoes'
+import { Lugar } from '../componentes/Icones'
 import { dataComHora } from '../formatos'
 
 /**
@@ -33,14 +34,24 @@ export function Reservas() {
       .finally(() => definirCarregando(false))
   }, [])
 
+  /** A caixa volta ao estoque e é oferecida à próxima pessoa da fila. */
+  async function cancelar(reserva: Reserva) {
+    if (!window.confirm('Cancelar a reserva? A caixa vai para a próxima pessoa da fila.')) return
+    definirErro(null)
+    try {
+      const atualizada = await api.delete<Reserva>(`/reservas/${reserva.codigoRetirada}`)
+      definirReservas((lista) => lista.map((r) => (r.codigoRetirada === atualizada.codigoRetirada ? atualizada : r)))
+    } catch (e) {
+      definirErro(e)
+    }
+  }
+
   return (
     <>
       <div className="topo-app">
         <div className="cabecalho-app">
           <Marca />
-          <button type="button" className="icone-botao" aria-label="Notificações">
-            <Sino cor="var(--tinta-media)" />
-          </button>
+          <BotaoDeNotificacoes />
         </div>
       </div>
 
@@ -82,8 +93,12 @@ export function Reservas() {
                   Retire até {dataComHora(r.expiraEm)}
                 </p>
                 <p style={{ margin: '4px 0 0', fontSize: 13.5, color: 'var(--tinta-media)' }}>
-                  Leve um documento com foto e a receita.
+                  Leve um documento com foto e a receita. Se outra pessoa for buscar, ela precisa estar
+                  cadastrada como procuradora na sua conta.
                 </p>
+                <button type="button" className="texto-botao" style={{ marginTop: 8 }} onClick={() => cancelar(r)}>
+                  Cancelar reserva
+                </button>
               </>
             )}
 

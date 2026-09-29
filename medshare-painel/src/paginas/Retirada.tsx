@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { api } from '../api/cliente'
+import { api, ErroDaApi } from '../api/cliente'
 import type { ConferenciaDaRetirada, Reserva } from '../api/tipos'
 import { AvisoDeErro, AvisoDeSucesso } from '../componentes/Aviso'
 import { data, dataComHora } from '../formatos'
@@ -21,17 +21,43 @@ export function Retirada() {
   const [erro, definirErro] = useState<unknown>(null)
   const [concluida, definirConcluida] = useState<Reserva | null>(null)
   const [enviando, definirEnviando] = useState(false)
+  /** '' = o próprio titular; senão, o CPF do procurador (UC07 A3). */
+  const [quemRetira, definirQuemRetira] = useState('')
+  const [negando, definirNegando] = useState(false)
+  const [motivoDaNegativa, definirMotivoDaNegativa] = useState('')
+  const [negada, definirNegada] = useState<string | null>(null)
 
   function recomecar() {
     definirConferencia(null)
     definirReceita(false)
     definirDocumento(false)
+    definirQuemRetira('')
+    definirNegando(false)
+    definirMotivoDaNegativa('')
+  }
+
+  /** UC07 A1 — a receita não bate com o princípio ativo: entrega negada, caixa volta ao estoque. */
+  async function negar() {
+    if (!conferencia) return
+    definirErro(null)
+    definirEnviando(true)
+    try {
+      await api.post(`/reservas/${encodeURIComponent(conferencia.codigoRetirada)}/negativa`, { motivo: motivoDaNegativa.trim() })
+      definirNegada(conferencia.codigoRetirada)
+      definirCodigo('')
+      recomecar()
+    } catch (e) {
+      definirErro(e)
+    } finally {
+      definirEnviando(false)
+    }
   }
 
   async function buscar(evento: FormEvent) {
     evento.preventDefault()
     definirErro(null)
     definirConcluida(null)
+    definirNegada(null)
     recomecar()
     definirEnviando(true)
     try {
@@ -52,13 +78,15 @@ export function Retirada() {
     try {
       const reserva = await api.post<Reserva>(
         `/reservas/${encodeURIComponent(conferencia.codigoRetirada)}/retirada`,
-        { receitaConferida: receita, documentoConferido: documento },
+        { receitaConferida: receita, documentoConferido: documento, cpfDeQuemRetira: quemRetira },
       )
       definirConcluida(reserva)
       definirCodigo('')
       recomecar()
     } catch (e) {
       definirErro(e)
+      // RN02 no balcão: a caixa foi descartada e a reserva caiu; não há mais o que entregar.
+      if (e instanceof ErroDaApi && e.regra === 'RN02') recomecar()
     } finally {
       definirEnviando(false)
     }
@@ -78,6 +106,12 @@ export function Retirada() {
         <AvisoDeSucesso>
           Entrega de <strong>{concluida.medicamento}</strong> registrada. A reserva{' '}
           {concluida.codigoRetirada} foi concluída.
+        </AvisoDeSucesso>
+      )}
+      {negada && (
+        <AvisoDeSucesso>
+          Entrega da reserva {negada} negada. A caixa voltou ao estoque e o beneficiário foi avisado
+          para enviar uma receita atualizada.
         </AvisoDeSucesso>
       )}
 
@@ -123,6 +157,14 @@ export function Retirada() {
               <p className="valor">{conferencia.principioAtivo}</p>
             </div>
             <div className="dado">
+              <p className="rotulo">Apresentação</p>
+              <p className="valor">{conferencia.apresentacao}</p>
+            </div>
+            <div className="dado">
+              <p className="rotulo">Validade da caixa</p>
+              <p className="valor">{data(conferencia.validadeDaCaixa)}</p>
+            </div>
+            <div className="dado">
               <p className="rotulo">Retirar até</p>
               <p className="valor">{dataComHora(conferencia.expiraEm)}</p>
             </div>
@@ -160,7 +202,20 @@ export function Retirada() {
             </div>
           )}
 
-          <p className="rotulo" style={{ margin: '20px 0 12px' }}>Conferência obrigatória</p>
+          <label className="campo" style={{ marginTop: 20 }}>
+            <span>Quem está retirando?</span>
+            <select value={quemRetira} disabled={!podeEntregar} onChange={(e) => definirQuemRetira(e.target.value)}>
+              <option value="">{conferencia.titular} (titular)</option>
+              {conferencia.procuradores.map((p) => (
+                <option key={p.cpf} value={p.cpf}>{p.nome} — procurador(a), CPF final {p.cpf.slice(-4)}</option>
+              ))}
+            </select>
+            {conferencia.procuradores.length === 0 && (
+              <span className="apoio">Nenhum procurador cadastrado: só o titular pode retirar.</span>
+            )}
+          </label>
+
+          <p className="rotulo" style={{ margin: '8px 0 12px' }}>Conferência obrigatória</p>
 
           <label className="marcar">
             <input
@@ -179,7 +234,12 @@ export function Retirada() {
               disabled={!podeEntregar}
               onChange={(e) => definirDocumento(e.target.checked)}
             />
-            <span>Documento com foto é de {conferencia.titular}</span>
+            <span>
+              Documento com foto é de{' '}
+              {quemRetira
+                ? conferencia.procuradores.find((p) => p.cpf === quemRetira)?.nome
+                : conferencia.titular}
+            </span>
           </label>
 
           <div className="acoes">
@@ -190,7 +250,35 @@ export function Retirada() {
             >
               {enviando ? 'Registrando…' : 'Registrar entrega'}
             </button>
+            {conferencia.status === 'ATIVA' && !negando && (
+              <button className="perigo" disabled={enviando} onClick={() => definirNegando(true)}>
+                Negar entrega
+              </button>
+            )}
           </div>
+
+          {negando && (
+            <div style={{ marginTop: 18, paddingTop: 18, borderTop: '1px solid var(--linha)' }}>
+              <label className="campo">
+                <span>Por que a entrega foi negada?</span>
+                <textarea
+                  rows={2}
+                  maxLength={280}
+                  value={motivoDaNegativa}
+                  onChange={(e) => definirMotivoDaNegativa(e.target.value)}
+                  placeholder="Ex.: receita é de outro princípio ativo; receita em papel vencida."
+                />
+              </label>
+              <div className="acoes">
+                <button className="perigo" disabled={!motivoDaNegativa.trim() || enviando} onClick={negar}>
+                  Confirmar: negar entrega
+                </button>
+                <button className="secundario" onClick={() => { definirNegando(false); definirMotivoDaNegativa('') }}>
+                  Voltar
+                </button>
+              </div>
+            </div>
+          )}
         </article>
       )}
     </>

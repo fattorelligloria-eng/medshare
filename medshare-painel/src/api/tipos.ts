@@ -32,9 +32,36 @@ export interface Evento {
   statusNovo: string | null
 }
 
+/** O agendamento atual traz o codigo que o doador mostra no balcao (UC03). */
+export interface AgendamentoAtual {
+  pontoDeColeta: string
+  endereco: string
+  dataHora: string
+  codigoEntrega: string
+}
+
 export interface DoacaoDetalhada {
   doacao: Doacao
+  agendamento: AgendamentoAtual | null
+  /** UC02 A2 - cancelada e o reagendamento unico ainda nao foi usado. */
+  podeReagendar: boolean
   historico: Evento[]
+}
+
+/** UC03 passo 2 - o que o balcao ve de uma doacao. */
+export interface DoacaoNoBalcao {
+  codigo: string
+  medicamento: string
+  principioAtivo: string
+  apresentacao: string
+  lote: string
+  validade: string
+  status: string
+  fotoUrl: string | null
+  doador: string
+  codigoEntrega: string | null
+  agendadaPara: string | null
+  atualizadoEm: string
 }
 
 /** Um caso na fila da central: o que o doador declarou x o que a IA leu. */
@@ -53,6 +80,21 @@ export interface CasoDaCentral {
   motivo: string | null
   avaliador: string | null
   divergencias: string[]
+  esperandoDesde: string
+  lacreDeclarado: boolean
+}
+
+/** UC05/UC06 - caixa oferecida, com prazo para aceitar. */
+export interface Oferta {
+  id: number
+  status: 'PENDENTE' | 'ACEITA' | 'RECUSADA' | 'EXPIRADA' | 'CANCELADA'
+  medicamento: string
+  apresentacao: string
+  validade: string
+  pontoDeColeta: string
+  enderecoDoPonto: string
+  horarioDoPonto: string
+  expiraEm: string
 }
 
 export interface Reserva {
@@ -73,8 +115,11 @@ export interface ConferenciaDaRetirada {
   expiraEm: string
   medicamento: string
   principioAtivo: string
+  apresentacao: string
+  validadeDaCaixa: string
   titular: string
   cpfDoTitular: string
+  procuradores: { nome: string; cpf: string }[]
   receitaFotoUrl: string | null
   receitaCrm: string | null
   receitaEmissao: string | null
@@ -91,6 +136,22 @@ export interface PontoDeColeta {
   horario: string
 }
 
+/** UC08 - a farmacia como o administrador ve. */
+export interface PontoAdministrado {
+  id: number
+  nome: string
+  cnpj: string
+  endereco: string
+  municipio: string
+  horario: string
+  dias: number[]
+  abreAs: string
+  fechaAs: string
+  vagasPorHora: number
+  ativo: boolean
+  farmaceuticos: { nome: string; email: string; crf: string }[]
+}
+
 export interface Pagina<T> {
   content: T[]
   totalElements: number
@@ -101,6 +162,17 @@ export interface Pagina<T> {
 export interface Municipio {
   id: number
   nome: string
+}
+
+/** GET /enderecos/{cep} — preenche o cadastro e confere a RN09. */
+export interface EnderecoDoCep {
+  cep: string
+  logradouro: string
+  bairro: string
+  municipio: string
+  uf: string
+  municipioId: number | null
+  atendido: boolean
 }
 
 export interface Medicamento {
@@ -120,7 +192,27 @@ export interface Necessidade {
   ativa: boolean
   temReceitaValida: boolean
   validadeDaReceita?: string | null
+  /** UC07 A1 — a receita não bateu no balcão; precisa enviar outra. */
+  emRevisao: boolean
+  motivoRevisao?: string | null
+  /** UC07 A2 — perdeu uma caixa por validade e está na frente da fila. */
+  prioridade: boolean
   criadaEm: string
+}
+
+export interface Procurador {
+  id: number
+  nome: string
+  cpf: string
+}
+
+export interface Notificacao {
+  id: number
+  titulo: string
+  corpo: string
+  tipo: string
+  lida: boolean
+  quando: string
 }
 
 export interface RespostaDoCadUnico {
