@@ -1,6 +1,7 @@
 package br.com.medshare.app.telas
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -43,8 +44,11 @@ fun TelaInicial(
     aoNovoPedido: () -> Unit,
     aoEnviarReceita: (Long) -> Unit,
     aoVerificarCadUnico: () -> Unit,
+    aoAbrirNotificacoes: () -> Unit,
 ) {
     val escopo = rememberCoroutineScope()
+    var naoLidas by remember { mutableLongStateOf(0L) }
+    var ofertas by remember { mutableStateOf<List<Oferta>>(emptyList()) }
     val abas = buildList {
         if (sessao.ehDoador()) add(Aba.DOACOES)
         if (sessao.ehBeneficiario()) {
@@ -70,17 +74,37 @@ fun TelaInicial(
         if (sessao.ehBeneficiario()) {
             repositorio.minhasNecessidades().onSuccess { necessidades = it }.onFailure { erro = it }
             repositorio.minhasReservas().onSuccess { reservas = it }.onFailure { erro = it }
+            repositorio.minhasOfertas()
+                .onSuccess { lista -> ofertas = lista.filter { it.status == "PENDENTE" } }
+                .onFailure { erro = it }
         }
+        repositorio.naoLidas().onSuccess { naoLidas = it }
         carregando = false
     }
 
     LaunchedEffect(Unit) { recarregar() }
+
+    // Enquanto o push (Firebase) não está configurado, o app confere os avisos
+    // de minuto em minuto: oferta tem prazo de 24 h para aceitar (UC06).
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(60_000)
+            repositorio.naoLidas().onSuccess { naoLidas = it }
+        }
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(abaAtual.rotulo) },
                 actions = {
+                    IconButton(onClick = aoAbrirNotificacoes) {
+                        BadgedBox(badge = {
+                            if (naoLidas > 0) Badge { Text(if (naoLidas > 9) "9+" else naoLidas.toString()) }
+                        }) {
+                            Icon(Icons.Default.Notifications, contentDescription = "Notificações: $naoLidas não lidas")
+                        }
+                    }
                     IconButton(onClick = { escopo.launch { recarregar() } }) {
                         Icon(Icons.Default.Refresh, contentDescription = "Atualizar")
                     }
@@ -123,10 +147,11 @@ fun TelaInicial(
                 carregando -> Carregando()
                 abaAtual == Aba.DOACOES -> ListaDeDoacoes(doacoes, aoAbrirDoacao)
                 abaAtual == Aba.PEDIDOS -> ListaDePedidos(
-                    necessidades, repositorio, aoEnviarReceita,
+                    necessidades, ofertas, repositorio, aoEnviarReceita,
+                    aoReservar = { abaAtual = Aba.RESERVAS },
                 ) { escopo.launch { recarregar() } }
-                abaAtual == Aba.RESERVAS -> ListaDeReservas(reservas)
-                else -> AbaDaConta(sessao, aoSair, aoVerificarCadUnico)
+                abaAtual == Aba.RESERVAS -> ListaDeReservas(reservas, repositorio) { escopo.launch { recarregar() } }
+                else -> AbaDaConta(sessao, repositorio, aoSair, aoVerificarCadUnico)
             }
         }
     }
@@ -180,18 +205,24 @@ private fun ListaDeDoacoes(doacoes: List<Doacao>, aoAbrir: (String) -> Unit) {
     }
 }
 
+/**
+ * UC05/UC06 - os pedidos e, no topo, as ofertas: quando uma caixa aparece, o
+ * sistema oferece a UMA pessoa da fila, com 24 h para aceitar.
+ */
 @Composable
 private fun ListaDePedidos(
     necessidades: List<Necessidade>,
+    ofertas: List<Oferta>,
     repositorio: Repositorio,
     aoEnviarReceita: (Long) -> Unit,
+    aoReservar: () -> Unit,
     aoMudarAlgo: () -> Unit,
 ) {
     val escopo = rememberCoroutineScope()
-    var erroDaReserva by remember { mutableStateOf<Throwable?>(null) }
-    var reservando by remember { mutableStateOf<Long?>(null) }
+    var erroDaOferta by remember { mutableStateOf<Throwable?>(null) }
+    var respondendo by remember { mutableStateOf<Long?>(null) }
 
-    if (necessidades.isEmpty()) {
+    if (necessidades.isEmpty() && ofertas.isEmpty()) {
         EstadoVazio(
             "Nenhum pedido ativo",
             "Toque em Pedir e escolha o medicamento de que você precisa. Avisamos quando aparecer.",
@@ -199,12 +230,52 @@ private fun ListaDePedidos(
         return
     }
 
+    fun responder(oferta: Oferta, aceitar: Boolean) {
+        erroDaOferta = null
+        respondendo = oferta.id
+        escopo.launch {
+            val resultado = if (aceitar) repositorio.aceitarOferta(oferta.id).map { }
+            else repositorio.recusarOferta(oferta.id).map { }
+            resultado
+                .onSuccess { respondendo = null; aoMudarAlgo(); if (aceitar) aoReservar() }
+                .onFailure { respondendo = null; erroDaOferta = it; aoMudarAlgo() }
+        }
+    }
+
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        if (erroDaReserva != null) {
-            item { AvisoDeErro(erroDaReserva) }
+        if (erroDaOferta != null) {
+            item { AvisoDeErro(erroDaOferta) }
+        }
+        items(ofertas, key = { "oferta-${it.id}" }) { oferta ->
+            Surface(
+                color = MaterialTheme.colorScheme.primaryContainer,
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Column(Modifier.padding(16.dp)) {
+                    Text("CHEGOU PARA VOCÊ", style = MaterialTheme.typography.labelSmall)
+                    Text(oferta.medicamento, style = MaterialTheme.typography.titleLarge)
+                    Text("${oferta.apresentacao} · validade ${Formatos.data(oferta.validade)}",
+                        style = MaterialTheme.typography.bodyMedium)
+                    Spacer(Modifier.height(8.dp))
+                    LinhaDeDado("Farmácia", "${oferta.pontoDeColeta} — ${oferta.enderecoDoPonto}")
+                    Spacer(Modifier.height(6.dp))
+                    LinhaDeDado("Horário", oferta.horarioDoPonto)
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Aceite até ${Formatos.dataComHora(oferta.expiraEm)}. Depois a caixa vai para a próxima pessoa.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    BotaoPrincipal("Aceitar e reservar", { responder(oferta, true) }, ocupado = respondendo == oferta.id)
+                    Spacer(Modifier.height(8.dp))
+                    BotaoSecundario("Recusar", { responder(oferta, false) }, habilitado = respondendo != oferta.id)
+                }
+            }
         }
         items(necessidades, key = { it.id }) { pedido ->
             Cartao {
@@ -216,33 +287,31 @@ private fun ListaDePedidos(
                 )
                 Spacer(Modifier.height(12.dp))
 
-                if (pedido.temReceitaValida) {
-                    Text(
-                        "Receita válida até ${Formatos.data(pedido.validadeDaReceita)}",
+                when {
+                    pedido.emRevisao -> {
+                        Text(
+                            "A farmácia não pôde entregar: ${pedido.motivoRevisao}. " +
+                                "Envie uma receita atualizada para voltar à fila.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        BotaoSecundario("Enviar nova receita", { aoEnviarReceita(pedido.id) })
+                    }
+                    pedido.temReceitaValida -> Text(
+                        "Receita válida até ${Formatos.data(pedido.validadeDaReceita)}. " +
+                            if (pedido.prioridade) "Você está na frente da fila." else "Você está na fila; avisamos quando chegar.",
                         style = MaterialTheme.typography.bodyMedium,
                     )
-                    Spacer(Modifier.height(12.dp))
-                    BotaoPrincipal(
-                        texto = "Procurar disponível agora",
-                        ocupado = reservando == pedido.id,
-                        aoClicar = {
-                            erroDaReserva = null
-                            reservando = pedido.id
-                            escopo.launch {
-                                repositorio.reservar(pedido.id)
-                                    .onSuccess { reservando = null; aoMudarAlgo() }
-                                    .onFailure { reservando = null; erroDaReserva = it }
-                            }
-                        },
-                    )
-                } else {
-                    Text(
-                        "Falta enviar a receita médica. Sem ela não é possível reservar.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    BotaoSecundario("Enviar receita", { aoEnviarReceita(pedido.id) })
+                    else -> {
+                        Text(
+                            "Falta enviar a receita médica (ou ela venceu). Sem ela não dá para receber ofertas.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        BotaoSecundario("Enviar receita", { aoEnviarReceita(pedido.id) })
+                    }
                 }
             }
         }
@@ -250,7 +319,9 @@ private fun ListaDePedidos(
 }
 
 @Composable
-private fun ListaDeReservas(reservas: List<Reserva>) {
+private fun ListaDeReservas(reservas: List<Reserva>, repositorio: Repositorio, aoMudarAlgo: () -> Unit) {
+    val escopo = rememberCoroutineScope()
+    var erro by remember { mutableStateOf<Throwable?>(null) }
     if (reservas.isEmpty()) {
         EstadoVazio(
             "Nenhuma reserva",
@@ -262,6 +333,9 @@ private fun ListaDeReservas(reservas: List<Reserva>) {
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        if (erro != null) {
+            item { AvisoDeErro(erro) }
+        }
         items(reservas, key = { it.codigoRetirada }) { reserva ->
             Cartao {
                 Row(
@@ -309,10 +383,19 @@ private fun ListaDeReservas(reservas: List<Reserva>) {
                         fontWeight = FontWeight.SemiBold,
                     )
                     Text(
-                        "Leve um documento com foto e a receita.",
+                        "Leve um documento com foto e a receita. Se outra pessoa for buscar, " +
+                            "ela precisa estar cadastrada como procuradora na aba Conta.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    Spacer(Modifier.height(8.dp))
+                    BotaoSecundario("Cancelar reserva", {
+                        escopo.launch {
+                            repositorio.cancelarReserva(reserva.codigoRetirada)
+                                .onSuccess { aoMudarAlgo() }
+                                .onFailure { erro = it }
+                        }
+                    })
                 }
 
                 if (reserva.pontoDeColeta != null) {
@@ -333,8 +416,18 @@ private fun ListaDeReservas(reservas: List<Reserva>) {
 }
 
 @Composable
-private fun AbaDaConta(sessao: Sessao, aoSair: () -> Unit, aoVerificarCadUnico: () -> Unit) {
-    Column(Modifier.fillMaxSize().padding(20.dp)) {
+private fun AbaDaConta(
+    sessao: Sessao,
+    repositorio: Repositorio,
+    aoSair: () -> Unit,
+    aoVerificarCadUnico: () -> Unit,
+) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .verticalScroll(androidx.compose.foundation.rememberScrollState())
+            .padding(20.dp),
+    ) {
         Cartao {
             Text(sessao.nome, style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.height(4.dp))
@@ -360,9 +453,76 @@ private fun AbaDaConta(sessao: Sessao, aoSair: () -> Unit, aoVerificarCadUnico: 
                 BotaoSecundario("Informar meu NIS", aoVerificarCadUnico)
             }
             Spacer(Modifier.height(16.dp))
+            CartaoDeProcuradores(repositorio)
+            Spacer(Modifier.height(16.dp))
         }
 
-        Spacer(Modifier.weight(1f))
+        Spacer(Modifier.height(16.dp))
         BotaoSecundario("Sair da conta", aoSair)
+    }
+}
+
+/** UC07 A3 - quem pode retirar no lugar do beneficiário. */
+@Composable
+private fun CartaoDeProcuradores(repositorio: Repositorio) {
+    val escopo = rememberCoroutineScope()
+    var lista by remember { mutableStateOf<List<Procurador>>(emptyList()) }
+    var nome by remember { mutableStateOf("") }
+    var cpf by remember { mutableStateOf("") }
+    var erro by remember { mutableStateOf<Throwable?>(null) }
+    var enviando by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        repositorio.procuradores().onSuccess { lista = it }.onFailure { erro = it }
+    }
+
+    Cartao {
+        Text("Quem pode retirar por você", style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(6.dp))
+        Text(
+            "Se você não puder ir à farmácia, cadastre quem vai. A pessoa leva o próprio " +
+                "documento, a receita e o código de retirada.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        AvisoDeErro(erro, Modifier.padding(top = 8.dp))
+        lista.forEach { p ->
+            Row(
+                Modifier.fillMaxWidth().padding(top = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("${p.nome} · CPF final ${p.cpf.takeLast(4)}", style = MaterialTheme.typography.bodyMedium)
+                TextButton(onClick = {
+                    escopo.launch {
+                        repositorio.removerProcurador(p.id)
+                            .onSuccess { lista = lista - p }
+                            .onFailure { erro = it }
+                    }
+                }) { Text("Remover") }
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        CampoDeTexto(nome, { nome = it.take(120) }, "Nome completo")
+        Spacer(Modifier.height(8.dp))
+        CampoDeTexto(
+            cpf, { cpf = it.filter(Char::isDigit).take(11) }, "CPF",
+            tipoDeTeclado = androidx.compose.ui.text.input.KeyboardType.Number,
+        )
+        Spacer(Modifier.height(10.dp))
+        BotaoSecundario(
+            "Adicionar pessoa",
+            {
+                erro = null
+                enviando = true
+                escopo.launch {
+                    repositorio.cadastrarProcurador(nome, cpf)
+                        .onSuccess { lista = (lista + it).sortedBy(Procurador::nome); nome = ""; cpf = "" }
+                        .onFailure { erro = it }
+                    enviando = false
+                }
+            },
+            habilitado = !enviando && nome.trim().length >= 3 && cpf.length == 11,
+        )
     }
 }

@@ -7,6 +7,7 @@ import kotlinx.serialization.json.Json
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Retrofit
 import kotlin.test.*
 
@@ -147,8 +148,9 @@ class ContratoDaApiTest {
         val servico = exigirServidor()
         token = servico.entrar(PedidoDeLogin("bruno@medshare.test", "medshare123")).tokenDeAcesso
 
-        val necessidade = servico.criarNecessidade(PedidoDeNecessidade(1))
-        val erro = assertFails { servico.reservar(PedidoDeReserva(necessidade.id)) }
+        // RN08 vale já no pedido (UC04), não só na reserva. Rode contra um banco
+        // de demonstração novo: nele o Bruno ainda não tem o NIS confirmado.
+        val erro = assertFails { servico.criarNecessidade(PedidoDeNecessidade(1)) }
 
         // O app precisa conseguir extrair a regra e a mensagem — é o que a tela mostra.
         val traduzido = Rede.traduzir(erro)
@@ -168,9 +170,17 @@ class ContratoDaApiTest {
         val medicamento = servico.buscarMedicamentos("a").content.first()
         val venceEmDezDias = java.time.LocalDate.now().plusDays(10).toString()
 
+        // A foto precisa ter sido enviada pela propria API (fotos de fora sao recusadas).
+        val bytes = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0xD9.toByte())
+        val parte = okhttp3.MultipartBody.Part.createFormData(
+            "arquivo", "caixa.jpg",
+            bytes.toRequestBody("image/jpeg".toMediaType()),
+        )
+        val foto = servico.enviarFoto(parte)
+
         val erro = assertFails {
             servico.cadastrarDoacao(
-                PedidoDeDoacao(medicamento.id, "LOTE-TESTE", venceEmDezDias, "http://x/f.jpg"),
+                PedidoDeDoacao(medicamento.id, "LOTE-TESTE", venceEmDezDias, foto.url, lacreDeclarado = true),
             )
         }
 

@@ -11,6 +11,7 @@ object Destinos {
     const val CADUNICO = "cadunico"
     const val NOVO_PEDIDO = "novo-pedido"
     const val RECEITA = "receita/{id}"
+    const val NOTIFICACOES = "notificacoes"
 
     fun detalheDaDoacao(codigo: String) = "doacao/$codigo"
     fun agendamento(codigo: String) = "agendamento/$codigo"

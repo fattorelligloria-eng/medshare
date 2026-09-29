@@ -83,15 +83,83 @@ data class Evento(
     val statusNovo: String? = null,
 )
 
+/** O agendamento atual traz o código que o doador mostra no balcão (UC03). */
 @Serializable
-data class DoacaoDetalhada(val doacao: Doacao, val historico: List<Evento>)
+data class AgendamentoAtual(
+    val pontoDeColeta: String,
+    val endereco: String,
+    val dataHora: String,
+    val codigoEntrega: String,
+)
 
+@Serializable
+data class DoacaoDetalhada(
+    val doacao: Doacao,
+    val historico: List<Evento>,
+    val agendamento: AgendamentoAtual? = null,
+    /** UC02 A2 - cancelada e o reagendamento único ainda não foi usado. */
+    val podeReagendar: Boolean = false,
+)
+
+/** UC01 - [quantidade] caixas iguais; [lacreDeclarado] é a declaração da RN01. */
 @Serializable
 data class PedidoDeDoacao(
     val medicamentoId: Long,
     val lote: String,
     val validade: String,
     val fotoUrl: String,
+    val quantidade: Int = 1,
+    val lacreDeclarado: Boolean,
+)
+
+/** UC10 A2 - a foto nova que a central pediu. */
+@Serializable
+data class PedidoDeNovaFoto(val fotoUrl: String)
+
+/** UC05/UC06 - caixa oferecida, com prazo para aceitar. */
+@Serializable
+data class Oferta(
+    val id: Long,
+    val status: String,
+    val medicamento: String,
+    val apresentacao: String,
+    val validade: String,
+    val pontoDeColeta: String,
+    val enderecoDoPonto: String,
+    val horarioDoPonto: String,
+    val expiraEm: String,
+)
+
+@Serializable
+data class Notificacao(
+    val id: Long,
+    val titulo: String,
+    val corpo: String,
+    val tipo: String,
+    val lida: Boolean,
+    val quando: String,
+)
+
+@Serializable
+data class Contagem(val quantidade: Long = 0)
+
+/** UC07 A3 - quem pode retirar no lugar do beneficiário. */
+@Serializable
+data class Procurador(val id: Long, val nome: String, val cpf: String)
+
+@Serializable
+data class PedidoDeProcurador(val nome: String, val cpf: String)
+
+/** RN09 - endereço pelo CEP; [atendido] diz se fica na Grande São Paulo. */
+@Serializable
+data class EnderecoDoCep(
+    val cep: String,
+    val logradouro: String = "",
+    val bairro: String = "",
+    val municipio: String = "",
+    val uf: String = "",
+    val municipioId: Short? = null,
+    val atendido: Boolean = false,
 )
 
 @Serializable
@@ -117,6 +185,11 @@ data class Necessidade(
     val ativa: Boolean,
     val temReceitaValida: Boolean,
     val validadeDaReceita: String? = null,
+    /** UC07 A1 - a receita não bateu no balcão; precisa enviar outra. */
+    val emRevisao: Boolean = false,
+    val motivoRevisao: String? = null,
+    /** UC07 A2 - perdeu uma caixa por validade e está na frente da fila. */
+    val prioridade: Boolean = false,
     val criadaEm: String,
 )
 
@@ -144,9 +217,6 @@ data class RespostaDoCadUnico(
     val precisaDeAnaliseHumana: Boolean = false,
     val observacao: String? = null,
 )
-
-@Serializable
-data class PedidoDeReserva(val necessidadeId: Long)
 
 @Serializable
 data class Reserva(
