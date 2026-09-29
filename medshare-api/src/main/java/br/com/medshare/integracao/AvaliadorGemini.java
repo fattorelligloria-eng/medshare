@@ -111,19 +111,23 @@ public class AvaliadorGemini implements AvaliadorDeEmbalagem {
     private final RepositorioDeFotos fotos;
     private final ObjectMapper json;
     private final String modelo;
+    private final String modeloReserva;
 
     public AvaliadorGemini(@Value("${medshare.gemini.chave}") String chave,
                            @Value("${medshare.gemini.modelo:gemini-3.8-flash}") String modelo,
+                           @Value("${medshare.gemini.modelo-reserva:gemini-3.5-flash-lite}") String modeloReserva,
                            RepositorioDeFotos fotos, ObjectMapper json) {
         this.modelo = modelo;
+        this.modeloReserva = modeloReserva == null || modeloReserva.isBlank() ? null : modeloReserva;
         this.fotos = fotos;
         this.json = json;
 
         // Sem limite de tempo, um Gemini lento prenderia a tela de doacao do
-        // app (a leitura acontece dentro do cadastro).
+        // app (a leitura acontece dentro do cadastro). Com o modelo reserva,
+        // o pior caso sao duas esperas destas.
         var cliente = new JdkClientHttpRequestFactory(
                 HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build());
-        cliente.setReadTimeout(Duration.ofSeconds(45));
+        cliente.setReadTimeout(Duration.ofSeconds(25));
 
         // A chave vai no cabecalho, e nao na URL: URL aparece em log e em
         // mensagem de erro, cabecalho nao.
@@ -132,26 +136,52 @@ public class AvaliadorGemini implements AvaliadorDeEmbalagem {
                 .requestFactory(cliente)
                 .defaultHeader("x-goog-api-key", chave)
                 .build();
-        log.info("Avaliador Gemini ativo, modelo {}", modelo);
+        log.info("Avaliador Gemini ativo, modelo {} (reserva: {})", modelo,
+                this.modeloReserva == null ? "nenhum" : this.modeloReserva);
     }
 
+    /**
+     * Tenta o modelo principal e, se o Google estiver sobrecarregado (503),
+     * com a cota gratuita esgotada (429) ou lento demais, repete no modelo
+     * reserva. No plano gratuito o 503 e frequente nos modelos mais novos;
+     * sem a reserva, quase toda doacao cairia na central por falta de leitura.
+     */
     @Override
     public LeituraDaEmbalagem avaliar(String fotoUrl) {
+        byte[] imagem;
         try {
-            byte[] imagem = lerDoDisco(fotoUrl);
-            JsonNode resposta = chamarGemini(imagem, fotos.tipoDa(fotoUrl));
-            return interpretar(resposta, json);
-        } catch (HttpStatusCodeException e) {
-            if (e.getStatusCode().isSameCodeAs(HttpStatus.TOO_MANY_REQUESTS)) {
-                log.warn("Limite do plano gratuito do Gemini atingido; a doacao vai para a central");
-            } else {
-                log.warn("Gemini respondeu {} ao avaliar {}", e.getStatusCode(), fotoUrl);
-            }
-            return LeituraDaEmbalagem.indisponivel("Não foi possível analisar a foto automaticamente");
+            imagem = lerDoDisco(fotoUrl);
         } catch (Exception e) {
-            log.warn("Falha ao avaliar a foto {}: {}", fotoUrl, e.getMessage());
+            log.warn("Falha ao ler a foto {}: {}", fotoUrl, e.getMessage());
             return LeituraDaEmbalagem.indisponivel("Não foi possível analisar a foto automaticamente");
         }
+
+        List<String> tentativas = modeloReserva == null ? List.of(modelo) : List.of(modelo, modeloReserva);
+        for (String modeloDaVez : tentativas) {
+            try {
+                JsonNode resposta = chamarGemini(modeloDaVez, imagem, fotos.tipoDa(fotoUrl));
+                return interpretar(resposta, json).feitaPor(modeloDaVez);
+            } catch (HttpStatusCodeException e) {
+                if (!valeTentarDeNovo(e)) {
+                    log.warn("Gemini ({}) respondeu {} ao avaliar {}", modeloDaVez, e.getStatusCode(), fotoUrl);
+                    break;
+                }
+                log.warn("Gemini ({}) indisponível agora ({}){}", modeloDaVez, e.getStatusCode(),
+                        modeloDaVez.equals(modelo) && modeloReserva != null ? "; tentando " + modeloReserva : "");
+            } catch (org.springframework.web.client.ResourceAccessException e) {
+                log.warn("Gemini ({}) não respondeu a tempo: {}", modeloDaVez, e.getMessage());
+            } catch (Exception e) {
+                log.warn("Falha ao interpretar a leitura do Gemini ({}): {}", modeloDaVez, e.getMessage());
+                break;
+            }
+        }
+        return LeituraDaEmbalagem.indisponivel("Não foi possível analisar a foto automaticamente");
+    }
+
+    /** 503 (sobrecarga), 429 (cota gratuita) e 500/504 sao passageiros; 400/403 nao. */
+    private static boolean valeTentarDeNovo(HttpStatusCodeException e) {
+        return e.getStatusCode().isSameCodeAs(HttpStatus.TOO_MANY_REQUESTS)
+                || e.getStatusCode().is5xxServerError();
     }
 
     @Override
@@ -174,7 +204,7 @@ public class AvaliadorGemini implements AvaliadorDeEmbalagem {
         return conteudo;
     }
 
-    private JsonNode chamarGemini(byte[] imagem, String tipo) {
+    private JsonNode chamarGemini(String modeloDaVez, byte[] imagem, String tipo) {
         Map<String, Object> corpo = Map.of(
                 "system_instruction", Map.of("parts", List.of(Map.of("text", INSTRUCOES))),
                 "contents", List.of(Map.of("parts", List.of(
@@ -187,7 +217,7 @@ public class AvaliadorGemini implements AvaliadorDeEmbalagem {
                         "responseSchema", ESQUEMA_DA_RESPOSTA));
 
         return gemini.post()
-                .uri("/models/{modelo}:generateContent", modelo)
+                .uri("/models/{modelo}:generateContent", modeloDaVez)
                 .body(corpo)
                 .retrieve()
                 .body(JsonNode.class);

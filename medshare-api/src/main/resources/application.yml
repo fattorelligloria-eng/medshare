@@ -52,8 +52,10 @@ medshare:
     chave: ${MEDSHARE_GEMINI_CHAVE:}
     # Lista de modelos: https://ai.google.dev/gemini-api/docs/models
     # 3.8 Flash tem plano gratuito e le bem texto pequeno (lote e validade).
-    # Se a cota gratuita apertar, gemini-3.5-flash-lite tambem serve.
     modelo: ${MEDSHARE_GEMINI_MODELO:gemini-3.8-flash}
+    # Usado quando o principal esta sobrecarregado (503) ou sem cota (429) —
+    # frequente no plano gratuito. Em branco desliga a reserva.
+    modelo-reserva: ${MEDSHARE_GEMINI_MODELO_RESERVA:gemini-3.5-flash-lite}
   portal-transparencia:
     chave: ${MEDSHARE_PORTAL_CHAVE:}
   cmed:
@@ -68,7 +70,9 @@ medshare:
     # celular consegue alcancar — nao "localhost", que no aparelho aponta para
     # o proprio aparelho.
     diretorio: ${MEDSHARE_FOTOS_DIRETORIO:./dados/fotos}
-    endereco-publico: ${MEDSHARE_FOTOS_ENDERECO:http://localhost:8080/fotos-locais}
+    # Acompanha a porta da API: fixo em 8080, as fotos apontavam para o lugar
+    # errado quando a API subia na 8081.
+    endereco-publico: ${MEDSHARE_FOTOS_ENDERECO:http://localhost:${server.port}/fotos-locais}
 
 management:
   endpoints:
