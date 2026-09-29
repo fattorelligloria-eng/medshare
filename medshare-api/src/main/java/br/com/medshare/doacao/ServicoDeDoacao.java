@@ -105,7 +105,8 @@ public class ServicoDeDoacao {
 
         AnalisePreValidacao analise = new AnalisePreValidacao(doacao, leitura.ean(),
                 leitura.lote(), leitura.validade(), leitura.classe(), leitura.certeza(),
-                leitura.motivo(), avaliador.nome());
+                leitura.motivo(),
+                leitura.avaliador() != null ? leitura.avaliador() : avaliador.nome());
         analises.save(analise);
 
         if (regraDaPreValidacao.decidirSobre(analise) == DecisaoDaPreValidacao.SEGUIR) {
