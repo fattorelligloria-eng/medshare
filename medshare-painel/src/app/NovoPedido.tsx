@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { api } from '../api/cliente'
+import { Link, useNavigate } from 'react-router-dom'
+import { api, ErroDaApi } from '../api/cliente'
 import type { Medicamento, Necessidade } from '../api/tipos'
 import { AvisoDeErro } from '../componentes/Aviso'
 import { BuscaDeMedicamento } from '../componentes/BuscaDeMedicamento'
@@ -32,6 +32,12 @@ export function NovoPedido() {
       <CabecalhoInterno titulo="Do que você precisa?" para="/app/pedidos" />
       <div className="conteudo-app" style={{ paddingTop: 22, flex: 1 }}>
         <AvisoDeErro erro={erro} />
+        {erro instanceof ErroDaApi && erro.regra === 'RN08' && (
+          // RN08 — sem CadÚnico confirmado não há pedido; o caminho é informar o NIS.
+          <Link to="/app/cadunico" className="botao secundario" style={{ marginBottom: 18 }}>
+            Informar meu NIS
+          </Link>
+        )}
         {enviando
           ? <p style={{ color: 'var(--tinta-fraca)', fontSize: 14 }}>Registrando…</p>
           : <BuscaDeMedicamento aoEscolher={pedir} />}

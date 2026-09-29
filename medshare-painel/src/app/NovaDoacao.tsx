@@ -20,6 +20,8 @@ export function NovaDoacao() {
   const [medicamento, definirMedicamento] = useState<Medicamento | null>(null)
   const [lote, definirLote] = useState('')
   const [validade, definirValidade] = useState('')
+  const [quantidade, definirQuantidade] = useState(1)
+  const [lacreDeclarado, definirLacreDeclarado] = useState(false)
   const [arquivo, definirArquivo] = useState<File | null>(null)
   const [previa, definirPrevia] = useState<string | null>(null)
   const [erro, definirErro] = useState<unknown>(null)
@@ -41,7 +43,8 @@ export function NovaDoacao() {
     lote.trim() !== '' &&
     validade !== '' &&
     !validadeCurta &&
-    arquivo !== null
+    arquivo !== null &&
+    lacreDeclarado
 
   async function enviar() {
     if (!medicamento || !arquivo) return
@@ -50,13 +53,16 @@ export function NovaDoacao() {
     try {
       // A foto vai primeiro: sem a URL dela, a doação não pode nem ser criada.
       const foto = await api.enviarArquivo<FotoEnviada>('/fotos', arquivo)
-      const doacao = await api.post<Doacao>('/doacoes', {
+      // Cada caixa vira uma doação com código próprio (RN06).
+      const doacoes = await api.post<Doacao[]>('/doacoes', {
         medicamentoId: medicamento.id,
         lote: lote.trim().toUpperCase(),
         validade,
         fotoUrl: foto.url,
+        quantidade,
+        lacreDeclarado,
       })
-      navegar(`/app/doacoes/${doacao.codigo}`, { replace: true })
+      navegar(doacoes.length === 1 ? `/app/doacoes/${doacoes[0].codigo}` : '/app/doacoes', { replace: true })
     } catch (e) {
       definirErro(e)
       definirEnviando(false)
@@ -134,6 +140,27 @@ export function NovaDoacao() {
           <label className="campo">
             <span>Validade</span>
             <input type="date" value={validade} onChange={(e) => definirValidade(e.target.value)} />
+          </label>
+
+          <label className="campo">
+            <span>Quantas caixas iguais (mesmo lote)?</span>
+            <input
+              type="number"
+              min={1}
+              max={10}
+              value={quantidade}
+              onChange={(e) => definirQuantidade(Math.min(10, Math.max(1, Number(e.target.value) || 1)))}
+            />
+            <span className="apoio">Cada caixa ganha um código e segue seu próprio caminho.</span>
+          </label>
+
+          <label className="marcar">
+            <input
+              type="checkbox"
+              checked={lacreDeclarado}
+              onChange={(e) => definirLacreDeclarado(e.target.checked)}
+            />
+            <span>Declaro que a embalagem está lacrada de fábrica e nunca foi aberta.</span>
           </label>
         </div>
 

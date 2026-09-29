@@ -450,3 +450,39 @@ input::placeholder, textarea::placeholder { color: #A4B1AA; }
   .lateral nav { flex-direction: row; flex-wrap: wrap; }
   .area { padding: 22px 18px; }
 }
+
+/* --- notificacoes: contador sobre o sino --- */
+.icone-botao { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+.contador {
+  position: absolute; top: 2px; right: 2px;
+  min-width: 16px; height: 16px; padding: 0 4px;
+  border-radius: 999px; background: var(--terracota); color: var(--branco);
+  font-size: 10.5px; font-weight: 700; line-height: 16px; text-align: center;
+}
+.notificacao { padding: 14px 0; border-bottom: 1px solid var(--linha); }
+.notificacao.nova .titulo::before {
+  content: ''; display: inline-block; width: 7px; height: 7px; margin-right: 7px;
+  border-radius: 999px; background: var(--verde); vertical-align: middle;
+}
+.notificacao .titulo { margin: 0; font-size: 14.5px; font-weight: 600; }
+.notificacao .corpo { margin: 4px 0 0; font-size: 13.5px; line-height: 1.45; color: var(--tinta-media); }
+.notificacao .quando { margin: 6px 0 0; font-size: 12px; color: var(--tinta-fraca); }
+
+/* --- agendamento: horarios com vaga --- */
+.horarios { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 8px; margin-top: 8px; }
+.horarios button {
+  padding: 9px 0; font-size: 14px; font-weight: 600; border-radius: 10px;
+  background: var(--fundo); color: var(--tinta); border: 1px solid var(--linha);
+}
+.horarios button.marcado { background: var(--verde); color: var(--branco); border-color: var(--verde); }
+.dias { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.dias button {
+  flex-shrink: 0; padding: 8px 12px; font-size: 13px; border-radius: 10px;
+  background: var(--fundo); color: var(--tinta-media); border: 1px solid var(--linha);
+}
+.dias button.marcado { border-color: var(--verde); color: var(--verde-escuro); background: var(--verde-tenue); font-weight: 600; }
+
+/* --- fotos no painel --- */
+.foto-caso { display: block; width: 100%; max-height: 320px; object-fit: contain; border-radius: var(--raio); background: var(--fundo-app); margin-bottom: 18px; }
+.linha-form { display: flex; gap: 10px; flex-wrap: wrap; }
+.linha-form > * { flex: 1; min-width: 140px; }

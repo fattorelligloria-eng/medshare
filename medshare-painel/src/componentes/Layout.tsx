@@ -32,10 +32,18 @@ export function Layout() {
             </>
           )}
           {temPapel('ADMIN') && (
-            <NavLink to="/painel/central" className={({ isActive }) => (isActive ? 'ativo' : '')}>
-              Central de análise
-            </NavLink>
+            <>
+              <NavLink to="/painel/central" className={({ isActive }) => (isActive ? 'ativo' : '')}>
+                Central de análise
+              </NavLink>
+              <NavLink to="/painel/farmacias" className={({ isActive }) => (isActive ? 'ativo' : '')}>
+                Farmácias
+              </NavLink>
+            </>
           )}
+          <NavLink to="/painel/notificacoes" className={({ isActive }) => (isActive ? 'ativo' : '')}>
+            Notificações
+          </NavLink>
           {(temPapel('FARMACEUTICO') || temPapel('ADMIN')) && (
             <NavLink to="/painel/rastreio" className={({ isActive }) => (isActive ? 'ativo' : '')}>
               Rastreio

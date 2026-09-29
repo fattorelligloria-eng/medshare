@@ -6,7 +6,8 @@ import { useAutenticacao } from '../contexto/Autenticacao'
 import { AvisoDeErro } from '../componentes/Aviso'
 import { Status, explicar } from '../componentes/Status'
 import { Marca } from '../componentes/Logo'
-import { Confere, Lugar, Mais, Sino } from '../componentes/Icones'
+import { BotaoDeNotificacoes } from '../componentes/BotaoDeNotificacoes'
+import { Confere, Lugar, Mais } from '../componentes/Icones'
 import { data, primeiroNome } from '../formatos'
 
 /**
@@ -40,9 +41,7 @@ export function Doacoes() {
       <div className="topo-app">
         <div className="cabecalho-app">
           <Marca />
-          <button type="button" className="icone-botao" aria-label="Notificações">
-            <Sino cor="var(--tinta-media)" />
-          </button>
+          <BotaoDeNotificacoes />
         </div>
       </div>
 

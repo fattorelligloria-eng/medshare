@@ -155,6 +155,7 @@ async function enviarArquivo<T>(caminho: string, arquivo: File): Promise<T> {
 export const api = {
   get: <T>(caminho: string) => chamar<T>('GET', caminho),
   post: <T>(caminho: string, corpo?: unknown) => chamar<T>('POST', caminho, corpo),
+  put: <T>(caminho: string, corpo?: unknown) => chamar<T>('PUT', caminho, corpo),
   delete: <T>(caminho: string) => chamar<T>('DELETE', caminho),
   enviarArquivo,
 }

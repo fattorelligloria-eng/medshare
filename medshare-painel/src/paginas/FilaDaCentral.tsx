@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { api } from '../api/cliente'
 import type { CasoDaCentral, Pagina } from '../api/tipos'
 import { AvisoDeErro, AvisoDeSucesso } from '../componentes/Aviso'
-import { data } from '../formatos'
+import { data, dataComHora } from '../formatos'
 
 /**
  * RN10 — a mesa da central.
@@ -37,7 +37,7 @@ export function FilaDaCentral() {
 
   useEffect(() => { void carregar() }, [carregar])
 
-  async function decidir(codigo: string, decisao: 'APROVADA' | 'RECUSADA') {
+  async function decidir(codigo: string, decisao: 'APROVADA' | 'RECUSADA' | 'NOVA_FOTO') {
     definirErro(null)
     definirRecado(null)
     try {
@@ -45,9 +45,8 @@ export function FilaDaCentral() {
         decisao,
         justificativa: justificativas[codigo] ?? '',
       })
-      definirRecado(
-        `${codigo} ${decisao === 'APROVADA' ? 'aprovada' : 'recusada'}. O doador foi avisado.`,
-      )
+      const resultado = { APROVADA: 'aprovada', RECUSADA: 'recusada', NOVA_FOTO: 'devolvida pedindo nova foto' }[decisao]
+      definirRecado(`${codigo} ${resultado}. O doador foi avisado.`)
       await carregar()
     } catch (e) {
       definirErro(e)
@@ -117,6 +116,17 @@ export function FilaDaCentral() {
             )}
           </div>
 
+          <p style={{ margin: '0 0 14px', fontSize: 13, color: 'var(--tinta-fraca)' }}>
+            Esperando desde {dataComHora(caso.esperandoDesde)}
+            {caso.lacreDeclarado ? ' · doador declarou a embalagem lacrada' : ''}
+          </p>
+
+          {caso.fotoUrl && (
+            <a href={caso.fotoUrl} target="_blank" rel="noreferrer">
+              <img className="foto-caso" src={caso.fotoUrl} alt={`Foto enviada pelo doador de ${caso.medicamento}`} />
+            </a>
+          )}
+
           {caso.motivo && (
             <p style={{ margin: '0 0 18px', fontSize: 14, color: 'var(--tinta-media)', lineHeight: 1.5 }}>
               <strong>Leitura ({caso.avaliador}):</strong> {caso.motivo}
@@ -154,7 +164,7 @@ export function FilaDaCentral() {
                 value={justificativas[caso.codigo] ?? ''}
                 onChange={(e) =>
                   definirJustificativas({ ...justificativas, [caso.codigo]: e.target.value })}
-                placeholder="Ex.: foto nítida, lacre de fábrica intacto; o lote confere com a caixa."
+                placeholder="Ex.: foto nítida, lacre intacto — ou: foto escura, não dá para ler o lote."
               />
             </label>
           </div>
@@ -166,6 +176,14 @@ export function FilaDaCentral() {
               onClick={() => decidir(caso.codigo, 'APROVADA')}
             >
               Aprovar
+            </button>
+            <button
+              className="secundario"
+              disabled={!(justificativas[caso.codigo] ?? '').trim()}
+              onClick={() => decidir(caso.codigo, 'NOVA_FOTO')}
+              title="Não dá para decidir pela foto: o doador envia outra"
+            >
+              Pedir nova foto
             </button>
             <button
               className="perigo"
