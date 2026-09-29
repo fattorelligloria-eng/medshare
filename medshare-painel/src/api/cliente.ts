@@ -32,36 +32,94 @@ export function lerSessao(): Sessao | null {
   }
 }
 
+/** Avisado quando a sessão acaba de vez, para a tela voltar ao login. */
+export const EVENTO_SESSAO_ENCERRADA = 'medshare:sessao-encerrada'
+
 export function guardarSessao(sessao: Sessao | null) {
   if (sessao) localStorage.setItem(CHAVE_DA_SESSAO, JSON.stringify(sessao))
   else localStorage.removeItem(CHAVE_DA_SESSAO)
 }
 
-async function chamar<T>(metodo: string, caminho: string, corpo?: unknown): Promise<T> {
-  const sessao = lerSessao()
-  const resposta = await fetch(`/api${caminho}`, {
-    method: metodo,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(sessao ? { Authorization: `Bearer ${sessao.tokenDeAcesso}` } : {}),
-    },
-    body: corpo === undefined ? undefined : JSON.stringify(corpo),
+function encerrarSessao() {
+  guardarSessao(null)
+  window.dispatchEvent(new Event(EVENTO_SESSAO_ENCERRADA))
+}
+
+/** Resposta de erro que não é JSON (ex.: página HTML de um proxy) não quebra a tela. */
+function lerCorpo(texto: string): any {
+  if (!texto) return null
+  try {
+    return JSON.parse(texto)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * O token de acesso dura 2 horas. Quando ele vence, trocamos pelo de renovação
+ * (14 dias) sem a pessoa perceber. Chamadas simultâneas esperam a mesma troca.
+ */
+let renovacaoEmAndamento: Promise<boolean> | null = null
+
+function renovarSessao(): Promise<boolean> {
+  renovacaoEmAndamento ??= (async () => {
+    const sessao = lerSessao()
+    if (!sessao?.tokenDeRenovacao) return false
+    try {
+      const resposta = await fetch('/api/autenticacao/renovacao', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tokenDeRenovacao: sessao.tokenDeRenovacao }),
+      })
+      if (!resposta.ok) return false
+      guardarSessao((await resposta.json()) as Sessao)
+      return true
+    } catch {
+      return false
+    }
+  })().finally(() => {
+    renovacaoEmAndamento = null
   })
+  return renovacaoEmAndamento
+}
+
+/** Faz a requisição com o token atual e, se ele venceu, renova e tenta mais uma vez. */
+async function comAutenticacao(montar: (cabecalhos: Record<string, string>) => RequestInit, caminho: string) {
+  const enviar = () => {
+    const sessao = lerSessao()
+    const cabecalhos: Record<string, string> = sessao ? { Authorization: `Bearer ${sessao.tokenDeAcesso}` } : {}
+    return fetch(`/api${caminho}`, montar(cabecalhos))
+  }
+
+  let resposta = await enviar()
+  if (resposta.status === 401 && lerSessao()) {
+    if (await renovarSessao()) {
+      resposta = await enviar()
+    }
+    if (resposta.status === 401) {
+      encerrarSessao()
+      throw new ErroDaApi(401, 'Sua sessão expirou. Entre de novo.')
+    }
+  }
+  return resposta
+}
+
+async function chamar<T>(metodo: string, caminho: string, corpo?: unknown): Promise<T> {
+  const resposta = await comAutenticacao((cabecalhos) => ({
+    method: metodo,
+    headers: { 'Content-Type': 'application/json', ...cabecalhos },
+    body: corpo === undefined ? undefined : JSON.stringify(corpo),
+  }), caminho)
 
   if (resposta.status === 204) return undefined as T
 
-  const texto = await resposta.text()
-  const dados = texto ? JSON.parse(texto) : null
+  const dados = lerCorpo(await resposta.text())
 
   if (!resposta.ok) {
-    if (resposta.status === 401) {
-      guardarSessao(null)
-      throw new ErroDaApi(401, 'Sua sessao expirou. Entre de novo.')
-    }
     const mensagem =
       dados?.mensagem ??
       dados?.campos?.map((c: { campo: string; problema: string }) => `${c.campo}: ${c.problema}`).join('; ') ??
-      'Nao foi possivel completar a operacao.'
+      'Não foi possível completar a operação.'
     throw new ErroDaApi(resposta.status, mensagem, dados?.regra, dados?.campos)
   }
 
@@ -76,18 +134,13 @@ async function chamar<T>(metodo: string, caminho: string, corpo?: unknown): Prom
  * na mão quebra o envio de um jeito difícil de descobrir.
  */
 async function enviarArquivo<T>(caminho: string, arquivo: File): Promise<T> {
-  const sessao = lerSessao()
-  const formulario = new FormData()
-  formulario.append('arquivo', arquivo)
+  const resposta = await comAutenticacao((cabecalhos) => {
+    const formulario = new FormData()
+    formulario.append('arquivo', arquivo)
+    return { method: 'POST', headers: cabecalhos, body: formulario }
+  }, caminho)
 
-  const resposta = await fetch(`/api${caminho}`, {
-    method: 'POST',
-    headers: sessao ? { Authorization: `Bearer ${sessao.tokenDeAcesso}` } : {},
-    body: formulario,
-  })
-
-  const texto = await resposta.text()
-  const dados = texto ? JSON.parse(texto) : null
+  const dados = lerCorpo(await resposta.text())
 
   if (!resposta.ok) {
     throw new ErroDaApi(

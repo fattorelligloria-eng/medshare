@@ -40,7 +40,14 @@ fun TelaDeCadUnico(
             repositorio.verificarCadUnico(nis)
                 .onSuccess {
                     enviando = false
-                    sucesso = "Verificação concluída. Vale até ${Formatos.data(it.validoAte)}."
+                    sucesso = if (it.confirmado) {
+                        "Tudo certo. Sua verificação vale até ${Formatos.data(it.validoAte)}."
+                    } else {
+                        // "Não encontrado" não é recusa: a equipe confere à mão.
+                        "Não encontramos esse NIS como beneficiário de programa social. " +
+                            "Isso não é um não: seu caso foi para a nossa equipe, que " +
+                            "confere à mão e responde em até 48 horas."
+                    }
                 }
                 .onFailure { enviando = false; erro = it }
         }

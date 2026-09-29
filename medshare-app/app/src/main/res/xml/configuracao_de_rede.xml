@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Versão publicada: só HTTPS. Receita e documento não trafegam em texto aberto.
+     A versão debug troca este arquivo por src/debug/res/xml/configuracao_de_rede.xml. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>

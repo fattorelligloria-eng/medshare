@@ -6,15 +6,19 @@ import br.com.medshare.integracao.AvaliadorDeEmbalagem;
 import br.com.medshare.integracao.LeituraDaEmbalagem;
 import br.com.medshare.medicamento.Medicamento;
 import br.com.medshare.medicamento.MedicamentoRepository;
+import br.com.medshare.necessidade.ServicoDeNecessidade;
 import br.com.medshare.notificacao.ServicoDeNotificacao;
 import br.com.medshare.notificacao.TipoNotificacao;
 import br.com.medshare.prevalidacao.*;
 import br.com.medshare.usuario.Papel;
 import br.com.medshare.usuario.Usuario;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 /**
  * O caminho da doacao, do cadastro ate ficar disponivel na prateleira.
@@ -41,6 +45,7 @@ public class ServicoDeDoacao {
     private final RegraDeDecisaoDaPreValidacao regraDaPreValidacao;
     private final GeradorDeCodigo codigos;
     private final ServicoDeNotificacao notificacoes;
+    private final ServicoDeNecessidade necessidades;
     private final PropriedadesDoMedShare propriedades;
 
     public ServicoDeDoacao(DoacaoRepository doacoes, MedicamentoRepository medicamentos,
@@ -50,7 +55,9 @@ public class ServicoDeDoacao {
                            AvaliadorDeEmbalagem avaliador,
                            RegraDeDecisaoDaPreValidacao regraDaPreValidacao,
                            GeradorDeCodigo codigos, ServicoDeNotificacao notificacoes,
+                           ServicoDeNecessidade necessidades,
                            PropriedadesDoMedShare propriedades) {
+        this.necessidades = necessidades;
         this.doacoes = doacoes;
         this.medicamentos = medicamentos;
         this.pontos = pontos;
@@ -198,6 +205,7 @@ public class ServicoDeDoacao {
         validacoes.save(Validacao.aprovar(doacao, farmaceutico));
         doacao.validar(usuarioFarmaceutico);
         doacao.disponibilizar(usuarioFarmaceutico);
+        necessidades.avisarFilaDeEspera(doacao.getMedicamento());
         return doacao;
     }
 
@@ -221,6 +229,32 @@ public class ServicoDeDoacao {
     public Doacao buscarPorCodigo(String codigo) {
         return doacoes.findByCodigo(codigo)
                 .orElseThrow(() -> new RecursoNaoEncontrado("Doacao", codigo));
+    }
+
+    /**
+     * RN05 e RN06 - o historico e do doador, da farmacia e da central.
+     * Para qualquer outra pessoa a doacao simplesmente "nao existe": dizer
+     * "sem permissao" ja confirmaria que aquele codigo e valido.
+     */
+    @Transactional(readOnly = true)
+    public Doacao detalharPara(String codigo, Usuario solicitante) {
+        Doacao doacao = buscarPorCodigo(codigo);
+        boolean ehDoador = doacao.getDoador().getId().equals(solicitante.getId());
+        boolean ehEquipe = solicitante.temPapel(Papel.ADMIN) || solicitante.temPapel(Papel.FARMACEUTICO);
+        if (!ehDoador && !ehEquipe) {
+            throw new RecursoNaoEncontrado("Doacao", codigo);
+        }
+        return doacao;
+    }
+
+    /** O que chega hoje no ponto de coleta onde o farmaceutico atua. */
+    @Transactional(readOnly = true)
+    public Page<Doacao> filaDoBalcao(Usuario usuarioFarmaceutico, Pageable pagina) {
+        Farmaceutico farmaceutico = buscarFarmaceutico(usuarioFarmaceutico);
+        return doacoes.findByPontoDeColetaIdAndStatusInOrderByAtualizadoEmDesc(
+                farmaceutico.getPontoDeColeta().getId(),
+                List.of(StatusDoacao.AGENDADA, StatusDoacao.RECEBIDA, StatusDoacao.VALIDADA),
+                pagina);
     }
 
     // --- guardas -------------------------------------------------------------

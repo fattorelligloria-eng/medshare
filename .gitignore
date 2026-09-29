@@ -27,7 +27,10 @@ local.properties
 # --- Fotos enviadas em desenvolvimento ------------------------------------
 # São receitas e caixas de remédio: dado de saúde de pessoa real, mesmo em
 # teste. Nunca versionar.
-dados/
+#
+# O caminho é ancorado de propósito: um "dados/" solto também escondia o
+# pacote br.com.medshare.app.dados do aplicativo, que nunca subia para o Git.
+/medshare-api/dados/
 
 # --- O APK ----------------------------------------------------------------
 # Ele sai pela aba Releases, não pelo repositório: binário de 12 MB dentro do

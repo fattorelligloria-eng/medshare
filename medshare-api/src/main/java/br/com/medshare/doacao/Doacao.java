@@ -9,6 +9,7 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -30,9 +31,14 @@ import java.util.List;
 @Table(name = "doacao")
 public class Doacao {
 
-    /** O historico e lido por gente, entao data vai no formato daqui. */
+    /**
+     * O historico e lido por gente, entao data vai no formato e no fuso daqui.
+     * O fuso e explicito porque o horario chega em UTC do app e o servidor pode
+     * rodar em UTC: sem ele, "14:00" virava "17:00" num registro imutavel.
+     */
     private static final DateTimeFormatter FORMATO_BRASILEIRO =
-            DateTimeFormatter.ofPattern("dd/MM/yyyy 'às' HH:mm");
+            DateTimeFormatter.ofPattern("dd/MM/yyyy 'às' HH:mm")
+                    .withZone(ZoneId.of("America/Sao_Paulo"));
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -188,14 +194,23 @@ public class Doacao {
                 "Disponível para beneficiários", responsavel);
     }
 
-    public void reservar(String codigoDeRetirada, Usuario responsavel) {
+    /**
+     * RN05 - o codigo de retirada NAO entra no historico: o doador le este
+     * historico, e com o codigo em maos poderia se passar pelo beneficiario.
+     */
+    public void reservar(Usuario responsavel) {
         mudarPara(StatusDoacao.RESERVADA, TipoEvento.RESERVA,
-                "Reservada sob o código " + codigoDeRetirada, responsavel);
+                "Reservada por um beneficiário", responsavel);
     }
 
     public void liberarReservaExpirada() {
         mudarPara(StatusDoacao.DISPONIVEL, TipoEvento.EXPIRACAO_DE_RESERVA,
                 "Reserva expirou sem retirada; voltou para o estoque", null);
+    }
+
+    public void liberarReservaCancelada(Usuario beneficiario) {
+        mudarPara(StatusDoacao.DISPONIVEL, TipoEvento.CANCELAMENTO_DE_RESERVA,
+                "Reserva cancelada pelo beneficiário; voltou para o estoque", beneficiario);
     }
 
     public void entregar(Usuario farmaceutico) {

@@ -65,6 +65,11 @@ public class FiltroDeAutenticacaoJwt extends OncePerRequestFilter {
         }
         try {
             UserDetails detalhes = usuarios.loadUserByUsername(email);
+            if (!detalhes.isEnabled()) {
+                // Conta desativada depois de o token ser emitido: o token
+                // continua assinado, mas deixa de valer na hora.
+                return;
+            }
             var autenticacao = new UsernamePasswordAuthenticationToken(
                     detalhes, null, detalhes.getAuthorities());
             autenticacao.setDetails(new WebAuthenticationDetailsSource().buildDetails(requisicao));

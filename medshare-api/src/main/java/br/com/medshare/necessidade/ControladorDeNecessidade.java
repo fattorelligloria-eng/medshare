@@ -1,5 +1,6 @@
 package br.com.medshare.necessidade;
 
+import br.com.medshare.integracao.RepositorioDeFotos;
 import br.com.medshare.necessidade.dto.*;
 import br.com.medshare.seguranca.UsuarioLogado;
 import jakarta.validation.Valid;
@@ -18,10 +19,13 @@ import java.util.Map;
 public class ControladorDeNecessidade {
 
     private final ServicoDeNecessidade servico;
+    private final RepositorioDeFotos fotos;
     private final UsuarioLogado usuarioLogado;
 
-    public ControladorDeNecessidade(ServicoDeNecessidade servico, UsuarioLogado usuarioLogado) {
+    public ControladorDeNecessidade(ServicoDeNecessidade servico, RepositorioDeFotos fotos,
+                                    UsuarioLogado usuarioLogado) {
         this.servico = servico;
+        this.fotos = fotos;
         this.usuarioLogado = usuarioLogado;
     }
 
@@ -61,6 +65,7 @@ public class ControladorDeNecessidade {
     @PostMapping("/{id}/receita")
     public NecessidadeResumida anexarReceita(@PathVariable Long id,
                                              @Valid @RequestBody PedidoDeReceita pedido) {
+        fotos.exigirFotoNossa(pedido.fotoUrl());
         Receita receita = servico.anexarReceita(id, pedido.fotoUrl(), pedido.dataEmissao(),
                 pedido.validade(), pedido.crmMedico(), pedido.ufCrm(),
                 usuarioLogado.obrigatorio());

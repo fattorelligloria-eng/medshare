@@ -27,8 +27,11 @@ import java.util.Set;
  * producao e problema, nao conveniencia.
  *
  * Os precos sao os tetos da propria tabela CMED/ANVISA, e nao numeros
- * inventados: o catalogo de verdade entra pelo ImportadorCmed, lendo o CSV
- * publicado pela ANVISA.
+ * inventados. A importacao automatica do CSV publicado pela ANVISA ainda nao
+ * existe; ate la, o catalogo e este.
+ *
+ * As fotos daqui nao existem em disco, entao a leitura automatica sempre as
+ * manda para a central — o que e exatamente o que a demonstracao precisa.
  */
 @Component
 @Profile("demo")

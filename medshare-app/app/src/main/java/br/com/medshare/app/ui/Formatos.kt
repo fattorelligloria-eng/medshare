@@ -1,13 +1,24 @@
 package br.com.medshare.app.ui
 
+import java.math.BigDecimal
+import java.math.RoundingMode
+import java.text.NumberFormat
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+
 /**
- * Formatação de data sem biblioteca extra.
+ * Formatação de exibição.
  *
- * A API manda data como "2026-09-28" e data com hora em ISO. Como o app só
- * exibe — nunca calcula com essas datas — recortar o texto resolve, e evita
- * arrastar uma dependência de datas para dentro do APK.
+ * A API manda data como "2026-09-28" e data com hora em ISO, com fuso. Data
+ * pura é só recortada; data com hora é convertida para o fuso do aparelho,
+ * porque o servidor pode devolver em UTC ("...T17:00:00Z" são 14h em Brasília).
  */
 object Formatos {
+
+    private val DIA_E_HORA = DateTimeFormatter.ofPattern("dd/MM/yyyy 'às' HH:mm")
+    private val REAIS = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
 
     /** "2026-09-28" vira "28/09/2026". Texto inesperado volta como veio. */
     fun data(iso: String?): String {
@@ -16,21 +27,20 @@ object Formatos {
         return if (partes.size == 3) "${partes[2]}/${partes[1]}/${partes[0]}" else iso
     }
 
-    /** "2026-09-28T14:30:00Z" vira "28/09/2026 às 14:30". */
+    /** "2026-09-28T17:30:00Z" vira "28/09/2026 às 14:30" num aparelho em Brasília. */
     fun dataComHora(iso: String?): String {
         if (iso == null) return "—"
-        val dia = data(iso)
-        val hora = iso.substringAfter('T', "").take(5)
-        return if (hora.length == 5) "$dia às $hora" else dia
+        return runCatching {
+            OffsetDateTime.parse(iso).atZoneSameInstant(ZoneId.systemDefault()).format(DIA_E_HORA)
+        }.getOrElse { data(iso) }
     }
 
-    fun reais(valor: Double): String {
-        val inteiro = valor.toLong()
-        val centavos = ((valor - inteiro) * 100).toLong().toString().padStart(2, '0')
-        val comPontos = inteiro.toString()
-            .reversed().chunked(3).joinToString(".").reversed()
-        return "R$ $comPontos,$centavos"
-    }
+    /**
+     * Pelo BigDecimal do texto, e não por conta com Double: 1234.29 * 100 dá
+     * 123428.99999 em ponto flutuante, e os centavos saíam errados.
+     */
+    fun reais(valor: Double): String =
+        REAIS.format(BigDecimal(valor.toString()).setScale(2, RoundingMode.HALF_UP))
 
     /** Como cada status aparece para o usuário. */
     fun status(chave: String): String = when (chave) {

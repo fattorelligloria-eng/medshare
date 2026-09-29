@@ -92,7 +92,9 @@ export function App() {
           </>
         )}
         {temPapel('ADMIN') && <Route path="/painel/central" element={<FilaDaCentral />} />}
-        <Route path="/painel/rastreio" element={<Rastreio />} />
+        {(temPapel('FARMACEUTICO') || temPapel('ADMIN')) && (
+          <Route path="/painel/rastreio" element={<Rastreio />} />
+        )}
         <Route path="/painel" element={<Navigate to={temPapel('FARMACEUTICO') ? '/painel/balcao' : '/painel/central'} replace />} />
       </Route>
 

@@ -32,7 +32,8 @@ public class ServicoDeReserva {
 
     private final ReservaRepository reservas;
     private final EntregaRepository entregas;
-    private final NecessidadeRepository necessidades;
+    private final NecessidadeRepository pedidos;
+    private final ServicoDeNecessidade necessidades;
     private final VerificacaoCadUnicoRepository verificacoes;
     private final FarmaceuticoRepository farmaceuticos;
     private final ServicoDeMatching matching;
@@ -41,13 +42,14 @@ public class ServicoDeReserva {
     private final PropriedadesDoMedShare propriedades;
 
     public ServicoDeReserva(ReservaRepository reservas, EntregaRepository entregas,
-                            NecessidadeRepository necessidades,
+                            NecessidadeRepository pedidos, ServicoDeNecessidade necessidades,
                             VerificacaoCadUnicoRepository verificacoes,
                             FarmaceuticoRepository farmaceuticos, ServicoDeMatching matching,
                             GeradorDeCodigo codigos, ServicoDeNotificacao notificacoes,
                             PropriedadesDoMedShare propriedades) {
         this.reservas = reservas;
         this.entregas = entregas;
+        this.pedidos = pedidos;
         this.necessidades = necessidades;
         this.verificacoes = verificacoes;
         this.farmaceuticos = farmaceuticos;
@@ -59,10 +61,11 @@ public class ServicoDeReserva {
 
     @Transactional
     public Reserva reservarPara(Long necessidadeId, Usuario beneficiario) {
-        Necessidade necessidade = necessidades.findById(necessidadeId)
+        Necessidade necessidade = pedidos.findById(necessidadeId)
                 .orElseThrow(() -> new RecursoNaoEncontrado("Necessidade", necessidadeId));
 
         exigirQueSejaODono(necessidade, beneficiario);
+        exigirNecessidadeAtiva(necessidade);          // RN04
         exigirCadUnicoVigente(beneficiario);          // RN08
         necessidade.exigirReceitaValida();            // RN03
         exigirQueNaoTenhaReservaAtiva(necessidade);   // RN04
@@ -74,7 +77,7 @@ public class ServicoDeReserva {
 
         Reserva reserva = new Reserva(codigos.paraRetirada(), doacao, necessidade,
                 propriedades.reserva().horasParaRetirada());
-        doacao.reservar(reserva.getCodigoRetirada(), beneficiario);
+        doacao.reservar(beneficiario);
         reservas.save(reserva);
 
         notificacoes.avisar(beneficiario, TipoNotificacao.RESERVA_CRIADA,
@@ -95,12 +98,8 @@ public class ServicoDeReserva {
     @Transactional
     public Entrega registrarRetirada(String codigoRetirada, boolean receitaConferida,
                                      boolean documentoConferido, Usuario usuarioFarmaceutico) {
-        Reserva reserva = reservas.findByCodigoRetirada(codigoRetirada)
-                .orElseThrow(() -> new RecursoNaoEncontrado("Código de retirada", codigoRetirada));
-
-        Farmaceutico farmaceutico = farmaceuticos.findById(usuarioFarmaceutico.getId())
-                .orElseThrow(() -> new RegraDeNegocioViolada("RN10",
-                        "Somente um farmacêutico cadastrado pode registrar a entrega"));
+        Reserva reserva = buscarNoBalcao(codigoRetirada, usuarioFarmaceutico);
+        Farmaceutico farmaceutico = buscarFarmaceutico(usuarioFarmaceutico);
 
         if (reserva.venceu()) {
             throw new RegraDeNegocioViolada("RESERVA",
@@ -126,7 +125,26 @@ public class ServicoDeReserva {
         exigirQueSejaODono(reserva.getNecessidade(), solicitante);
 
         reserva.cancelar();
-        reserva.getDoacao().liberarReservaExpirada();
+        reserva.getDoacao().liberarReservaCancelada(solicitante);
+        necessidades.avisarFilaDeEspera(reserva.getDoacao().getMedicamento());
+        return reserva;
+    }
+
+    /**
+     * RN03 - o que o farmaceutico precisa ver para conferir a retirada: quem e
+     * o titular (para comparar com o documento) e a receita anexada. So a
+     * farmacia onde a caixa esta enxerga isso.
+     */
+    @Transactional(readOnly = true)
+    public Reserva buscarNoBalcao(String codigoRetirada, Usuario usuarioFarmaceutico) {
+        Reserva reserva = reservas.findByCodigoRetirada(codigoRetirada)
+                .orElseThrow(() -> new RecursoNaoEncontrado("Código de retirada", codigoRetirada));
+        Farmaceutico farmaceutico = buscarFarmaceutico(usuarioFarmaceutico);
+        var ponto = reserva.getDoacao().getPontoDeColeta();
+        if (ponto == null || !farmaceutico.atuaEm(ponto)) {
+            throw new RegraDeNegocioViolada("RN10",
+                    "Esta reserva é para retirada em outro ponto de coleta");
+        }
         return reserva;
     }
 
@@ -148,6 +166,7 @@ public class ServicoDeReserva {
                     "Reserva expirada",
                     "O prazo para retirar %s terminou. Voce pode reservar novamente."
                             .formatted(reserva.getDoacao().getMedicamento().getNomeComercial()));
+            necessidades.avisarFilaDeEspera(reserva.getDoacao().getMedicamento());
         }
         if (!vencidas.isEmpty()) {
             log.info("{} reserva(s) expirada(s) devolvida(s) ao estoque", vencidas.size());
@@ -175,6 +194,24 @@ public class ServicoDeReserva {
     }
 
     // --- guardas -------------------------------------------------------------
+
+    private Farmaceutico buscarFarmaceutico(Usuario usuario) {
+        return farmaceuticos.findById(usuario.getId())
+                .orElseThrow(() -> new RegraDeNegocioViolada("RN10",
+                        "Somente um farmacêutico cadastrado pode registrar a entrega"));
+    }
+
+    /**
+     * RN04 - pedido encerrado (ja atendido ou cancelado) nao reserva de novo.
+     * Sem isto, o id de um pedido ja entregue, com a mesma receita, servia
+     * para tirar outra caixa do estoque.
+     */
+    private void exigirNecessidadeAtiva(Necessidade necessidade) {
+        if (!necessidade.isAtiva()) {
+            throw new RegraDeNegocioViolada("RN04",
+                    "Este pedido já foi encerrado. Faça um novo pedido se ainda precisar do medicamento.");
+        }
+    }
 
     private void exigirQueSejaODono(Necessidade necessidade, Usuario usuario) {
         if (!necessidade.getBeneficiario().getId().equals(usuario.getId())) {
