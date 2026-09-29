@@ -21,8 +21,17 @@ public class Medicamento {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "registro_anvisa", nullable = false, unique = true)
+    /** Um registro tem varias apresentacoes; nao e unico. */
+    @Column(name = "registro_anvisa", nullable = false)
     private String registroAnvisa;
+
+    /**
+     * Codigo da apresentacao na lista da CMED, unico. E por ele que a
+     * importacao sabe se atualiza uma linha existente ou cria uma nova.
+     * Nulo nos medicamentos cadastrados a mao (dados de demonstracao).
+     */
+    @Column(name = "codigo_ggrem", unique = true, length = 15)
+    private String codigoGgrem;
 
     @Column(name = "nome_comercial", nullable = false)
     private String nomeComercial;
@@ -95,6 +104,10 @@ public class Medicamento {
 
     public Long getId() {
         return id;
+    }
+
+    public String getCodigoGgrem() {
+        return codigoGgrem;
     }
 
     public String getRegistroAnvisa() {
