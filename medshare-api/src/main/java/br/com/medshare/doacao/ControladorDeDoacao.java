@@ -3,6 +3,7 @@ package br.com.medshare.doacao;
 import br.com.medshare.doacao.dto.*;
 import br.com.medshare.integracao.RepositorioDeFotos;
 import br.com.medshare.seguranca.UsuarioLogado;
+import br.com.medshare.usuario.Usuario;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import org.springframework.data.domain.Page;
@@ -10,7 +11,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/doacoes")
@@ -32,13 +36,18 @@ public class ControladorDeDoacao {
         this.usuarioLogado = usuarioLogado;
     }
 
+    // --- doador ---------------------------------------------------------------
+
+    /** UC01 - cria uma doacao por caixa (quantidade) e devolve todas. */
     @PostMapping
     @PreAuthorize("hasRole('DOADOR')")
-    public ResponseEntity<DoacaoResumida> cadastrar(@Valid @RequestBody PedidoDeDoacao pedido) {
+    public ResponseEntity<List<DoacaoResumida>> cadastrar(@Valid @RequestBody PedidoDeDoacao pedido) {
         fotos.exigirFotoNossa(pedido.fotoUrl());
-        Doacao doacao = servico.cadastrar(pedido.medicamentoId(), pedido.lote(),
-                pedido.validade(), pedido.fotoUrl(), usuarioLogado.obrigatorio());
-        return ResponseEntity.status(HttpStatus.CREATED).body(DoacaoResumida.de(doacao));
+        List<Doacao> criadas = servico.cadastrar(pedido.medicamentoId(), pedido.lote(),
+                pedido.validade(), pedido.fotoUrl(), pedido.quantidadeOuUm(),
+                pedido.lacreDeclarado(), usuarioLogado.obrigatorio());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(criadas.stream().map(DoacaoResumida::de).toList());
     }
 
     @GetMapping("/minhas")
@@ -49,14 +58,18 @@ public class ControladorDeDoacao {
                 .map(DoacaoResumida::de);
     }
 
-    /** RN06 - o historico, visivel so para o doador, a farmacia e a central. */
+    /** RN06 / UC09 - o historico, visivel so para o doador, a farmacia e a central. */
     @GetMapping("/{codigo}")
+    @Transactional(readOnly = true)
     public DoacaoDetalhada detalhar(@PathVariable String codigo) {
         Doacao doacao = servico.detalharPara(codigo, usuarioLogado.obrigatorio());
+        Agendamento agendamento = servico.agendamentoAtualDe(doacao).orElse(null);
         return DoacaoDetalhada.de(doacao,
-                eventos.findByDoacaoIdOrderByOcorridoEmAscIdAsc(doacao.getId()));
+                eventos.findByDoacaoIdOrderByOcorridoEmAscIdAsc(doacao.getId()),
+                agendamento, servico.podeReagendar(doacao));
     }
 
+    /** UC02 - agenda (ou reagenda, uma vez, depois de um cancelamento). */
     @PostMapping("/{codigo}/agendamento")
     @PreAuthorize("hasRole('DOADOR')")
     public DoacaoResumida agendar(@PathVariable String codigo,
@@ -75,13 +88,40 @@ public class ControladorDeDoacao {
                 servico.cancelarAgendamento(codigo, motivo, usuarioLogado.obrigatorio()));
     }
 
-    // --- balcao da farmacia ---------------------------------------------------
+    /** UC10 A2 - a foto nova que a central pediu. */
+    @PostMapping("/{codigo}/foto")
+    @PreAuthorize("hasRole('DOADOR')")
+    public DoacaoResumida trocarFoto(@PathVariable String codigo, @Valid @RequestBody PedidoDeNovaFoto pedido) {
+        fotos.exigirFotoNossa(pedido.fotoUrl());
+        return DoacaoResumida.de(servico.trocarFoto(codigo, pedido.fotoUrl(), usuarioLogado.obrigatorio()));
+    }
+
+    // --- balcao da farmacia (UC03) --------------------------------------------
 
     /** A fila do ponto de coleta onde o farmaceutico logado atua. */
     @GetMapping("/fila")
     @PreAuthorize("hasRole('FARMACEUTICO')")
-    public Page<DoacaoResumida> filaDoBalcao(Pageable pagina) {
-        return servico.filaDoBalcao(usuarioLogado.obrigatorio(), pagina).map(DoacaoResumida::de);
+    @Transactional(readOnly = true)
+    public Page<DoacaoNoBalcao> filaDoBalcao(Pageable pagina) {
+        return servico.filaDoBalcao(usuarioLogado.obrigatorio(), pagina).map(this::noBalcao);
+    }
+
+    /** UC03 passo 1 - o codigo de entrega que o doador mostra. */
+    @GetMapping("/balcao/entrega/{codigoEntrega}")
+    @PreAuthorize("hasRole('FARMACEUTICO')")
+    @Transactional(readOnly = true)
+    public DoacaoNoBalcao porCodigoDeEntrega(@PathVariable String codigoEntrega) {
+        return noBalcao(servico.buscarPorCodigoDeEntrega(codigoEntrega, usuarioLogado.obrigatorio()));
+    }
+
+    /** UC03 A3 - o doador chegou sem o codigo: busca pelo CPF ou telefone. */
+    @GetMapping("/balcao/busca")
+    @PreAuthorize("hasRole('FARMACEUTICO')")
+    @Transactional(readOnly = true)
+    public List<DoacaoNoBalcao> porDocumentoDoDoador(@RequestParam @Size(max = 20) String documento) {
+        Usuario farmaceutico = usuarioLogado.obrigatorio();
+        return servico.buscarPorDocumentoDoDoador(documento, farmaceutico).stream()
+                .map(this::noBalcao).toList();
     }
 
     @PostMapping("/{codigo}/recebimento")
@@ -90,18 +130,32 @@ public class ControladorDeDoacao {
         return DoacaoResumida.de(servico.receber(codigo, usuarioLogado.obrigatorio()));
     }
 
-    /** RN01 - conferencia do lacre aprovada: a caixa entra no estoque. */
+    /** RN01 - conferencia do lacre aprovada (com correcao opcional - A1): a caixa entra no estoque. */
     @PostMapping("/{codigo}/validacao")
     @PreAuthorize("hasRole('FARMACEUTICO')")
-    public DoacaoResumida validar(@PathVariable String codigo) {
-        return DoacaoResumida.de(servico.validar(codigo, usuarioLogado.obrigatorio()));
+    public DoacaoResumida validar(@PathVariable String codigo,
+                                  @Valid @RequestBody(required = false) PedidoDeValidacao pedido) {
+        PedidoDeValidacao dados = pedido == null ? new PedidoDeValidacao(null, null, null) : pedido;
+        if (dados.fotoUrl() != null) {
+            fotos.exigirFotoNossa(dados.fotoUrl());
+        }
+        return DoacaoResumida.de(servico.validar(codigo, dados.fotoUrl(), dados.lote(), dados.validade(),
+                usuarioLogado.obrigatorio()));
     }
 
     @PostMapping("/{codigo}/rejeicao")
     @PreAuthorize("hasRole('FARMACEUTICO')")
     public DoacaoResumida rejeitar(@PathVariable String codigo,
                                    @Valid @RequestBody PedidoDeRejeicao pedido) {
+        if (pedido.fotoUrl() != null) {
+            fotos.exigirFotoNossa(pedido.fotoUrl());
+        }
         return DoacaoResumida.de(servico.rejeitar(codigo, pedido.lacreIntegro(),
-                pedido.dadosConferem(), pedido.motivo(), usuarioLogado.obrigatorio()));
+                pedido.dadosConferem(), pedido.motivo(), pedido.fotoUrl(), usuarioLogado.obrigatorio()));
+    }
+
+    private DoacaoNoBalcao noBalcao(Doacao doacao) {
+        return DoacaoNoBalcao.de(doacao, servico.agendamentoAtualDe(doacao).orElse(null),
+                fotos.urlAssinada(doacao.getFotoUrl()));
     }
 }

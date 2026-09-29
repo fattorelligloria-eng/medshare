@@ -78,6 +78,37 @@ public class ControladorDeNecessidade {
         return ResponseEntity.noContent().build();
     }
 
+    // --- UC07 A3: procuradores -------------------------------------------------
+
+    public record ProcuradorResumido(Long id, String nome, String cpf) {
+        static ProcuradorResumido de(Procurador p) {
+            return new ProcuradorResumido(p.getId(), p.getNome(), p.getCpf());
+        }
+    }
+
+    public record PedidoDeProcurador(
+            @jakarta.validation.constraints.NotBlank @jakarta.validation.constraints.Size(max = 120) String nome,
+            @jakarta.validation.constraints.Pattern(regexp = "\\d{11}", message = "informe os 11 dígitos do CPF")
+            String cpf) { }
+
+    @GetMapping("/procuradores")
+    public List<ProcuradorResumido> procuradores() {
+        return servico.procuradoresDe(usuarioLogado.obrigatorio()).stream()
+                .map(ProcuradorResumido::de).toList();
+    }
+
+    @PostMapping("/procuradores")
+    public ResponseEntity<ProcuradorResumido> cadastrarProcurador(@Valid @RequestBody PedidoDeProcurador pedido) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(ProcuradorResumido.de(
+                servico.cadastrarProcurador(pedido.nome(), pedido.cpf(), usuarioLogado.obrigatorio())));
+    }
+
+    @DeleteMapping("/procuradores/{id}")
+    public ResponseEntity<Void> removerProcurador(@PathVariable Long id) {
+        servico.removerProcurador(id, usuarioLogado.obrigatorio());
+        return ResponseEntity.noContent().build();
+    }
+
     /** Conveniencia para o app: a validade de hoje, calculada no servidor. */
     @GetMapping("/hoje")
     public Map<String, LocalDate> hoje() {

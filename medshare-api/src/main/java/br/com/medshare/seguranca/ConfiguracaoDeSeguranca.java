@@ -52,6 +52,7 @@ public class ConfiguracaoDeSeguranca {
             .authorizeHttpRequests(rotas -> rotas
                     .requestMatchers("/api/autenticacao/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/municipios").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/enderecos/*").permitAll()
                     .requestMatchers(HttpMethod.GET, "/fotos-locais/**").permitAll()
                     .requestMatchers("/actuator/health").permitAll()
                     .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()

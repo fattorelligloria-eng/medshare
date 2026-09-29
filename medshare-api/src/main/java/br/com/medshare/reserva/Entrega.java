@@ -38,7 +38,29 @@ public class Entrega {
     @Column(name = "documento_conferido", nullable = false)
     private boolean documentoConferido;
 
+    /** UC07 A3 - quem apresentou o documento: o titular ou um procurador cadastrado. */
+    @Column(name = "retirado_por_cpf", length = 11)
+    private String retiradoPorCpf;
+
+    @Column(name = "retirado_por_procurador", nullable = false)
+    private boolean retiradoPorProcurador;
+
     protected Entrega() { }
+
+    public Entrega(Reserva reserva, Farmaceutico farmaceutico, boolean receitaConferida,
+                   boolean documentoConferido, String retiradoPorCpf, boolean porProcurador) {
+        this(reserva, farmaceutico, receitaConferida, documentoConferido);
+        this.retiradoPorCpf = retiradoPorCpf;
+        this.retiradoPorProcurador = porProcurador;
+    }
+
+    public String getRetiradoPorCpf() {
+        return retiradoPorCpf;
+    }
+
+    public boolean isRetiradoPorProcurador() {
+        return retiradoPorProcurador;
+    }
 
     public Entrega(Reserva reserva, Farmaceutico farmaceutico,
                    boolean receitaConferida, boolean documentoConferido) {

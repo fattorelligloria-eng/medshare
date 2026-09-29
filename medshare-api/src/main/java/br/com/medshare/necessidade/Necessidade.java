@@ -43,6 +43,17 @@ public class Necessidade {
     @OneToOne(mappedBy = "necessidade", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Receita receita;
 
+    /** UC07 A2 - perdeu a caixa porque a validade caiu: volta a fila na frente. */
+    @Column(nullable = false)
+    private boolean prioridade;
+
+    /** UC07 A1 - a receita nao bateu no balcao; sai da fila ate mandar outra. */
+    @Column(name = "em_revisao", nullable = false)
+    private boolean emRevisao;
+
+    @Column(name = "motivo_revisao")
+    private String motivoRevisao;
+
     protected Necessidade() { }
 
     public Necessidade(Usuario beneficiario, Medicamento medicamento) {
@@ -52,6 +63,50 @@ public class Necessidade {
 
     public void anexarReceita(Receita receita) {
         this.receita = receita;
+        receitaRenovada();
+    }
+
+    /** Receita nova (ou trocada) tira o pedido da revisao. */
+    public void receitaRenovada() {
+        this.emRevisao = false;
+        this.motivoRevisao = null;
+    }
+
+    /**
+     * UC04 A4 - o pedido do mesmo principio ativo e atualizado em vez de
+     * duplicado (ex.: a pessoa escolheu outra apresentacao do mesmo remedio).
+     */
+    public void trocarMedicamento(Medicamento novo) {
+        this.medicamento = novo;
+    }
+
+    public void priorizar() {
+        this.prioridade = true;
+    }
+
+    public void marcarParaRevisao(String motivo) {
+        this.emRevisao = true;
+        this.motivoRevisao = motivo;
+    }
+
+    /**
+     * Pode receber oferta agora? Ativo, fora de revisao e com receita valida
+     * (RN03). O CadUnico (RN08) e conferido a parte, porque e do beneficiario.
+     */
+    public boolean aptaParaOferta() {
+        return ativa && !emRevisao && receita != null && receita.estaValida();
+    }
+
+    public boolean isPrioridade() {
+        return prioridade;
+    }
+
+    public boolean isEmRevisao() {
+        return emRevisao;
+    }
+
+    public String getMotivoRevisao() {
+        return motivoRevisao;
     }
 
     public void encerrar() {

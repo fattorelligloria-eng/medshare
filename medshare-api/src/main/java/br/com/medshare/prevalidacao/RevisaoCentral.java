@@ -14,7 +14,9 @@ public class RevisaoCentral {
 
     public enum Decisao {
         APROVADA,
-        RECUSADA
+        RECUSADA,
+        /** UC10 A2 - nao da para decidir pela foto; o doador envia outra. */
+        NOVA_FOTO
     }
 
     @Id

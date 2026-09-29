@@ -39,6 +39,13 @@ public class Farmaceutico {
         this.pontoDeColeta = pontoDeColeta;
     }
 
+    /** UC08 - o administrador pode mudar o farmaceutico de farmacia. */
+    public void passarAAtuarEm(PontoDeColeta ponto, String crf, String ufCrf) {
+        this.pontoDeColeta = ponto;
+        this.crf = crf;
+        this.ufCrf = ufCrf;
+    }
+
     public boolean atuaEm(PontoDeColeta ponto) {
         return pontoDeColeta.getId().equals(ponto.getId());
     }

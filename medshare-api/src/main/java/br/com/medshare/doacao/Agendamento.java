@@ -13,8 +13,9 @@ public class Agendamento {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "doacao_id", nullable = false, unique = true)
+    /** Ate dois por doacao: o original e um reagendamento (UC02 A2). */
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "doacao_id", nullable = false)
     private Doacao doacao;
 
     @ManyToOne(optional = false, fetch = FetchType.EAGER)
@@ -28,6 +29,10 @@ public class Agendamento {
     private String codigoEntrega;
 
     private Boolean compareceu;
+
+    /** UC02 - o lembrete da vespera sai uma vez so. */
+    @Column(name = "lembrete_enviado", nullable = false)
+    private boolean lembreteEnviado;
 
     @Column(name = "criado_em", nullable = false, updatable = false)
     private OffsetDateTime criadoEm = OffsetDateTime.now();
@@ -48,6 +53,14 @@ public class Agendamento {
 
     public void registrarFalta() {
         this.compareceu = false;
+    }
+
+    public void marcarLembreteEnviado() {
+        this.lembreteEnviado = true;
+    }
+
+    public boolean isLembreteEnviado() {
+        return lembreteEnviado;
     }
 
     public Long getId() {

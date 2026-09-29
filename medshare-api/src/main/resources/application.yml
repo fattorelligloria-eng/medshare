@@ -41,7 +41,7 @@ medshare:
     dias-minimos-de-validade: 30        # RN02
     valor-minimo-pmc: 150.00            # RN07
   reserva:
-    horas-para-retirada: 72             # prazo da reserva antes de expirar
+    horas-para-retirada: 120            # UC06 passo 3 - 5 dias para retirar
   cadunico:
     meses-de-validade: 12               # RN08
 

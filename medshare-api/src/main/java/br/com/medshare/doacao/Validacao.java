@@ -45,6 +45,10 @@ public class Validacao {
     @Column(name = "motivo_rejeicao")
     private String motivoRejeicao;
 
+    /** UC03 passo 3 - foto tirada no balcao; com a decisao, vira exemplo rotulado da fase 2. */
+    @Column(name = "foto_url")
+    private String fotoUrl;
+
     protected Validacao() { }
 
     private Validacao(Doacao doacao, Farmaceutico farmaceutico, boolean lacreIntegro,
@@ -59,16 +63,34 @@ public class Validacao {
 
     /** RN01 - so e possivel aprovar com lacre integro e dados conferindo. */
     public static Validacao aprovar(Doacao doacao, Farmaceutico farmaceutico) {
-        return new Validacao(doacao, farmaceutico, true, true, true, null);
+        return aprovar(doacao, farmaceutico, null);
+    }
+
+    public static Validacao aprovar(Doacao doacao, Farmaceutico farmaceutico, String fotoUrl) {
+        Validacao validacao = new Validacao(doacao, farmaceutico, true, true, true, null);
+        validacao.fotoUrl = fotoUrl;
+        return validacao;
     }
 
     public static Validacao rejeitar(Doacao doacao, Farmaceutico farmaceutico,
                                      boolean lacreIntegro, boolean dadosConferem, String motivo) {
+        return rejeitar(doacao, farmaceutico, lacreIntegro, dadosConferem, motivo, null);
+    }
+
+    public static Validacao rejeitar(Doacao doacao, Farmaceutico farmaceutico,
+                                     boolean lacreIntegro, boolean dadosConferem, String motivo,
+                                     String fotoUrl) {
         if (motivo == null || motivo.isBlank()) {
             throw new RegraDeNegocioViolada("RN01",
                     "Toda rejeição precisa de um motivo registrado");
         }
-        return new Validacao(doacao, farmaceutico, lacreIntegro, dadosConferem, false, motivo);
+        Validacao validacao = new Validacao(doacao, farmaceutico, lacreIntegro, dadosConferem, false, motivo);
+        validacao.fotoUrl = fotoUrl;
+        return validacao;
+    }
+
+    public String getFotoUrl() {
+        return fotoUrl;
     }
 
     public Long getId() {

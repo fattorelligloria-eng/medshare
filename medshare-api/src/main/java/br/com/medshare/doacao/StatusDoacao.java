@@ -23,11 +23,15 @@ public enum StatusDoacao {
         }
     },
 
-    /** RN10 - a IA achou divergencia ou nao teve certeza; um humano decide. */
+    /**
+     * RN10 - a IA achou divergencia ou nao teve certeza; um humano decide.
+     * UC10 A2: se nem a pessoa consegue decidir pela foto, pede outra e a
+     * doacao volta para CADASTRADA.
+     */
     EM_ANALISE_CENTRAL {
         @Override
         public Set<StatusDoacao> proximosPossiveis() {
-            return EnumSet.of(PRE_VALIDADA, RECUSADA);
+            return EnumSet.of(PRE_VALIDADA, RECUSADA, CADASTRADA);
         }
     },
 
@@ -77,6 +81,18 @@ public enum StatusDoacao {
         }
     },
 
+    /**
+     * O doador cancelou ou nao compareceu em 7 dias (UC02 A2). Pode ser
+     * reagendada uma unica vez — o limite de uma vez e conferido no service,
+     * que conta os agendamentos da doacao.
+     */
+    CANCELADA {
+        @Override
+        public Set<StatusDoacao> proximosPossiveis() {
+            return EnumSet.of(AGENDADA);
+        }
+    },
+
     // --- estados finais: daqui a doacao nao sai mais ---
 
     /** Entregue ao beneficiario. Fim feliz do ciclo. */
@@ -84,9 +100,6 @@ public enum StatusDoacao {
 
     /** Barrada antes de chegar na farmacia (PMC abaixo do piso, validade curta). */
     RECUSADA,
-
-    /** O doador nao compareceu ao agendamento. */
-    CANCELADA,
 
     /** Chegou na farmacia, mas o farmaceutico reprovou na conferencia (RN01). */
     REJEITADA,

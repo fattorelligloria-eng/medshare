@@ -23,6 +23,13 @@ public class Municipio {
 
     protected Municipio() { }
 
+    /** O codigo IBGE chega pelo ViaCEP na primeira vez que um CEP do municipio e consultado. */
+    public void registrarCodigoIbge(String codigo) {
+        if (this.codigoIbge == null && codigo != null && codigo.matches("\\d{7}")) {
+            this.codigoIbge = codigo;
+        }
+    }
+
     public Short getId() {
         return id;
     }

@@ -68,6 +68,10 @@ public class Doacao {
     @Column(name = "foto_url", nullable = false)
     private String fotoUrl;
 
+    /** RN01 - o doador declarou, no cadastro, que a embalagem esta lacrada. */
+    @Column(name = "lacre_declarado", nullable = false)
+    private boolean lacreDeclarado;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatusDoacao status = StatusDoacao.CADASTRADA;
@@ -109,10 +113,27 @@ public class Doacao {
     public static Doacao cadastrar(String codigo, Usuario doador, Medicamento medicamento,
                                    String lote, LocalDate validade, String fotoUrl,
                                    BigDecimal pisoDePreco, int diasMinimos) {
+        return cadastrar(codigo, doador, medicamento, lote, validade, fotoUrl,
+                pisoDePreco, diasMinimos, true);
+    }
+
+    /**
+     * @param lacreDeclarado RN01 - o doador confirma que a embalagem esta
+     *                       lacrada. Sem a declaracao, a doacao nem e criada.
+     */
+    public static Doacao cadastrar(String codigo, Usuario doador, Medicamento medicamento,
+                                   String lote, LocalDate validade, String fotoUrl,
+                                   BigDecimal pisoDePreco, int diasMinimos,
+                                   boolean lacreDeclarado) {
+        if (!lacreDeclarado) {
+            throw new RegraDeNegocioViolada("RN01",
+                    "Só aceitamos embalagem lacrada. Confirme que a caixa nunca foi aberta.");
+        }
         exigirMedicamentoDeAltoCusto(medicamento, pisoDePreco);
         exigirValidadeSuficiente(validade, diasMinimos, medicamento);
 
         Doacao doacao = new Doacao(codigo, doador, medicamento, lote, validade, fotoUrl);
+        doacao.lacreDeclarado = true;
         doacao.registrarEvento(TipoEvento.CADASTRO,
                 "Doação cadastrada pelo doador", null, StatusDoacao.CADASTRADA, doador);
         return doacao;
@@ -173,6 +194,80 @@ public class Doacao {
                 "Agendamento cancelado: " + motivo, responsavel);
     }
 
+    /** UC02 A2 - nova data depois de um cancelamento. O limite de uma vez fica no service. */
+    public void reagendar(PontoDeColeta ponto, OffsetDateTime quando, Usuario responsavel) {
+        mudarPara(StatusDoacao.AGENDADA, TipoEvento.REAGENDAMENTO,
+                "Entrega reagendada em %s para %s"
+                        .formatted(ponto.getNome(), FORMATO_BRASILEIRO.format(quando)),
+                responsavel);
+        this.pontoDeColeta = ponto;
+    }
+
+    /** UC10 A2 - a central nao conseguiu decidir pela foto e pediu outra ao doador. */
+    public void pedirNovaFoto(String motivo, Usuario analista) {
+        mudarPara(StatusDoacao.CADASTRADA, TipoEvento.NOVA_FOTO_SOLICITADA,
+                "Central pediu uma nova foto: " + motivo, analista);
+    }
+
+    /** UC10 A2 - o doador enviou a foto nova; a pre-validacao roda de novo. */
+    public void trocarFoto(String novaFotoUrl, Usuario doador) {
+        if (status != StatusDoacao.CADASTRADA) {
+            throw new RegraDeNegocioViolada("CICLO",
+                    "A doação %s está em %s; só dá para trocar a foto quando a central pedir."
+                            .formatted(codigo, status));
+        }
+        this.fotoUrl = novaFotoUrl;
+        this.atualizadoEm = OffsetDateTime.now();
+        registrarEvento(TipoEvento.NOVA_FOTO_ENVIADA, "Doador enviou uma nova foto da embalagem",
+                status, status, doador);
+    }
+
+    /**
+     * UC03 A1 - no balcao, o farmaceutico ve que lote ou validade reais sao
+     * outros e corrige. O valor antigo fica no historico (RN06), e a validade
+     * corrigida ainda precisa passar na RN02.
+     */
+    public void corrigirDados(String novoLote, LocalDate novaValidade, int diasMinimos,
+                              Usuario farmaceutico) {
+        if (status != StatusDoacao.RECEBIDA) {
+            throw new RegraDeNegocioViolada("CICLO",
+                    "Só dá para corrigir lote e validade com a caixa no balcão (status RECEBIDA)");
+        }
+        List<String> mudancas = new ArrayList<>();
+        if (novoLote != null && !novoLote.isBlank() && !novoLote.equals(lote)) {
+            mudancas.add("lote %s → %s".formatted(lote, novoLote));
+            this.lote = novoLote;
+        }
+        if (novaValidade != null && !novaValidade.equals(validade)) {
+            exigirValidadeSuficiente(novaValidade, diasMinimos, medicamento);
+            mudancas.add("validade %s → %s".formatted(validade, novaValidade));
+            this.validade = novaValidade;
+        }
+        if (mudancas.isEmpty()) {
+            return;
+        }
+        this.atualizadoEm = OffsetDateTime.now();
+        registrarEvento(TipoEvento.CORRECAO_DE_DADOS,
+                "Farmacêutico corrigiu " + String.join(" e ", mudancas), status, status, farmaceutico);
+    }
+
+    /**
+     * UC08 A2 - antes de desativar uma farmacia, o estoque vai para outra.
+     * So caixa DISPONIVEL se move: reservada ja tem beneficiario a caminho.
+     */
+    public void transferirPara(PontoDeColeta destino, Usuario responsavel) {
+        if (status != StatusDoacao.DISPONIVEL) {
+            throw new RegraDeNegocioViolada("CICLO",
+                    "Só caixas disponíveis podem ser transferidas; %s está em %s".formatted(codigo, status));
+        }
+        String origem = pontoDeColeta == null ? "—" : pontoDeColeta.getNome();
+        this.pontoDeColeta = destino;
+        this.atualizadoEm = OffsetDateTime.now();
+        registrarEvento(TipoEvento.TRANSFERENCIA,
+                "Transferida de %s para %s".formatted(origem, destino.getNome()),
+                status, status, responsavel);
+    }
+
     public void receber(Usuario farmaceutico) {
         mudarPara(StatusDoacao.RECEBIDA, TipoEvento.RECEBIMENTO,
                 "Caixa recebida no balcão", farmaceutico);
@@ -209,8 +304,18 @@ public class Doacao {
     }
 
     public void liberarReservaCancelada(Usuario beneficiario) {
+        liberarReservaCancelada("Reserva cancelada pelo beneficiário", beneficiario);
+    }
+
+    /** Reserva desfeita (pelo beneficiario ou por entrega negada no balcao). */
+    public void liberarReservaCancelada(String motivo, Usuario responsavel) {
         mudarPara(StatusDoacao.DISPONIVEL, TipoEvento.CANCELAMENTO_DE_RESERVA,
-                "Reserva cancelada pelo beneficiário; voltou para o estoque", beneficiario);
+                motivo + "; voltou para o estoque", responsavel);
+    }
+
+    /** UC05 - a caixa foi oferecida a alguem da fila (sem nome: RN05). */
+    public void registrarOferta(Usuario sistema) {
+        registrarEvento(TipoEvento.OFERTA, "Oferecida a um beneficiário da fila", status, status, sistema);
     }
 
     public void entregar(Usuario farmaceutico) {
@@ -290,6 +395,10 @@ public class Doacao {
 
     public String getFotoUrl() {
         return fotoUrl;
+    }
+
+    public boolean isLacreDeclarado() {
+        return lacreDeclarado;
     }
 
     public StatusDoacao getStatus() {

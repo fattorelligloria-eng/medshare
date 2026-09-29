@@ -25,7 +25,7 @@ class RepositorioDeFotosTest {
 
     @BeforeEach
     void preparar() throws Exception {
-        fotos = new RepositorioDeFotos(pasta.toString(), ENDERECO + "/");
+        fotos = new RepositorioDeFotos(pasta.toString(), ENDERECO + "/", "segredo-de-teste");
         nomeGravado = fotos.novoNome(".png");
         Files.write(pasta.resolve(nomeGravado), new byte[] {1, 2, 3});
     }
@@ -58,6 +58,21 @@ class RepositorioDeFotosTest {
     @DisplayName("recusa nome valido que nao existe em disco")
     void recusaArquivoInexistente() {
         assertThat(fotos.ehFotoNossa(fotos.urlDe(fotos.novoNome(".jpg")))).isFalse();
+    }
+
+    @Test
+    @DisplayName("link assinado abre o arquivo; adulterado ou vencido nao abre")
+    void linkAssinado() {
+        String link = fotos.urlAssinada(fotos.urlDe(nomeGravado));
+        var parametros = org.springframework.web.util.UriComponentsBuilder.fromUriString(link).build().getQueryParams();
+        long expira = Long.parseLong(parametros.getFirst("expira"));
+        String assinatura = parametros.getFirst("assinatura");
+
+        assertThat(fotos.arquivoDoLink(nomeGravado, expira, assinatura)).isPresent();
+        assertThat(fotos.arquivoDoLink(nomeGravado, expira + 1, assinatura)).isEmpty();
+        assertThat(fotos.arquivoDoLink(nomeGravado, expira, assinatura + "x")).isEmpty();
+        assertThat(fotos.arquivoDoLink(nomeGravado, 1, assinatura)).isEmpty();
+        assertThat(fotos.arquivoDoLink(nomeGravado, expira, null)).isEmpty();
     }
 
     @Test

@@ -13,4 +13,11 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     boolean existsByEmail(String email);
 
     boolean existsByCpf(String cpf);
+
+    @org.springframework.data.jpa.repository.Query("""
+            SELECT DISTINCT u FROM Usuario u JOIN u.papeis p
+            WHERE p = :papel AND u.ativo = TRUE
+            """)
+    java.util.List<Usuario> ativosComPapel(
+            @org.springframework.data.repository.query.Param("papel") Papel papel);
 }

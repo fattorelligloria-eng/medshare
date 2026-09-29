@@ -76,7 +76,7 @@ class ServicoDeMatchingTest {
     @Test
     @DisplayName("sem estoque, nao devolve nada")
     void semEstoque() {
-        when(doacoes.disponiveisDoMedicamento(eq(1L), any())).thenReturn(List.of());
+        when(doacoes.disponiveisDoPrincipioAtivo(eq("principio de Alecensa"), any())).thenReturn(List.of());
 
         assertThat(matching.melhorDoacaoPara(new Necessidade(beneficiarioNoCentro, medicamento)))
                 .isEmpty();
@@ -89,7 +89,7 @@ class ServicoDeMatchingTest {
         PontoDeColeta perto = pontoDeColeta(1L, "Se", SE[0], SE[1]);
 
         // O repositorio ja devolve ordenado por validade.
-        when(doacoes.disponiveisDoMedicamento(eq(1L), any())).thenReturn(List.of(
+        when(doacoes.disponiveisDoPrincipioAtivo(eq("principio de Alecensa"), any())).thenReturn(List.of(
                 doacaoDisponivel("MS-VENCE-ANTES", 40, longe),
                 doacaoDisponivel("MS-VENCE-DEPOIS", 300, perto)));
 
@@ -105,7 +105,7 @@ class ServicoDeMatchingTest {
         PontoDeColeta longe = pontoDeColeta(2L, "Guarulhos", GUARULHOS[0], GUARULHOS[1]);
         PontoDeColeta perto = pontoDeColeta(1L, "Se", SE[0], SE[1]);
 
-        when(doacoes.disponiveisDoMedicamento(eq(1L), any())).thenReturn(List.of(
+        when(doacoes.disponiveisDoPrincipioAtivo(eq("principio de Alecensa"), any())).thenReturn(List.of(
                 doacaoDisponivel("MS-LONGE", 100, longe),
                 doacaoDisponivel("MS-PERTO", 110, perto)));
 
@@ -122,10 +122,74 @@ class ServicoDeMatchingTest {
         ReflectionTestUtils.setField(semCoordenadas, "endereco", endereco(null, null));
 
         PontoDeColeta ponto = pontoDeColeta(1L, "Se", SE[0], SE[1]);
-        when(doacoes.disponiveisDoMedicamento(eq(1L), any()))
+        when(doacoes.disponiveisDoPrincipioAtivo(eq("principio de Alecensa"), any()))
                 .thenReturn(List.of(doacaoDisponivel("MS-UNICA", 100, ponto)));
 
         assertThat(matching.melhorDoacaoPara(new Necessidade(semCoordenadas, medicamento)))
                 .isPresent();
+    }
+
+    // --- pedido para uma caixa (UC05) ------------------------------------------
+
+    private Necessidade pedidoCom(Long id, Usuario quem, OffsetDateTime criadoEm) {
+        Necessidade necessidade = new Necessidade(quem, medicamento);
+        ReflectionTestUtils.setField(necessidade, "id", id);
+        ReflectionTestUtils.setField(necessidade, "criadaEm", criadoEm);
+        necessidade.anexarReceita(new br.com.medshare.necessidade.Receita(necessidade, "http://x/r.jpg",
+                LocalDate.now().minusDays(1), LocalDate.now().plusDays(60), "12345", "SP"));
+        return necessidade;
+    }
+
+    private Usuario beneficiarioEm(Long id, double[] onde) {
+        Usuario usuario = usuario(id, "Pessoa " + id, Papel.BENEFICIARIO);
+        ReflectionTestUtils.setField(usuario, "endereco", endereco(onde[0], onde[1]));
+        return usuario;
+    }
+
+    @Test
+    @DisplayName("UC05: na mesma faixa de distancia, quem pediu antes recebe a oferta")
+    void antiguidadeDentroDaFaixa() {
+        var caixa = doacaoDisponivel("MS-1", 100, pontoDeColeta(1L, "Se", SE[0], SE[1]));
+        var antigo = pedidoCom(10L, beneficiarioEm(10L, SE), OffsetDateTime.now().minusDays(30));
+        var novo = pedidoCom(11L, beneficiarioEm(11L, SE), OffsetDateTime.now().minusDays(1));
+
+        assertThat(matching.melhorNecessidadePara(caixa, List.of(novo, antigo), n -> true))
+                .get().extracting(Necessidade::getId).isEqualTo(10L);
+    }
+
+    @Test
+    @DisplayName("UC05: quem mora bem mais perto da farmacia passa na frente")
+    void distanciaAntesDaAntiguidade() {
+        var caixa = doacaoDisponivel("MS-1", 100, pontoDeColeta(1L, "Se", SE[0], SE[1]));
+        var antigoLonge = pedidoCom(10L, beneficiarioEm(10L, GUARULHOS), OffsetDateTime.now().minusDays(30));
+        var novoPerto = pedidoCom(11L, beneficiarioEm(11L, SE), OffsetDateTime.now().minusDays(1));
+
+        assertThat(matching.melhorNecessidadePara(caixa, List.of(antigoLonge, novoPerto), n -> true))
+                .get().extracting(Necessidade::getId).isEqualTo(11L);
+    }
+
+    @Test
+    @DisplayName("UC07 A2: quem perdeu uma caixa por validade tem prioridade")
+    void prioridadePrimeiro() {
+        var caixa = doacaoDisponivel("MS-1", 100, pontoDeColeta(1L, "Se", SE[0], SE[1]));
+        var perto = pedidoCom(10L, beneficiarioEm(10L, SE), OffsetDateTime.now().minusDays(30));
+        var prioritarioLonge = pedidoCom(11L, beneficiarioEm(11L, GUARULHOS), OffsetDateTime.now());
+        prioritarioLonge.priorizar();
+
+        assertThat(matching.melhorNecessidadePara(caixa, List.of(perto, prioritarioLonge), n -> true))
+                .get().extracting(Necessidade::getId).isEqualTo(11L);
+    }
+
+    @Test
+    @DisplayName("pedido sem receita valida, em revisao ou sem CadUnico nao recebe oferta")
+    void soAptosRecebem() {
+        var caixa = doacaoDisponivel("MS-1", 100, pontoDeColeta(1L, "Se", SE[0], SE[1]));
+        var semReceita = new Necessidade(beneficiarioEm(10L, SE), medicamento);
+        var emRevisao = pedidoCom(11L, beneficiarioEm(11L, SE), OffsetDateTime.now());
+        emRevisao.marcarParaRevisao("receita de outro principio ativo");
+        var semCadUnico = pedidoCom(12L, beneficiarioEm(12L, SE), OffsetDateTime.now());
+
+        assertThat(matching.melhorNecessidadePara(caixa, List.of(semReceita, emRevisao, semCadUnico),
+                n -> !n.getId().equals(12L))).isEmpty();
     }
 }

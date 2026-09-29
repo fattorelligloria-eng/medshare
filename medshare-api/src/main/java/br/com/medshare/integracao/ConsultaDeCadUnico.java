@@ -24,7 +24,12 @@ public interface ConsultaDeCadUnico {
      * @param formatoValido     o número tem a forma de um NIS de verdade
      * @param observacao        o que dizer a quem está esperando
      */
-    record ResultadoDaConsulta(boolean confirmado, boolean formatoValido, String observacao) {
+    record ResultadoDaConsulta(boolean confirmado, boolean formatoValido, String observacao,
+                               boolean indisponivel) {
+
+        public ResultadoDaConsulta(boolean confirmado, boolean formatoValido, String observacao) {
+            this(confirmado, formatoValido, observacao, false);
+        }
 
         public static ResultadoDaConsulta confirmado(String observacao) {
             return new ResultadoDaConsulta(true, true, observacao);
@@ -34,13 +39,18 @@ public interface ConsultaDeCadUnico {
             return new ResultadoDaConsulta(false, true, observacao);
         }
 
+        /** UC04 A2 - o Portal nao respondeu: guarda o NIS e tenta de novo depois. */
+        public static ResultadoDaConsulta indisponivel(String observacao) {
+            return new ResultadoDaConsulta(false, true, observacao, true);
+        }
+
         public static ResultadoDaConsulta formatoInvalido(String observacao) {
             return new ResultadoDaConsulta(false, false, observacao);
         }
 
         /** Formato bom mas sem confirmação: uma pessoa precisa olhar. */
         public boolean precisaDeAnaliseHumana() {
-            return !confirmado && formatoValido;
+            return !confirmado && formatoValido && !indisponivel;
         }
     }
 }
