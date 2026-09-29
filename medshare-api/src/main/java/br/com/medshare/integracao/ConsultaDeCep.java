@@ -22,6 +22,7 @@ public class ConsultaDeCep {
 
     private final RestClient viaCep = RestClient.builder()
             .baseUrl("https://viacep.com.br/ws")
+            .requestFactory(Tempos.curtos())
             .build();
 
     public Optional<EnderecoConsultado> porCep(String cep) {
@@ -43,7 +44,8 @@ public class ConsultaDeCep {
                     resposta.path("logradouro").asText(),
                     resposta.path("bairro").asText(),
                     resposta.path("localidade").asText(),
-                    resposta.path("uf").asText()));
+                    resposta.path("uf").asText(),
+                    resposta.path("ibge").asText(null)));
         } catch (Exception e) {
             log.warn("ViaCEP indisponivel para o CEP {}: {}", apenasDigitos, e.getMessage());
             return Optional.empty();

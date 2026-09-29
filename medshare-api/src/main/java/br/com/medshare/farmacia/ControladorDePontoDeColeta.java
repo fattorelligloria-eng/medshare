@@ -1,10 +1,12 @@
 package br.com.medshare.farmacia;
 
+import br.com.medshare.doacao.ServicoDeDoacao;
 import br.com.medshare.farmacia.dto.PontoDeColetaResumido;
 import br.com.medshare.seguranca.UsuarioLogado;
 import br.com.medshare.usuario.Endereco;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @RestController
@@ -14,10 +16,13 @@ public class ControladorDePontoDeColeta {
     private static final int QUANTIDADE_SUGERIDA = 5;
 
     private final PontoDeColetaRepository pontos;
+    private final ServicoDeDoacao doacoes;
     private final UsuarioLogado usuarioLogado;
 
-    public ControladorDePontoDeColeta(PontoDeColetaRepository pontos, UsuarioLogado usuarioLogado) {
+    public ControladorDePontoDeColeta(PontoDeColetaRepository pontos, ServicoDeDoacao doacoes,
+                                      UsuarioLogado usuarioLogado) {
         this.pontos = pontos;
+        this.doacoes = doacoes;
         this.usuarioLogado = usuarioLogado;
     }
 
@@ -43,5 +48,11 @@ public class ControladorDePontoDeColeta {
                         QUANTIDADE_SUGERIDA).stream()
                 .map(PontoDeColetaResumido::de)
                 .toList();
+    }
+
+    /** UC02 passo 1 - horarios com vaga nas proximas duas semanas. */
+    @GetMapping("/{id}/horarios")
+    public List<OffsetDateTime> horarios(@PathVariable Long id) {
+        return doacoes.horariosDisponiveis(id);
     }
 }

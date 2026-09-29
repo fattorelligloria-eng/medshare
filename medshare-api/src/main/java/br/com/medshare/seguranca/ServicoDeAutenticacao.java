@@ -24,16 +24,16 @@ public class ServicoDeAutenticacao {
             "Esta conta está desativada. Fale com a equipe do MedShare.";
 
     private final UsuarioRepository usuarios;
-    private final MunicipioRepository municipios;
+    private final ServicoDeEndereco enderecos;
     private final PasswordEncoder codificador;
     private final AuthenticationManager autenticador;
     private final ServicoDeToken tokens;
 
-    public ServicoDeAutenticacao(UsuarioRepository usuarios, MunicipioRepository municipios,
+    public ServicoDeAutenticacao(UsuarioRepository usuarios, ServicoDeEndereco enderecos,
                                  PasswordEncoder codificador, AuthenticationManager autenticador,
                                  ServicoDeToken tokens) {
         this.usuarios = usuarios;
-        this.municipios = municipios;
+        this.enderecos = enderecos;
         this.codificador = codificador;
         this.autenticador = autenticador;
         this.tokens = tokens;
@@ -44,13 +44,10 @@ public class ServicoDeAutenticacao {
         recusarPapelRestrito(pedido.papeis());
         recusarCadastroDuplicado(pedido);
 
-        // RN09: se o municipio nao esta na tabela da Grande SP, nao existe cadastro.
-        Municipio municipio = municipios.findById(pedido.municipioId())
-                .orElseThrow(() -> new RegraDeNegocioViolada("RN09",
-                        "O MedShare atende apenas os 39 municípios da Grande São Paulo"));
-
-        Endereco endereco = new Endereco(pedido.cep(), pedido.logradouro(), pedido.numero(),
-                pedido.complemento(), pedido.bairro(), municipio,
+        // RN09: municipio da Grande SP, conferido contra o CEP; e as coordenadas
+        // que o matching usa para medir distancia.
+        Endereco endereco = enderecos.montar(pedido.cep(), pedido.logradouro(), pedido.numero(),
+                pedido.complemento(), pedido.bairro(), pedido.municipioId(),
                 pedido.latitude(), pedido.longitude());
 
         Usuario novo = new Usuario(pedido.nome(), pedido.cpf(), pedido.email(),

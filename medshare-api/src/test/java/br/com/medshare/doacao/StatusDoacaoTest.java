@@ -11,14 +11,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 class StatusDoacaoTest {
 
     @Test
-    @DisplayName("os estados finais sao exatamente os cinco previstos no diagrama")
+    @DisplayName("os estados finais sao os do diagrama; CANCELADA admite um reagendamento (UC02 A2)")
     void estadosFinais() {
         assertThat(java.util.Arrays.stream(StatusDoacao.values())
                 .filter(StatusDoacao::ehFinal)
                 .toList())
                 .containsExactlyInAnyOrder(
-                        StatusDoacao.ENTREGUE, StatusDoacao.RECUSADA, StatusDoacao.CANCELADA,
+                        StatusDoacao.ENTREGUE, StatusDoacao.RECUSADA,
                         StatusDoacao.REJEITADA, StatusDoacao.DESCARTADA);
+        assertThat(StatusDoacao.CANCELADA.proximosPossiveis()).containsExactly(StatusDoacao.AGENDADA);
+    }
+
+    @Test
+    @DisplayName("UC10 A2: a central pode devolver a doacao para CADASTRADA pedindo nova foto")
+    void centralPedeNovaFoto() {
+        assertThat(StatusDoacao.EM_ANALISE_CENTRAL.podeIrPara(StatusDoacao.CADASTRADA)).isTrue();
     }
 
     @ParameterizedTest

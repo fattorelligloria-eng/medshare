@@ -14,7 +14,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.EnumSet;
 import java.util.Set;
 
 /**
@@ -96,29 +99,32 @@ public class DadosDeDemonstracao implements CommandLineRunner {
     }
 
     private PontoDeColeta criarPontosDeColeta() {
+        var semana = EnumSet.range(DayOfWeek.MONDAY, DayOfWeek.FRIDAY);
+        var semanaESabado = EnumSet.range(DayOfWeek.MONDAY, DayOfWeek.SATURDAY);
+
         PontoDeColeta centro = pontos.save(new PontoDeColeta(
                 "Farmácia Parceira Sé", "11222333000181",
                 endereco("01001000", "Praça da Sé", "100", "Sé", "São Paulo",
                         -23.5505, -46.6339),
-                "Segunda a sexta, 8h às 18h"));
+                semana, LocalTime.of(8, 0), LocalTime.of(18, 0), 4));
 
         pontos.save(new PontoDeColeta(
                 "Farmácia Parceira Guarulhos", "11222333000262",
                 endereco("07010000", "Rua Dom Pedro II", "250", "Centro", "Guarulhos",
                         -23.4543, -46.5337),
-                "Segunda a sábado, 8h às 20h"));
+                semanaESabado, LocalTime.of(8, 0), LocalTime.of(20, 0), 4));
 
         pontos.save(new PontoDeColeta(
                 "Farmácia Parceira Santo André", "11222333000343",
                 endereco("09010000", "Rua Coronel Oliveira Lima", "80", "Centro", "Santo André",
                         -23.6639, -46.5383),
-                "Segunda a sexta, 9h às 19h"));
+                semana, LocalTime.of(9, 0), LocalTime.of(19, 0), 4));
 
         pontos.save(new PontoDeColeta(
                 "Farmácia Parceira Osasco", "11222333000424",
                 endereco("06010000", "Rua Antônio Agu", "400", "Centro", "Osasco",
                         -23.5324, -46.7916),
-                "Segunda a sexta, 8h às 18h"));
+                semana, LocalTime.of(8, 0), LocalTime.of(18, 0), 4));
 
         return centro;
     }
@@ -165,8 +171,9 @@ public class DadosDeDemonstracao implements CommandLineRunner {
                 "http://localhost:8080/fotos-locais/demo-sovaldi.jpg", ana);
         doacoes.decidirNaCentral(aguardandoRecebimento.getCodigo(),
                 RevisaoCentral.Decisao.APROVADA, "Foto nítida, lacre de fábrica intacto", diego);
-        doacoes.agendar(aguardandoRecebimento.getCodigo(), centro.getId(),
-                java.time.OffsetDateTime.now().plusDays(2), ana);
+        // O agendamento so aceita horario com vaga e com a farmacia aberta (UC02).
+        var horarios = doacoes.horariosDisponiveis(centro.getId());
+        doacoes.agendar(aguardandoRecebimento.getCodigo(), centro.getId(), horarios.get(1), ana);
 
         // 3) Ja recebida: aguarda a conferencia do lacre (RN01).
         var aguardandoConferencia = doacoes.cadastrar(tivicay, "TIV2026C",
@@ -174,8 +181,7 @@ public class DadosDeDemonstracao implements CommandLineRunner {
                 "http://localhost:8080/fotos-locais/demo-tivicay.jpg", ana);
         doacoes.decidirNaCentral(aguardandoConferencia.getCodigo(),
                 RevisaoCentral.Decisao.APROVADA, "Leitura conferiu com o cadastro", diego);
-        doacoes.agendar(aguardandoConferencia.getCodigo(), centro.getId(),
-                java.time.OffsetDateTime.now().plusDays(1), ana);
+        doacoes.agendar(aguardandoConferencia.getCodigo(), centro.getId(), horarios.get(0), ana);
         doacoes.receber(aguardandoConferencia.getCodigo(), carla);
     }
 

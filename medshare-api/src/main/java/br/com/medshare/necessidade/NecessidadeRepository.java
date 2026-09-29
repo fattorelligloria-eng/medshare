@@ -11,20 +11,31 @@ public interface NecessidadeRepository extends JpaRepository<Necessidade, Long> 
 
     List<Necessidade> findByBeneficiarioIdAndAtivaTrue(Long beneficiarioId);
 
-    Optional<Necessidade> findByBeneficiarioIdAndMedicamentoIdAndAtivaTrue(
-            Long beneficiarioId, Long medicamentoId);
+    /** RN04 / UC04 A4 - um pedido ativo por principio ativo. */
+    @Query("""
+            SELECT n FROM Necessidade n
+            WHERE n.beneficiario.id = :beneficiarioId
+              AND n.ativa = TRUE
+              AND LOWER(TRIM(n.medicamento.principioAtivo)) = LOWER(TRIM(:principioAtivo))
+            """)
+    Optional<Necessidade> ativaDoPrincipioAtivo(@Param("beneficiarioId") Long beneficiarioId,
+                                                @Param("principioAtivo") String principioAtivo);
 
     /**
-     * Fila de espera de um medicamento, por ordem de chegada.
-     * Quem pediu primeiro e atendido primeiro: e o criterio mais simples de
-     * explicar para quem esta esperando, e o unico que nao exige o sistema
-     * julgar quem precisa mais.
+     * UC05 - a fila de um principio ativo: quem perdeu uma caixa por validade
+     * primeiro (UC07 A2), depois por ordem de chegada. So entra quem esta fora
+     * de revisao e sem oferta aberta; a distancia e a receita sao conferidas
+     * depois, no matching.
      */
     @Query("""
             SELECT n FROM Necessidade n
-            WHERE n.medicamento.id = :medicamentoId
+            WHERE LOWER(TRIM(n.medicamento.principioAtivo)) = LOWER(TRIM(:principioAtivo))
               AND n.ativa = TRUE
-            ORDER BY n.criadaEm ASC
+              AND n.emRevisao = FALSE
+              AND NOT EXISTS (
+                  SELECT o FROM Oferta o
+                  WHERE o.necessidade = n AND o.status = br.com.medshare.reserva.Oferta.Status.PENDENTE)
+            ORDER BY n.prioridade DESC, n.criadaEm ASC
             """)
-    List<Necessidade> filaDeEsperaDoMedicamento(@Param("medicamentoId") Long medicamentoId);
+    List<Necessidade> filaDoPrincipioAtivo(@Param("principioAtivo") String principioAtivo);
 }

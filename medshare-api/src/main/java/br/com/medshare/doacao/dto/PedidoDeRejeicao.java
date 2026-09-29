@@ -8,5 +8,6 @@ public record PedidoDeRejeicao(
         boolean lacreIntegro,
         boolean dadosConferem,
         @NotBlank(message = "descreva o motivo da rejeição")
-        @Size(max = 400, message = "resuma o motivo em até 400 caracteres") String motivo
+        @Size(max = 400, message = "resuma o motivo em até 400 caracteres") String motivo,
+        @Size(max = 500) String fotoUrl
 ) { }

@@ -43,6 +43,10 @@ public class VerificacaoCadUnico {
     @Column(nullable = false)
     private String fonte = "PORTAL_TRANSPARENCIA";
 
+    /** UC04 A2 - o Portal estava fora do ar; uma rotina tenta de novo. */
+    @Column(name = "consulta_pendente", nullable = false)
+    private boolean consultaPendente;
+
     protected VerificacaoCadUnico() { }
 
     public VerificacaoCadUnico(Usuario usuario, String nis, boolean confirmado,
@@ -59,6 +63,23 @@ public class VerificacaoCadUnico {
         this.confirmado = true;
         this.validoAte = LocalDate.now().plusMonths(mesesDeValidade);
         this.fonte = "CENTRAL";
+    }
+
+    public void marcarConsultaPendente() {
+        this.consultaPendente = true;
+    }
+
+    /** Resultado da nova tentativa de consulta ao Portal (UC04 A2). */
+    public void registrarNovaConsulta(boolean confirmadoAgora, int mesesDeValidade) {
+        this.consultaPendente = false;
+        if (confirmadoAgora) {
+            this.confirmado = true;
+            this.validoAte = LocalDate.now().plusMonths(mesesDeValidade);
+        }
+    }
+
+    public boolean isConsultaPendente() {
+        return consultaPendente;
     }
 
     public boolean estaVigente() {

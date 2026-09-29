@@ -5,7 +5,9 @@ import br.com.medshare.doacao.dto.DoacaoResumida;
 import br.com.medshare.prevalidacao.dto.CasoDaCentral;
 import br.com.medshare.prevalidacao.dto.PedidoDeRevisao;
 import br.com.medshare.necessidade.ServicoDeNecessidade;
+import br.com.medshare.integracao.RepositorioDeFotos;
 import br.com.medshare.seguranca.UsuarioLogado;
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,10 +29,12 @@ public class ControladorDaCentral {
     private final ServicoDeDoacao servico;
     private final ServicoDeNecessidade servicoDeNecessidade;
     private final UsuarioLogado usuarioLogado;
+    private final RepositorioDeFotos fotos;
 
     public ControladorDaCentral(DoacaoRepository doacoes, AnalisePreValidacaoRepository analises,
                                 ServicoDeDoacao servico, ServicoDeNecessidade servicoDeNecessidade,
-                                UsuarioLogado usuarioLogado) {
+                                UsuarioLogado usuarioLogado, RepositorioDeFotos fotos) {
+        this.fotos = fotos;
         this.doacoes = doacoes;
         this.analises = analises;
         this.servico = servico;
@@ -38,18 +42,26 @@ public class ControladorDaCentral {
         this.usuarioLogado = usuarioLogado;
     }
 
+    /** UC10 passo 1 - ordenada por tempo de espera: quem espera ha mais tempo primeiro. */
     @GetMapping("/fila")
+    @Transactional(readOnly = true)
     public Page<CasoDaCentral> fila(Pageable pagina) {
         return doacoes
-                .findByStatusOrderByCriadoEmDesc(StatusDoacao.EM_ANALISE_CENTRAL, pagina)
-                .map(doacao -> CasoDaCentral.de(doacao,
-                        analises.findByDoacaoId(doacao.getId()).orElse(null)));
+                .findByStatusOrderByAtualizadoEmAsc(StatusDoacao.EM_ANALISE_CENTRAL, pagina)
+                .map(this::caso);
     }
 
     @GetMapping("/casos/{codigo}")
+    @Transactional(readOnly = true)
     public CasoDaCentral detalhar(@PathVariable String codigo) {
-        Doacao doacao = servico.buscarPorCodigo(codigo);
-        return CasoDaCentral.de(doacao, analises.findByDoacaoId(doacao.getId()).orElse(null));
+        return caso(servico.buscarPorCodigo(codigo));
+    }
+
+    /** UC10 passo 2 - a ultima leitura da foto (a doacao pode ter recebido foto nova). */
+    private CasoDaCentral caso(Doacao doacao) {
+        return CasoDaCentral.de(doacao,
+                analises.findFirstByDoacaoIdOrderByCriadoEmDesc(doacao.getId()).orElse(null),
+                fotos.urlAssinada(doacao.getFotoUrl()));
     }
 
     /**

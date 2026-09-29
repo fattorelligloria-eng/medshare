@@ -4,6 +4,7 @@ import br.com.medshare.doacao.Doacao;
 import br.com.medshare.prevalidacao.AnalisePreValidacao;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 /**
@@ -26,14 +27,18 @@ public record CasoDaCentral(
         String certeza,
         String motivo,
         String avaliador,
-        List<String> divergencias
+        List<String> divergencias,
+        /** UC10 passo 1 - desde quando o caso espera na central. */
+        OffsetDateTime esperandoDesde,
+        boolean lacreDeclarado
 ) {
 
-    public static CasoDaCentral de(Doacao doacao, AnalisePreValidacao analise) {
+    /** @param fotoAssinada link com prazo para exibir a foto (nunca a URL gravada) */
+    public static CasoDaCentral de(Doacao doacao, AnalisePreValidacao analise, String fotoAssinada) {
         return new CasoDaCentral(
                 doacao.getCodigo(),
                 doacao.getMedicamento().descricaoCompleta(),
-                doacao.getFotoUrl(),
+                fotoAssinada,
                 doacao.getLote(),
                 doacao.getValidade(),
                 doacao.getMedicamento().getEan(),
@@ -44,6 +49,8 @@ public record CasoDaCentral(
                 analise == null ? null : analise.getCerteza().name(),
                 analise == null ? null : analise.getMotivo(),
                 analise == null ? null : analise.getAvaliador(),
-                analise == null ? List.of() : analise.getDivergencias());
+                analise == null ? List.of() : analise.getDivergencias(),
+                doacao.getAtualizadoEm(),
+                doacao.isLacreDeclarado());
     }
 }

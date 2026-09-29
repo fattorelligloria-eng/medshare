@@ -1,15 +1,19 @@
 package br.com.medshare.reserva.dto;
 
+import br.com.medshare.necessidade.Procurador;
 import br.com.medshare.reserva.Reserva;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.List;
 
 /**
- * RN03 - o que o farmaceutico ve no balcao para conferir a retirada.
+ * RN03 / UC07 passo 2 - o que o farmaceutico ve no balcao para conferir a
+ * retirada.
  *
- * Tem o nome do titular e o CPF parcialmente mascarado, para comparar com o
- * documento, e a receita anexada. Nada sobre quem doou (RN05).
+ * Tem o nome do titular e o CPF parcialmente mascarado, os procuradores
+ * cadastrados (A3), a receita anexada (link com prazo) e a validade da caixa
+ * (RN02). Nada sobre quem doou (RN05).
  */
 public record ConferenciaDaRetirada(
         String codigoRetirada,
@@ -17,8 +21,11 @@ public record ConferenciaDaRetirada(
         OffsetDateTime expiraEm,
         String medicamento,
         String principioAtivo,
+        String apresentacao,
+        LocalDate validadeDaCaixa,
         String titular,
         String cpfDoTitular,
+        List<ProcuradorResumido> procuradores,
         String receitaFotoUrl,
         String receitaCrm,
         LocalDate receitaEmissao,
@@ -26,10 +33,14 @@ public record ConferenciaDaRetirada(
         boolean receitaValida
 ) {
 
-    public static ConferenciaDaRetirada de(Reserva reserva) {
+    public record ProcuradorResumido(String nome, String cpf) { }
+
+    public static ConferenciaDaRetirada de(Reserva reserva, String receitaAssinada,
+                                           List<Procurador> procuradores) {
         var necessidade = reserva.getNecessidade();
         var beneficiario = necessidade.getBeneficiario();
-        var medicamento = reserva.getDoacao().getMedicamento();
+        var doacao = reserva.getDoacao();
+        var medicamento = doacao.getMedicamento();
         var receita = necessidade.getReceita();
         return new ConferenciaDaRetirada(
                 reserva.getCodigoRetirada(),
@@ -37,9 +48,14 @@ public record ConferenciaDaRetirada(
                 reserva.getExpiraEm(),
                 medicamento.getNomeComercial(),
                 medicamento.getPrincipioAtivo(),
+                medicamento.getApresentacao(),
+                doacao.getValidade(),
                 beneficiario.getNome(),
                 mascarar(beneficiario.getCpf()),
-                receita == null ? null : receita.getFotoUrl(),
+                procuradores.stream()
+                        .map(p -> new ProcuradorResumido(p.getNome(), p.getCpf()))
+                        .toList(),
+                receitaAssinada,
                 receita == null ? null : "CRM-%s %s".formatted(receita.getUfCrm(), receita.getCrmMedico()),
                 receita == null ? null : receita.getDataEmissao(),
                 receita == null ? null : receita.getValidade(),

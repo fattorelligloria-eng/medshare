@@ -13,17 +13,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 
 /**
- * Da reserva ate a entrega.
+ * Da reserva ate a entrega (UC06 e UC07).
  *
- * Aqui se cruzam quatro regras, e a ordem em que sao conferidas importa: RN08
- * (o beneficiario esta no CadUnico), RN03 (tem receita valida), RN04 (nao tem
- * outra reserva ativa do mesmo medicamento) e RN02 (a caixa ainda tem prazo).
- * Conferimos tudo antes de prender a caixa, para nao tirar do estoque um
- * medicamento que a pessoa nao conseguiria retirar.
+ * A reserva nasce do aceite de uma oferta (ServicoDeOferta). Aqui ficam a
+ * retirada no balcao, a entrega negada, o cancelamento e as rotinas que
+ * devolvem ao estoque o que nao foi retirado — sempre oferecendo a caixa para
+ * a proxima pessoa da fila.
  */
 @Service
 public class ServicoDeReserva {
@@ -32,108 +32,114 @@ public class ServicoDeReserva {
 
     private final ReservaRepository reservas;
     private final EntregaRepository entregas;
-    private final NecessidadeRepository pedidos;
-    private final ServicoDeNecessidade necessidades;
-    private final VerificacaoCadUnicoRepository verificacoes;
+    private final ProcuradorRepository procuradores;
     private final FarmaceuticoRepository farmaceuticos;
-    private final ServicoDeMatching matching;
-    private final GeradorDeCodigo codigos;
+    private final ServicoDeOferta ofertas;
     private final ServicoDeNotificacao notificacoes;
     private final PropriedadesDoMedShare propriedades;
 
     public ServicoDeReserva(ReservaRepository reservas, EntregaRepository entregas,
-                            NecessidadeRepository pedidos, ServicoDeNecessidade necessidades,
-                            VerificacaoCadUnicoRepository verificacoes,
-                            FarmaceuticoRepository farmaceuticos, ServicoDeMatching matching,
-                            GeradorDeCodigo codigos, ServicoDeNotificacao notificacoes,
+                            ProcuradorRepository procuradores, FarmaceuticoRepository farmaceuticos,
+                            ServicoDeOferta ofertas, ServicoDeNotificacao notificacoes,
                             PropriedadesDoMedShare propriedades) {
         this.reservas = reservas;
         this.entregas = entregas;
-        this.pedidos = pedidos;
-        this.necessidades = necessidades;
-        this.verificacoes = verificacoes;
+        this.procuradores = procuradores;
         this.farmaceuticos = farmaceuticos;
-        this.matching = matching;
-        this.codigos = codigos;
+        this.ofertas = ofertas;
         this.notificacoes = notificacoes;
         this.propriedades = propriedades;
     }
 
-    @Transactional
-    public Reserva reservarPara(Long necessidadeId, Usuario beneficiario) {
-        Necessidade necessidade = pedidos.findById(necessidadeId)
-                .orElseThrow(() -> new RecursoNaoEncontrado("Necessidade", necessidadeId));
-
-        exigirQueSejaODono(necessidade, beneficiario);
-        exigirNecessidadeAtiva(necessidade);          // RN04
-        exigirCadUnicoVigente(beneficiario);          // RN08
-        necessidade.exigirReceitaValida();            // RN03
-        exigirQueNaoTenhaReservaAtiva(necessidade);   // RN04
-
-        Doacao doacao = matching.melhorDoacaoPara(necessidade)
-                .orElseThrow(() -> new RegraDeNegocioViolada("ESTOQUE",
-                        "Ainda não há %s disponível. Você está na fila e será avisado."
-                                .formatted(necessidade.getMedicamento().getNomeComercial())));
-
-        Reserva reserva = new Reserva(codigos.paraRetirada(), doacao, necessidade,
-                propriedades.reserva().horasParaRetirada());
-        doacao.reservar(beneficiario);
-        reservas.save(reserva);
-
-        notificacoes.avisar(beneficiario, TipoNotificacao.RESERVA_CRIADA,
-                "Medicamento reservado",
-                "Retire %s em %s até %s. Código: %s. Leve documento e a receita."
-                        .formatted(necessidade.getMedicamento().getNomeComercial(),
-                                doacao.getPontoDeColeta().getNome(),
-                                reserva.getExpiraEm().toLocalDate(),
-                                reserva.getCodigoRetirada()));
-        return reserva;
-    }
-
     /**
-     * A retirada no balcao. RN03 - o farmaceutico confere a receita e o
-     * documento antes de entregar; sem as duas conferencias, o objeto Entrega
-     * nem chega a ser construido.
+     * UC07 - a retirada no balcao.
+     *
+     * RN03: o farmaceutico confere receita e documento; sem as duas
+     * conferencias o objeto Entrega nem chega a ser construido.
+     * RN02: a validade minima vale no momento da retirada (A2).
+     * A3: quem retira e o titular ou um procurador cadastrado antes.
      */
-    @Transactional
+    @Transactional(noRollbackFor = ValidadeInsuficienteNaRetirada.class)
     public Entrega registrarRetirada(String codigoRetirada, boolean receitaConferida,
-                                     boolean documentoConferido, Usuario usuarioFarmaceutico) {
+                                     boolean documentoConferido, String cpfDeQuemRetira,
+                                     Usuario usuarioFarmaceutico) {
         Reserva reserva = buscarNoBalcao(codigoRetirada, usuarioFarmaceutico);
         Farmaceutico farmaceutico = buscarFarmaceutico(usuarioFarmaceutico);
 
+        if (reserva.getStatus() != StatusReserva.ATIVA) {
+            throw new RegraDeNegocioViolada("RESERVA",
+                    "Esta reserva está %s e não pode ser entregue".formatted(reserva.getStatus()));
+        }
         if (reserva.venceu()) {
             throw new RegraDeNegocioViolada("RESERVA",
-                    "Esta reserva venceu em %s. Peça ao beneficiário para reservar de novo."
-                            .formatted(reserva.getExpiraEm()));
+                    "Esta reserva venceu em %s. O beneficiário volta para a fila.".formatted(reserva.getExpiraEm()));
         }
 
-        Entrega entrega = entregas.save(
-                new Entrega(reserva, farmaceutico, receitaConferida, documentoConferido));
+        Doacao doacao = reserva.getDoacao();
+        int diasMinimos = propriedades.doacao().diasMinimosDeValidade();
+        if (!doacao.aindaTemValidadeSuficiente(diasMinimos)) {
+            descartarPorValidade(reserva, usuarioFarmaceutico);
+            throw new ValidadeInsuficienteNaRetirada(doacao.diasAteVencer(), diasMinimos);
+        }
+
+        Usuario titular = reserva.getNecessidade().getBeneficiario();
+        String cpf = cpfDeQuemRetira == null || cpfDeQuemRetira.isBlank()
+                ? titular.getCpf() : cpfDeQuemRetira.replaceAll("\\D", "");
+        boolean porProcurador = !cpf.equals(titular.getCpf());
+        if (porProcurador && !procuradores.existsByBeneficiarioIdAndCpf(titular.getId(), cpf)) {
+            throw new RegraDeNegocioViolada("RN03",
+                    "Esta pessoa não está cadastrada como procuradora do beneficiário. "
+                            + "Só o titular ou um procurador cadastrado no app pode retirar.");
+        }
+
+        Entrega entrega = entregas.save(new Entrega(reserva, farmaceutico,
+                receitaConferida, documentoConferido, cpf, porProcurador));
 
         reserva.concluir();
-        reserva.getDoacao().entregar(usuarioFarmaceutico);
+        doacao.entregar(usuarioFarmaceutico);
         reserva.getNecessidade().encerrar();
 
         avisarOsDoisLadosSemSeApresentarem(reserva);
         return entrega;
     }
 
+    /**
+     * UC07 A1 - a receita nao bate com o principio ativo: a entrega e negada,
+     * a reserva cai, a caixa volta ao estoque (e a proxima pessoa recebe a
+     * oferta) e o pedido fica em revisao ate chegar uma receita nova.
+     */
+    @Transactional
+    public Reserva negarEntrega(String codigoRetirada, String motivo, Usuario usuarioFarmaceutico) {
+        Reserva reserva = buscarNoBalcao(codigoRetirada, usuarioFarmaceutico);
+        reserva.cancelar();
+        reserva.getDoacao().liberarReservaCancelada("Entrega negada no balcão: " + motivo, usuarioFarmaceutico);
+        reserva.getNecessidade().marcarParaRevisao(motivo);
+
+        notificacoes.avisar(reserva.getNecessidade().getBeneficiario(), TipoNotificacao.ENTREGA_NEGADA,
+                "Retirada não concluída",
+                "A farmácia não pôde entregar %s: %s. Envie uma receita atualizada no app para voltar à fila."
+                        .formatted(reserva.getDoacao().getMedicamento().getNomeComercial(), motivo));
+        ofertas.ofertarDoacao(reserva.getDoacao());
+        return reserva;
+    }
+
     @Transactional
     public Reserva cancelar(String codigoRetirada, Usuario solicitante) {
         Reserva reserva = reservas.findByCodigoRetirada(codigoRetirada)
                 .orElseThrow(() -> new RecursoNaoEncontrado("Código de retirada", codigoRetirada));
-        exigirQueSejaODono(reserva.getNecessidade(), solicitante);
+        if (!reserva.getNecessidade().getBeneficiario().getId().equals(solicitante.getId())) {
+            throw new RecursoNaoEncontrado("Código de retirada", codigoRetirada);
+        }
 
         reserva.cancelar();
         reserva.getDoacao().liberarReservaCancelada(solicitante);
-        necessidades.avisarFilaDeEspera(reserva.getDoacao().getMedicamento());
+        ofertas.ofertarDoacao(reserva.getDoacao());
         return reserva;
     }
 
     /**
      * RN03 - o que o farmaceutico precisa ver para conferir a retirada: quem e
-     * o titular (para comparar com o documento) e a receita anexada. So a
-     * farmacia onde a caixa esta enxerga isso.
+     * o titular e a receita anexada. So a farmacia onde a caixa esta enxerga isso.
      */
     @Transactional(readOnly = true)
     public Reserva buscarNoBalcao(String codigoRetirada, Usuario usuarioFarmaceutico) {
@@ -148,10 +154,17 @@ public class ServicoDeReserva {
         return reserva;
     }
 
+    @Transactional(readOnly = true)
+    public List<Procurador> procuradoresDe(Reserva reserva) {
+        return procuradores.findByBeneficiarioIdOrderByNome(
+                reserva.getNecessidade().getBeneficiario().getId());
+    }
+
+    // --- rotinas --------------------------------------------------------------
+
     /**
-     * Devolve ao estoque o que ninguem retirou no prazo.
-     * Roda de hora em hora: uma caixa presa numa reserva abandonada e uma caixa
-     * que alguem da fila poderia estar usando.
+     * UC06 A3 - reserva nao retirada no prazo volta ao estoque, e a caixa e
+     * oferecida a proxima pessoa. O beneficiario continua na fila.
      */
     @Transactional
     public int liberarReservasVencidas() {
@@ -164,10 +177,10 @@ public class ServicoDeReserva {
             notificacoes.avisar(reserva.getNecessidade().getBeneficiario(),
                     TipoNotificacao.RESERVA_EXPIRADA,
                     "Reserva expirada",
-                    "O prazo para retirar %s terminou. Voce pode reservar novamente."
+                    "O prazo para retirar %s terminou. Você continua na fila."
                             .formatted(reserva.getDoacao().getMedicamento().getNomeComercial()));
-            necessidades.avisarFilaDeEspera(reserva.getDoacao().getMedicamento());
         }
+        vencidas.forEach(reserva -> ofertas.ofertarDoacao(reserva.getDoacao()));
         if (!vencidas.isEmpty()) {
             log.info("{} reserva(s) expirada(s) devolvida(s) ao estoque", vencidas.size());
         }
@@ -175,9 +188,36 @@ public class ServicoDeReserva {
     }
 
     /**
+     * RN02 / UC07 A2 antes de a pessoa sair de casa: reserva cuja caixa ja nao
+     * alcanca a validade minima e desfeita, a caixa e descartada e o
+     * beneficiario volta a fila com prioridade.
+     */
+    @Transactional
+    public int descartarReservasSemValidade() {
+        LocalDate validadeMinima = LocalDate.now().plusDays(propriedades.doacao().diasMinimosDeValidade());
+        List<Reserva> afetadas = reservas.ativasComValidadeAbaixoDe(validadeMinima);
+        afetadas.forEach(reserva -> descartarPorValidade(reserva, null));
+        return afetadas.size();
+    }
+
+    private void descartarPorValidade(Reserva reserva, Usuario responsavel) {
+        int diasMinimos = propriedades.doacao().diasMinimosDeValidade();
+        reserva.cancelar();
+        reserva.getDoacao().descartar(
+                "validade abaixo do mínimo de %d dias na data da retirada".formatted(diasMinimos), responsavel);
+        Necessidade necessidade = reserva.getNecessidade();
+        necessidade.priorizar();
+
+        notificacoes.avisar(necessidade.getBeneficiario(), TipoNotificacao.RESERVA_EXPIRADA,
+                "Reserva cancelada pela validade",
+                "A caixa de %s reservada para você chegou perto do vencimento e não pode ser entregue. "
+                        .formatted(reserva.getDoacao().getMedicamento().getNomeComercial())
+                        + "Você voltou para a fila com prioridade.");
+        ofertas.ofertarParaNecessidade(necessidade);
+    }
+
+    /**
      * RN05 - os dois recebem aviso, nenhum recebe o nome do outro.
-     * O doador fica sabendo que a doacao dele foi usada; o beneficiario, que a
-     * retirada foi concluida. Nenhuma das duas mensagens cita a outra pessoa.
      */
     private void avisarOsDoisLadosSemSeApresentarem(Reserva reserva) {
         String medicamento = reserva.getDoacao().getMedicamento().getNomeComercial();
@@ -193,60 +233,9 @@ public class ServicoDeReserva {
                         .formatted(medicamento));
     }
 
-    // --- guardas -------------------------------------------------------------
-
     private Farmaceutico buscarFarmaceutico(Usuario usuario) {
         return farmaceuticos.findById(usuario.getId())
                 .orElseThrow(() -> new RegraDeNegocioViolada("RN10",
                         "Somente um farmacêutico cadastrado pode registrar a entrega"));
-    }
-
-    /**
-     * RN04 - pedido encerrado (ja atendido ou cancelado) nao reserva de novo.
-     * Sem isto, o id de um pedido ja entregue, com a mesma receita, servia
-     * para tirar outra caixa do estoque.
-     */
-    private void exigirNecessidadeAtiva(Necessidade necessidade) {
-        if (!necessidade.isAtiva()) {
-            throw new RegraDeNegocioViolada("RN04",
-                    "Este pedido já foi encerrado. Faça um novo pedido se ainda precisar do medicamento.");
-        }
-    }
-
-    private void exigirQueSejaODono(Necessidade necessidade, Usuario usuario) {
-        if (!necessidade.getBeneficiario().getId().equals(usuario.getId())) {
-            throw new RegraDeNegocioViolada("RN05", "Este pedido pertence a outra pessoa");
-        }
-    }
-
-    /** RN08 - sem CadUnico vigente nao ha reserva. */
-    private void exigirCadUnicoVigente(Usuario beneficiario) {
-        boolean vigente = verificacoes
-                .findFirstByUsuarioIdOrderByValidoAteDesc(beneficiario.getId())
-                .map(VerificacaoCadUnico::estaVigente)
-                .orElse(false);
-
-        if (!vigente) {
-            throw new RegraDeNegocioViolada("RN08",
-                    "Para receber medicamentos é preciso ter NIS ativo no CadÚnico. "
-                            + "Informe seu NIS no aplicativo para fazermos a verificação.");
-        }
-    }
-
-    /** RN04 - uma reserva ativa por medicamento por beneficiario. */
-    private void exigirQueNaoTenhaReservaAtiva(Necessidade necessidade) {
-        boolean jaTem = reservas
-                .findByNecessidadeBeneficiarioIdOrderByCriadaEmDesc(
-                        necessidade.getBeneficiario().getId())
-                .stream()
-                .anyMatch(reserva -> reserva.getStatus() == StatusReserva.ATIVA
-                        && reserva.getNecessidade().getMedicamento().getId()
-                                .equals(necessidade.getMedicamento().getId()));
-
-        if (jaTem) {
-            throw new RegraDeNegocioViolada("RN04",
-                    "Você já tem uma reserva ativa de %s. Retire ou cancele antes de reservar outra."
-                            .formatted(necessidade.getMedicamento().getNomeComercial()));
-        }
     }
 }

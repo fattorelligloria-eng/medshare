@@ -6,5 +6,6 @@ import java.util.Optional;
 
 public interface AnalisePreValidacaoRepository extends JpaRepository<AnalisePreValidacao, Long> {
 
-    Optional<AnalisePreValidacao> findByDoacaoId(Long doacaoId);
+    /** A doacao pode ter varias analises (nova foto - UC10 A2); vale a mais recente. */
+    Optional<AnalisePreValidacao> findFirstByDoacaoIdOrderByCriadoEmDesc(Long doacaoId);
 }

@@ -10,6 +10,8 @@ public interface PontoDeColetaRepository extends JpaRepository<PontoDeColeta, Lo
 
     List<PontoDeColeta> findByAtivoTrueOrderByNome();
 
+    boolean existsByCnpj(String cnpj);
+
     /**
      * Pontos de coleta ativos ordenados por distancia do endereco informado.
      * A conta e feita no banco pela funcao distancia_km (Haversine), e nao em

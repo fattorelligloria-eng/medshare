@@ -111,8 +111,10 @@ class DoacaoTest {
             doacao.enviarParaCentral("lote lido difere do informado", doador);
 
             assertThat(doacao.getStatus()).isEqualTo(StatusDoacao.EM_ANALISE_CENTRAL);
+            // Aprovar, recusar ou pedir outra foto (UC10 A2) - nunca a IA sozinha.
             assertThat(doacao.getStatus().proximosPossiveis())
-                    .containsExactlyInAnyOrder(StatusDoacao.PRE_VALIDADA, StatusDoacao.RECUSADA);
+                    .containsExactlyInAnyOrder(StatusDoacao.PRE_VALIDADA, StatusDoacao.RECUSADA,
+                            StatusDoacao.CADASTRADA);
         }
 
         @Test

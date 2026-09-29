@@ -61,10 +61,10 @@ public class ConsultaNoPortalDaTransparencia implements ConsultaDeCadUnico {
         for (int i = 0; i < MESES_CONSULTADOS; i++) {
             Boolean encontrado = apareceNoMes(nis, mes.format(ANO_E_MES));
             if (encontrado == null) {
-                // A API não respondeu. Não é culpa de quem está pedindo.
-                return ResultadoDaConsulta.naoEncontrado(
-                        "Não conseguimos falar com o Portal da Transparência agora; "
-                                + "o caso foi para conferência da nossa equipe");
+                // A API não respondeu. Não é culpa de quem está pedindo (UC04 A2).
+                return ResultadoDaConsulta.indisponivel(
+                        "Não conseguimos falar com o Portal da Transparência agora. "
+                                + "Guardamos seu NIS e tentamos de novo sozinhos; você é avisado quando confirmar.");
             }
             if (encontrado) {
                 return ResultadoDaConsulta.confirmado(
