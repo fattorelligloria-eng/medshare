@@ -30,7 +30,7 @@ export function NovoPedido() {
   return (
     <>
       <CabecalhoInterno titulo="Do que você precisa?" para="/app/pedidos" />
-      <div className="conteudo-app" style={{ paddingTop: 22, flex: 1 }}>
+      <div className="conteudo-app cresce" style={{ paddingTop: 22 }}>
         <AvisoDeErro erro={erro} />
         {erro instanceof ErroDaApi && erro.regra === 'RN08' && (
           // RN08 — sem CadÚnico confirmado não há pedido; o caminho é informar o NIS.

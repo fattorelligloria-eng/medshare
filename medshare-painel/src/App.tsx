@@ -4,7 +4,7 @@ import { useAutenticacao } from './contexto/Autenticacao'
 import { Login } from './paginas/Login'
 import { Cadastro } from './paginas/Cadastro'
 
-import { MolduraDoApp, TelaDoApp } from './componentes/MolduraDoApp'
+import { AreaDoApp, TelaInterna } from './componentes/AreaDoApp'
 import { Doacoes } from './app/Doacoes'
 import { NovaDoacao } from './app/NovaDoacao'
 import { DetalheDaDoacao } from './app/DetalheDaDoacao'
@@ -27,9 +27,11 @@ import { Notificacoes } from './paginas/Notificacoes'
 /**
  * Duas áreas, propositalmente diferentes:
  *
- *   /app     — o aplicativo, em moldura de celular. É o produto.
- *   /painel  — a mesa de trabalho da farmácia e da central, em tela de
- *              computador, porque é nisso que elas trabalham.
+ *   /app     — o produto: o que o doador e o beneficiário usam.
+ *   /painel  — a mesa de trabalho da farmácia e da central.
+ *
+ * As duas abrem no navegador e usam a tela que têm. O /app também roda dentro
+ * do aplicativo Android, com as mesmas telas.
  *
  * Quem entra cai na área do seu papel. Quem acumula papéis escolhe pelo menu.
  */
@@ -56,7 +58,7 @@ export function App() {
   return (
     <Routes>
       {/* --- o aplicativo, com navegação de baixo --- */}
-      <Route element={<MolduraDoApp />}>
+      <Route element={<AreaDoApp />}>
         {temPapel('DOADOR') && <Route path="/app/doacoes" element={<Doacoes />} />}
         {temPapel('BENEFICIARIO') && (
           <>
@@ -68,7 +70,7 @@ export function App() {
       </Route>
 
       {/* --- telas internas do aplicativo, sem navegação de baixo --- */}
-      <Route element={<TelaDoApp />}>
+      <Route element={<TelaInterna />}>
         <Route path="/app/notificacoes" element={<Notificacoes />} />
         {temPapel('DOADOR') && (
           <>

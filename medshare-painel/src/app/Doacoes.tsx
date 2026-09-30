@@ -89,7 +89,7 @@ export function Doacoes() {
         </div>
       )}
 
-      <div className="conteudo-app" style={{ paddingTop: 26, flex: 1 }}>
+      <div className="conteudo-app cresce" style={{ paddingTop: 26 }}>
         <AvisoDeErro erro={erro} />
 
         {carregando && <p style={{ color: 'var(--tinta-fraca)', fontSize: 14 }}>Carregando…</p>}

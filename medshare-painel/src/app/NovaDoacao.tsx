@@ -73,7 +73,7 @@ export function NovaDoacao() {
     return (
       <>
         <CabecalhoInterno titulo="Qual medicamento?" para="/app/doacoes" />
-        <div className="conteudo-app" style={{ paddingTop: 22, flex: 1 }}>
+        <div className="conteudo-app cresce" style={{ paddingTop: 22 }}>
           <BuscaDeMedicamento aoEscolher={definirMedicamento} />
         </div>
       </>
@@ -84,7 +84,7 @@ export function NovaDoacao() {
     <>
       <CabecalhoInterno titulo="Dados da caixa" />
 
-      <div className="conteudo-app" style={{ paddingTop: 22, flex: 1 }}>
+      <div className="conteudo-app cresce" style={{ paddingTop: 22 }}>
         <AvisoDeErro erro={erro} />
 
         <div style={{ paddingBottom: 18, borderBottom: '1px solid var(--linha)', marginBottom: 20 }}>

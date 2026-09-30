@@ -42,7 +42,7 @@ export function CadUnico() {
     <>
       <CabecalhoInterno titulo="CadÚnico" para={acabouDeSeCadastrar ? undefined : '/app/conta'} />
 
-      <div className="conteudo-app" style={{ paddingTop: 22, flex: 1 }}>
+      <div className="conteudo-app cresce" style={{ paddingTop: 22 }}>
         {acabouDeSeCadastrar && (
           <AvisoDeSucesso>Conta criada. Falta só um passo.</AvisoDeSucesso>
         )}

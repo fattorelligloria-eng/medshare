@@ -61,7 +61,7 @@ export function EnvioDeReceita() {
     <>
       <CabecalhoInterno titulo="Enviar receita" para="/app/pedidos" />
 
-      <div className="conteudo-app" style={{ paddingTop: 22, flex: 1 }}>
+      <div className="conteudo-app cresce" style={{ paddingTop: 22 }}>
         <AvisoDeErro erro={erro} />
 
         <h1 className="humano" style={{ fontSize: 25 }}>A receita do médico</h1>

@@ -1,10 +1,4 @@
 # Roda a cada push e a cada pull request.
-#
-# O ponto não é o selo verde: é que ninguém precise acreditar em "na minha
-# máquina funciona". O GitHub clona o repositório do zero, numa máquina limpa,
-# e roda os testes. Se quebrou, quebrou para todo mundo.
-#
-# Grátis e ilimitado em repositório público.
 
 name: testes
 

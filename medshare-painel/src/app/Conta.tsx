@@ -21,7 +21,7 @@ export function Conta() {
         </div>
       </div>
 
-      <div className="conteudo-app" style={{ paddingTop: 28, flex: 1 }}>
+      <div className="conteudo-app cresce" style={{ paddingTop: 28 }}>
         <h1 className="humano" style={{ fontSize: 26 }}>{sessao?.nome}</h1>
         <p style={{ margin: '6px 0 0', fontSize: 14, color: 'var(--tinta-media)' }}>
           {sessao?.papeis.map((p) => NOME_DO_PAPEL[p] ?? p.toLowerCase()).join(' · ')}

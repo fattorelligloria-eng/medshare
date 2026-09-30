@@ -90,7 +90,7 @@ export function Pedidos() {
         </p>
       </div>
 
-      <div className="conteudo-app" style={{ paddingTop: 26, flex: 1 }}>
+      <div className="conteudo-app cresce" style={{ paddingTop: 26 }}>
         <AvisoDeErro erro={erro} />
 
         {ofertas.map((o) => (

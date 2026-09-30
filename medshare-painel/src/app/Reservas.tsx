@@ -55,7 +55,7 @@ export function Reservas() {
         </div>
       </div>
 
-      <div className="conteudo-app" style={{ paddingTop: 26, flex: 1 }}>
+      <div className="conteudo-app cresce" style={{ paddingTop: 26 }}>
         <h1 className="humano" style={{ fontSize: 26, marginBottom: 18 }}>Suas reservas</h1>
 
         <AvisoDeErro erro={erro} />

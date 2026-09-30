@@ -68,77 +68,140 @@ h1, h2, h3 { margin: 0; line-height: 1.2; letter-spacing: -0.02em; }
 }
 
 /* =============================================================================
-   Moldura de celular
+   A área do aplicativo
 
-   As telas do cidadão são do APLICATIVO. No navegador elas aparecem dentro de
-   uma moldura de celular — para ninguém confundir com site, e para a
-   apresentação mostrar o app de verdade projetado na parede.
-   Em tela pequena a moldura some e a tela ocupa tudo, que é como fica no
-   aparelho.
+   Web primeiro. Isto abre no navegador de um computador e tem que usar a tela
+   que tem: menu fixo à esquerda, conteúdo ocupando a largura, como qualquer
+   sistema web. No celular o menu desce para o rodapé e o conteúdo toma a tela
+   inteira.
+
+   É o MESMO markup nos dois casos. As telas do cidadão não sabem em que
+   tamanho estão sendo vistas, e não precisam saber — quem decide isso são as
+   poucas regras aqui embaixo.
    ========================================================================== */
 
-.palco {
+.area-app {
+  display: flex;
+  min-height: 100vh;
+  background: var(--branco);
+}
+
+/* --- menu lateral: existe só no computador --- */
+.menu-app {
+  width: 232px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--linha);
+  padding: 26px 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  background: var(--branco);
+}
+.menu-app nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.menu-app nav a {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 11px; border-radius: 9px;
+  font-size: 14px; font-weight: 500;
+  color: var(--tinta-media); text-decoration: none;
+}
+.menu-app nav a:hover { background: #F4F7F5; color: var(--tinta); }
+.menu-app nav a.ativo { background: var(--verde-tenue); color: var(--verde-escuro); font-weight: 700; }
+.menu-app .rodape { border-top: 1px solid var(--linha); padding-top: 15px; }
+.menu-app .quem { font-size: 13px; color: var(--tinta-media); margin: 0 0 10px; line-height: 1.4; }
+
+/* --- a coluna de conteúdo --- */
+.tela {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--branco);
+}
+
+/* 760px não é gosto: é a medida em que uma linha de texto ainda cabe num
+   movimento de olho. Mais largo que isso, o olho perde o começo da linha
+   seguinte e a leitura trava — e estas telas explicam coisas, não só listam. */
+.conteudo-app { padding: 0 40px; max-width: 760px; }
+.topo-app { padding: 30px 40px 0; max-width: 760px; }
+
+.tela .campo,
+.tela .escolha,
+.tela .aviso { max-width: 560px; }
+
+/* O logo já está no menu lateral. Repetir no topo do conteúdo é ruído — mas
+   no celular, onde não existe menu lateral, ele é a única marca na tela. */
+.tela .cabecalho-app .marca { display: none; }
+/* Escondido o logo, sobra só o sino nessa linha — e com space-between ele iria
+   parar na esquerda. O :has garante que isto valha só no cabeçalho que tinha
+   logo, e não no das telas internas, onde voltar e título já se distribuem. */
+.tela .cabecalho-app:has(.marca) { justify-content: flex-end; }
+
+/* No celular a coluna estica para empurrar o botão principal até o rodapé. No
+   computador a tela inteira já está à vista, e esticar só abriria um vão entre
+   o fim da lista e o botão. */
+.cresce { flex: 0 0 auto; }
+
+.tela .botao,
+.tela .principal,
+.tela .secundario,
+.tela .perigo { max-width: 560px; }
+.tela .rodape-acao .botao { width: auto; min-width: 264px; }
+
+/* --- celular --- */
+@media (max-width: 900px) {
+  /* A barra de baixo é irmã da coluna de conteúdo. Virando coluna, ela cai
+     naturalmente no rodapé, sem position: fixed e sem calcular espaço. */
+  .area-app { flex-direction: column; }
+  .menu-app { display: none; }
+  .conteudo-app { padding: 0 22px; max-width: none; }
+  .topo-app { padding: 26px 22px 0; max-width: none; }
+  .tela .campo,
+  .tela .escolha,
+  .tela .aviso { max-width: none; }
+  .tela .cabecalho-app .marca { display: flex; }
+  .tela .cabecalho-app:has(.marca) { justify-content: space-between; }
+  .cresce { flex: 1; }
+  .tela .botao,
+  .tela .principal,
+  .tela .secundario,
+  .tela .perigo { max-width: none; }
+  .tela .rodape-acao .botao { width: 100%; min-width: 0; }
+}
+
+/* =============================================================================
+   Entrada e cadastro — cartão centrado, que é como a web resolve isto
+   ========================================================================== */
+
+.entrada {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 32px 16px;
-  background:
-    radial-gradient(1200px 600px at 50% -10%, #EAF2EE 0%, transparent 60%),
-    var(--fundo-app);
+  padding: 40px 20px;
+  background: var(--fundo-app);
 }
 
-.moldura {
-  width: 390px;
-  height: 844px;
-  flex-shrink: 0;
+.cartao-entrada {
+  width: 100%;
+  max-width: 440px;
   background: var(--branco);
-  border-radius: 38px;
-  border: 10px solid #1B2620;
-  box-shadow: 0 24px 60px rgba(20, 32, 27, 0.22);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  position: relative;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio-g);
+  padding: 40px 36px 34px;
 }
 
-.moldura::before {
-  content: '';
-  position: absolute;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 108px;
-  height: 26px;
-  background: #1B2620;
-  border-radius: 0 0 16px 16px;
-  z-index: 5;
-}
-
-.tela {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  overflow-x: hidden;
-  background: var(--branco);
-}
-
-.tela::-webkit-scrollbar { width: 0; }
-
-.conteudo-app { padding: 0 26px; }
-.topo-app { padding: 52px 26px 0; }
-
-@media (max-width: 760px) {
-  .palco { padding: 0; align-items: stretch; background: var(--branco); }
-  .moldura {
-    width: 100%;
-    height: 100vh;
+@media (max-width: 560px) {
+  .entrada { padding: 0; align-items: stretch; background: var(--branco); }
+  .cartao-entrada {
+    max-width: none;
+    min-height: 100vh;
     border: 0;
     border-radius: 0;
-    box-shadow: none;
+    padding: 46px 22px 30px;
   }
-  .moldura::before { display: none; }
 }
 
 /* --- cabeçalho do app --- */
@@ -327,13 +390,22 @@ input::placeholder, textarea::placeholder { color: #A4B1AA; }
    Navegação de baixo (app)
    ========================================================================== */
 
-.nav-app {
-  padding: 10px 26px calc(22px + env(safe-area-inset-bottom, 0px));
-  display: flex;
-  justify-content: space-around;
-  border-top: 1px solid var(--linha);
-  background: var(--branco);
-  flex-shrink: 0;
+/* No computador quem navega é o menu lateral, então esta barra não existe.
+   Duas navegações na mesma tela é uma a mais. */
+.nav-app { display: none; }
+
+@media (max-width: 900px) {
+  .nav-app {
+    display: flex;
+    justify-content: space-around;
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    padding: 9px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--linha);
+    background: var(--branco);
+    flex-shrink: 0;
+  }
 }
 .nav-app a {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
@@ -341,14 +413,23 @@ input::placeholder, textarea::placeholder { color: #A4B1AA; }
 }
 .nav-app a.ativo { color: var(--verde); font-weight: 700; }
 
-/* O botão principal fica colado embaixo enquanto a lista rola: a ação mais
-   importante da tela não pode depender de a pessoa rolar até o fim. */
 .rodape-acao {
-  position: sticky;
-  bottom: 0;
-  padding: 14px 26px 16px;
+  padding: 22px 40px 40px;
+  max-width: 760px;
   flex-shrink: 0;
-  background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, var(--branco) 26%);
+}
+
+/* No celular ele gruda acima da navegação: a ação mais importante da tela não
+   pode depender de a pessoa rolar até o fim da lista. No computador a tela
+   inteira já está à vista, então grudar só atrapalharia. */
+@media (max-width: 900px) {
+  .rodape-acao {
+    position: sticky;
+    bottom: 58px;
+    padding: 14px 22px 16px;
+    max-width: none;
+    background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, var(--branco) 26%);
+  }
 }
 
 /* =============================================================================

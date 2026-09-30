@@ -33,11 +33,10 @@ export function Login() {
   }
 
   return (
-    <div className="palco">
-      <div className="moldura">
-        <div className="tela">
+    <div className="entrada">
+      <div className="cartao-entrada">
 
-          <div className="topo-app" style={{ paddingTop: 84 }}>
+          <div>
             <Logo tamanho={52} />
 
             <h1 className="humano" style={{ fontSize: 31, marginTop: 26, lineHeight: 1.15 }}>
@@ -49,7 +48,7 @@ export function Login() {
             </p>
           </div>
 
-          <form onSubmit={enviar} className="conteudo-app" style={{ paddingTop: 40 }}>
+          <form onSubmit={enviar} style={{ paddingTop: 30 }}>
             <AvisoDeErro erro={erro} />
 
             <label className="campo">
@@ -90,7 +89,6 @@ export function Login() {
             </div>
           </form>
 
-        </div>
       </div>
     </div>
   )

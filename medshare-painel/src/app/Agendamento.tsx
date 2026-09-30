@@ -75,7 +75,7 @@ export function Agendamento() {
     <>
       <CabecalhoInterno titulo="Agendar entrega" />
 
-      <div className="conteudo-app" style={{ paddingTop: 22, flex: 1 }}>
+      <div className="conteudo-app cresce" style={{ paddingTop: 22 }}>
         <AvisoDeErro erro={erro} />
 
         <h1 className="humano" style={{ fontSize: 25 }}>Onde você vai entregar?</h1>

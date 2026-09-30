@@ -125,11 +125,10 @@ export function Cadastro() {
   }
 
   return (
-    <div className="palco">
-      <div className="moldura">
-        <div className="tela">
+    <div className="entrada">
+      <div className="cartao-entrada">
 
-          <div className="topo-app" style={{ paddingBottom: 4 }}>
+          <div style={{ paddingBottom: 4 }}>
             <div className="cabecalho-app">
               <button type="button" className="icone-botao" onClick={voltar} aria-label="Voltar">
                 <Voltar />
@@ -152,7 +151,7 @@ export function Cadastro() {
             </div>
           </div>
 
-          <div className="conteudo-app" style={{ paddingTop: 26, flex: 1 }}>
+          <div style={{ paddingTop: 26 }}>
             <AvisoDeErro erro={erro} />
 
             {passo === 1 && (
@@ -294,7 +293,7 @@ export function Cadastro() {
             )}
           </div>
 
-          <div className="rodape-acao" style={{ paddingBottom: 30 }}>
+          <div style={{ paddingTop: 26 }}>
             {passo < 3 ? (
               <button
                 className="principal"
@@ -310,7 +309,6 @@ export function Cadastro() {
             )}
           </div>
 
-        </div>
       </div>
     </div>
   )
