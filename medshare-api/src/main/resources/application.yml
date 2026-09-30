@@ -32,6 +32,18 @@ spring:
       max-request-size: 10MB
 
 medshare:
+  cors:
+    # Quem pode chamar a API de dentro de um navegador.
+    #
+    # O padrao cobre a maquina de quem desenvolve (localhost e 127.0.0.1, em
+    # qualquer porta) e a rede local, que e como o celular alcanca a API de
+    # casa para testar o aplicativo. Nenhum desses enderecos e alcancavel de
+    # fora da sua rede.
+    #
+    # Em producao, ponha o dominio de verdade em MEDSHARE_CORS_ORIGENS: a
+    # lista inteira e substituida e estes padroes deixam de valer.
+    origens: ${MEDSHARE_CORS_ORIGENS:http://localhost:*,http://127.0.0.1:*,http://192.168.*:*,http://10.*:*,http://172.1*:*}
+
   jwt:
     # Em producao vem do ambiente. O default existe so para o "clonou e rodou".
     segredo: ${MEDSHARE_JWT_SEGREDO:desenvolvimento-local-apenas-nao-use-em-producao-000000}
