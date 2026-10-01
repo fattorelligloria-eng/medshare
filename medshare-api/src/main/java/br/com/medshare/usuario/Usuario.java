@@ -66,6 +66,19 @@ public class Usuario {
         papeis.add(papel);
     }
 
+    /**
+     * Atualiza o que a pessoa pode mudar sozinha.
+     *
+     * CPF e e-mail ficam de fora de proposito: o CPF e a identidade dela no
+     * sistema, e o e-mail e como ela entra. Trocar qualquer um dos dois e outra
+     * operacao, com conferencia propria — nao um campo no meio do formulario.
+     */
+    public void atualizarCadastro(String nome, String telefone, Endereco endereco) {
+        this.nome = nome;
+        this.telefone = telefone;
+        this.endereco = endereco;
+    }
+
     public void trocarSenha(String novoHash) {
         this.senhaHash = novoHash;
     }

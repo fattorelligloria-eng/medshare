@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,6 +17,22 @@ public interface DoacaoRepository extends JpaRepository<Doacao, Long> {
     Optional<Doacao> findByCodigo(String codigo);
 
     Page<Doacao> findByDoadorIdOrderByCriadoEmDesc(Long doadorId, Pageable pagina);
+
+    long countByDoadorId(Long doadorId);
+
+    long countByDoadorIdAndStatus(Long doadorId, StatusDoacao status);
+
+    /**
+     * Quanto custariam, na farmacia, as caixas que a pessoa ja doou e chegaram
+     * a alguem. E o preco de tabela da CMED, nao dinheiro que mudou de mao.
+     */
+    @Query("""
+            select coalesce(sum(d.medicamento.pmc), 0)
+              from Doacao d
+             where d.doador.id = :doadorId
+               and d.status = br.com.medshare.doacao.StatusDoacao.ENTREGUE
+            """)
+    BigDecimal valorEntreguePeloDoador(@Param("doadorId") Long doadorId);
 
     /** UC10 passo 1 - a fila da central, de quem espera ha mais tempo para quem chegou agora. */
     Page<Doacao> findByStatusOrderByAtualizadoEmAsc(StatusDoacao status, Pageable pagina);
