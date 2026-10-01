@@ -17,6 +17,8 @@ keystore.properties
 
 # --- Coisas que a máquina gera --------------------------------------------
 build/
+# Saída de compilação do Eclipse / VS Code (extensão Java).
+bin/
 dist/
 node_modules/
 .gradle/
