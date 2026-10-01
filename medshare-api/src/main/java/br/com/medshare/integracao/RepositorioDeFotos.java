@@ -47,6 +47,8 @@ public class RepositorioDeFotos {
     private static final Pattern NOME_VALIDO = Pattern.compile(
             "([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\\.(jpg|png|webp)");
 
+    private static final Pattern ENDERECO_ANTIGO = Pattern.compile("https?://[^/?#]+/fotos-locais/([^/?#]+)");
+
     /** Quanto tempo um link de foto vale depois de entregue pela API. */
     public static final Duration VALIDADE_DO_LINK = Duration.ofMinutes(15);
 
@@ -106,9 +108,11 @@ public class RepositorioDeFotos {
         if (urlCanonica == null) {
             return null;
         }
-        return nomeDa(urlCanonica).map(nome -> {
+        return nomeParaExibir(urlCanonica).map(nome -> {
             long expira = Instant.now().plus(VALIDADE_DO_LINK).getEpochSecond();
-            return "%s?expira=%d&assinatura=%s".formatted(urlCanonica, expira, assinar(nome.group(0), expira));
+            // Monta pelo endereco atual: fotos gravadas quando a API rodava em
+            // outra porta continuam abrindo.
+            return "%s?expira=%d&assinatura=%s".formatted(urlDe(nome.group(0)), expira, assinar(nome.group(0), expira));
         }).orElse(urlCanonica);
     }
 
@@ -180,6 +184,25 @@ public class RepositorioDeFotos {
             return Optional.empty();
         }
         Matcher nome = NOME_VALIDO.matcher(url.substring(prefixo.length()));
+        return nome.matches() ? Optional.of(nome) : Optional.empty();
+    }
+
+    /**
+     * Para exibir, aceita tambem fotos gravadas quando a API rodava em outro
+     * host ou porta: o link sai sempre pelo endereco atual e so abre se o
+     * arquivo existir no nosso disco. Para aceitar uma foto nova, continua
+     * valendo so o endereco atual (nomeDa).
+     */
+    private Optional<Matcher> nomeParaExibir(String url) {
+        Optional<Matcher> atual = nomeDa(url);
+        if (atual.isPresent()) {
+            return atual;
+        }
+        Matcher antigo = ENDERECO_ANTIGO.matcher(url);
+        if (!antigo.matches()) {
+            return Optional.empty();
+        }
+        Matcher nome = NOME_VALIDO.matcher(antigo.group(1));
         return nome.matches() ? Optional.of(nome) : Optional.empty();
     }
 }

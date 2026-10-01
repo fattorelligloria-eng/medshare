@@ -76,6 +76,16 @@ class RepositorioDeFotosTest {
     }
 
     @Test
+    @DisplayName("foto gravada com porta antiga ganha link pelo endereco atual")
+    void linkDeEnderecoAntigo() {
+        String link = fotos.urlAssinada("http://localhost:8080/fotos-locais/" + nomeGravado);
+
+        assertThat(link).startsWith(fotos.urlDe(nomeGravado) + "?expira=");
+        assertThat(fotos.urlAssinada("http://localhost:8080/fotos-locais/demo.jpg"))
+                .isEqualTo("http://localhost:8080/fotos-locais/demo.jpg");
+    }
+
+    @Test
     @DisplayName("exigirFotoNossa barra com regra FOTO")
     void exigirBarraComRegra() {
         assertThatThrownBy(() -> fotos.exigirFotoNossa("http://x/y.jpg"))
