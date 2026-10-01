@@ -1,0 +1,111 @@
+spring:
+  application:
+    name: medshare-api
+
+  datasource:
+    url: ${MEDSHARE_BANCO_URL:jdbc:postgresql://localhost:5432/medshare}
+    username: ${MEDSHARE_BANCO_USUARIO:medshare}
+    password: ${MEDSHARE_BANCO_SENHA:medshare_local}
+
+  jpa:
+    hibernate:
+      # O Flyway e o dono do esquema. "validate" faz a aplicacao se recusar a
+      # subir se alguma entidade nao bater com as tabelas — o erro aparece no
+      # boot, e nao em producao no meio de uma consulta.
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: America/Sao_Paulo
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  jackson:
+    default-property-inclusion: non_null
+
+  servlet:
+    multipart:
+      max-file-size: 8MB
+      max-request-size: 10MB
+
+medshare:
+  cors:
+    # Quem pode chamar a API de dentro de um navegador.
+    #
+    # O padrao cobre a maquina de quem desenvolve (localhost e 127.0.0.1, em
+    # qualquer porta) e a rede local, que e como o celular alcanca a API de
+    # casa para testar o aplicativo. Nenhum desses enderecos e alcancavel de
+    # fora da sua rede.
+    #
+    # Em producao, ponha o dominio de verdade em MEDSHARE_CORS_ORIGENS: a
+    # lista inteira e substituida e estes padroes deixam de valer.
+    origens: ${MEDSHARE_CORS_ORIGENS:http://localhost:*,http://127.0.0.1:*,http://192.168.*:*,http://10.*:*,http://172.1*:*}
+
+  jwt:
+    # Em producao vem do ambiente. O default existe so para o "clonou e rodou".
+    segredo: ${MEDSHARE_JWT_SEGREDO:desenvolvimento-local-apenas-nao-use-em-producao-000000}
+    minutos-de-validade: 120
+    dias-de-validade-do-refresh: 14
+  doacao:
+    dias-minimos-de-validade: 30        # RN02
+    valor-minimo-pmc: 150.00            # RN07
+  reserva:
+    horas-para-retirada: 120            # UC06 passo 3 - 5 dias para retirar
+  cadunico:
+    meses-de-validade: 12               # RN08
+
+  # Integracoes externas. Deixar em branco ativa as implementacoes simuladas,
+  # e o projeto roda inteiro sem nenhuma chave — util para desenvolver e
+  # apresentar. Preencher no .env liga a integracao real.
+  gemini:
+    chave: ${MEDSHARE_GEMINI_CHAVE:}
+    # Lista de modelos: https://ai.google.dev/gemini-api/docs/models
+    # 3.8 Flash tem plano gratuito e le bem texto pequeno (lote e validade).
+    modelo: ${MEDSHARE_GEMINI_MODELO:gemini-3.8-flash}
+    # Usado quando o principal esta sobrecarregado (503) ou sem cota (429) —
+    # frequente no plano gratuito. Em branco desliga a reserva.
+    modelo-reserva: ${MEDSHARE_GEMINI_MODELO_RESERVA:gemini-3.5-flash-lite}
+  portal-transparencia:
+    chave: ${MEDSHARE_PORTAL_CHAVE:}
+  cmed:
+    # Lista de precos "PMC - xls" da CMED/ANVISA. Com o caminho preenchido, a
+    # API importa o catalogo ao subir (e seguro repetir: so atualiza).
+    arquivo: ${MEDSHARE_CMED_ARQUIVO:}
+    # ICMS de Sao Paulo, onde a rede atua.
+    coluna-pmc: ${MEDSHARE_CMED_COLUNA_PMC:PMC 18 %}
+  fotos:
+    # As fotos ficam em disco e sao servidas em /fotos-locais/<uuid>. So URLs
+    # com este endereco sao aceitas nas doacoes e receitas. O endereco publico precisa ser o que o
+    # celular consegue alcancar — nao "localhost", que no aparelho aponta para
+    # o proprio aparelho.
+    diretorio: ${MEDSHARE_FOTOS_DIRETORIO:./dados/fotos}
+    # Acompanha a porta da API: fixo em 8080, as fotos apontavam para o lugar
+    # errado quando a API subia na 8081.
+    endereco-publico: ${MEDSHARE_FOTOS_ENDERECO:http://localhost:${server.port}/fotos-locais}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+server:
+  # Se a 8080 estiver ocupada na sua máquina (Apache, IIS, outro projeto),
+  # ponha MEDSHARE_PORTA=8081 no .env em vez de editar este arquivo.
+  port: ${MEDSHARE_PORTA:8080}
+  error:
+    include-message: always
+
+logging:
+  level:
+    br.com.medshare: INFO

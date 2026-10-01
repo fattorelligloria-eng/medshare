@@ -1,0 +1,4 @@
+# O carregador do .env roda antes do contexto do Spring existir, então ele não
+# pode ser descoberto por @Component — precisa estar registrado aqui.
+org.springframework.boot.env.EnvironmentPostProcessor=\
+  br.com.medshare.comum.CarregadorDoEnv
