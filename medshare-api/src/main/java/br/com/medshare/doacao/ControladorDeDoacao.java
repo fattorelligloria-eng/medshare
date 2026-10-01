@@ -15,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/doacoes")
@@ -24,15 +26,17 @@ public class ControladorDeDoacao {
     private final DoacaoRepository doacoes;
     private final EventoHistoricoRepository eventos;
     private final RepositorioDeFotos fotos;
+    private final AgendamentoRepository agendamentos;
     private final UsuarioLogado usuarioLogado;
 
     public ControladorDeDoacao(ServicoDeDoacao servico, DoacaoRepository doacoes,
                                EventoHistoricoRepository eventos, RepositorioDeFotos fotos,
-                               UsuarioLogado usuarioLogado) {
+                               AgendamentoRepository agendamentos, UsuarioLogado usuarioLogado) {
         this.servico = servico;
         this.doacoes = doacoes;
         this.eventos = eventos;
         this.fotos = fotos;
+        this.agendamentos = agendamentos;
         this.usuarioLogado = usuarioLogado;
     }
 
@@ -52,10 +56,29 @@ public class ControladorDeDoacao {
 
     @GetMapping("/minhas")
     @PreAuthorize("hasRole('DOADOR')")
+    @Transactional(readOnly = true)
     public Page<DoacaoResumida> minhasDoacoes(Pageable pagina) {
-        return doacoes
-                .findByDoadorIdOrderByCriadoEmDesc(usuarioLogado.obrigatorio().getId(), pagina)
-                .map(DoacaoResumida::de);
+        Page<Doacao> pagina1 = doacoes
+                .findByDoadorIdOrderByCriadoEmDesc(usuarioLogado.obrigatorio().getId(), pagina);
+
+        Map<Long, Agendamento> porDoacao = agendamentoDasDoacoes(pagina1.getContent());
+        return pagina1.map(doacao -> DoacaoResumida.de(doacao, porDoacao.get(doacao.getId())));
+    }
+
+    /**
+     * O agendamento atual de cada doacao da pagina, numa consulta so.
+     *
+     * O repositorio devolve do mais recente para o mais antigo; o merge mantem
+     * o primeiro que chegou de cada doacao, que e justamente o atual quando
+     * houve reagendamento.
+     */
+    private Map<Long, Agendamento> agendamentoDasDoacoes(List<Doacao> doacoesDaPagina) {
+        if (doacoesDaPagina.isEmpty()) return Map.of();
+
+        List<Long> ids = doacoesDaPagina.stream().map(Doacao::getId).toList();
+        return agendamentos.findByDoacaoIdInOrderByCriadoEmDesc(ids).stream()
+                .collect(Collectors.toMap(a -> a.getDoacao().getId(), a -> a,
+                        (atual, antigo) -> atual));
     }
 
     /** RN06 / UC09 - o historico, visivel so para o doador, a farmacia e a central. */
