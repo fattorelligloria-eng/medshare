@@ -151,10 +151,12 @@ export function Conta() {
             <Link to="/painel" className="botao secundario">Abrir o painel</Link>
           </section>
         )}
-      </div>
 
-      <div className="rodape-acao" style={{ paddingBottom: 20 }}>
-        <button className="secundario" onClick={sair}>Sair da conta</button>
+        {/* Fica no fim, e não no rodapé que gruda: sair não é a ação principal
+            desta tela, e grudado ele cobria os dados enquanto a pessoa rolava. */}
+        <section className="cartao-conta" style={{ paddingBottom: 28 }}>
+          <button className="secundario" onClick={sair}>Sair da conta</button>
+        </section>
       </div>
     </>
   )
