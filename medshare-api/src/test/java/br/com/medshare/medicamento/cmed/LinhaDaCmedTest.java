@@ -30,8 +30,8 @@ class LinhaDaCmedTest {
                 "10563,39", "11.336,31", "11233,15", "Tarja Vermelha"), colunas).orElseThrow();
 
         assertThat(linha.codigoGgrem()).isEqualTo("505113100020505");
-        assertThat(linha.nomeComercial()).isEqualTo("ORENCIA");
-        assertThat(linha.principioAtivo()).isEqualTo("ABATACEPTE");
+        assertThat(linha.nomeComercial()).isEqualTo("Orencia");
+        assertThat(linha.principioAtivo()).isEqualTo("Abatacepte");
         assertThat(linha.ean()).isEqualTo("7896016808197");
         assertThat(linha.pmc()).isEqualByComparingTo("11336.31");   // coluna de SP, nao a de 12%
         assertThat(linha.tarja()).isEqualTo(Tarja.VERMELHA);

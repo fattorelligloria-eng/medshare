@@ -90,9 +90,9 @@ public record LinhaDaCmed(
                 ggrem,
                 registro.isEmpty() ? "SEM REGISTRO" : registro,
                 ean.length() >= 8 && ean.length() <= 14 ? ean : null,
-                limitar(produto, 200),
-                colunas.valor(celulas, SUBSTANCIA),
-                limitar(colunas.valor(celulas, APRESENTACAO), 300),
+                limitar(TextoDaCmed.nome(produto), 200),
+                TextoDaCmed.principio(colunas.valor(celulas, SUBSTANCIA)),
+                limitar(TextoDaCmed.apresentacao(colunas.valor(celulas, APRESENTACAO)), 300),
                 vazioViraNulo(limitar(colunas.valor(celulas, LABORATORIO), 200)),
                 pmc.get(),
                 tarja(colunas.valor(celulas, TARJA))));
