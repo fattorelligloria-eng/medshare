@@ -41,7 +41,7 @@ export function Rastreio() {
         <p>Histórico completo e imutável de uma unidade doada.</p>
       </div>
 
-      <form className="bloco" onSubmit={buscar} style={{ maxWidth: 480 }}>
+      <form className="bloco form-busca" onSubmit={buscar}>
         <label className="campo">
           <span>Código da doação</span>
           <input

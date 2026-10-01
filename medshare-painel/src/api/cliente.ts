@@ -83,12 +83,33 @@ function renovarSessao(): Promise<boolean> {
   return renovacaoEmAndamento
 }
 
+/**
+ * A frase para quando a requisição não chega ao servidor.
+ *
+ * `navigator.onLine` distingue os dois casos que a pessoa resolve de formas
+ * diferentes: sem internet ela mexe no Wi-Fi; servidor fora ela espera. Dizer
+ * a coisa errada manda a pessoa consertar o que não está quebrado.
+ */
+function mensagemDeRedeForaDoAr(): string {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    return 'Você está sem internet. Assim que a conexão voltar, tente de novo.'
+  }
+  return 'Não consegui falar com o servidor. Verifique sua conexão e tente de novo.'
+}
+
 /** Faz a requisição com o token atual e, se ele venceu, renova e tenta mais uma vez. */
 async function comAutenticacao(montar: (cabecalhos: Record<string, string>) => RequestInit, caminho: string) {
-  const enviar = () => {
+  const enviar = async () => {
     const sessao = lerSessao()
     const cabecalhos: Record<string, string> = sessao ? { Authorization: `Bearer ${sessao.tokenDeAcesso}` } : {}
-    return fetch(`/api${caminho}`, montar(cabecalhos))
+    try {
+      return await fetch(`/api${caminho}`, montar(cabecalhos))
+    } catch {
+      // O fetch só estoura assim quando a requisição não chegou a lugar nenhum:
+      // sem rede, servidor fora, DNS. O navegador diz "Failed to fetch", em
+      // inglês, e isso ia parar na tela da pessoa.
+      throw new ErroDaApi(0, mensagemDeRedeForaDoAr())
+    }
   }
 
   let resposta = await enviar()

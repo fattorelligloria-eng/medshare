@@ -39,3 +39,51 @@ export function reais(valor: number): string {
 export function primeiroNome(nome: string): string {
   return nome.trim().split(/\s+/)[0] ?? nome
 }
+
+const DIA_DA_SEMANA = new Intl.DateTimeFormat('pt-BR', {
+  timeZone: 'America/Sao_Paulo',
+  weekday: 'long',
+  day: '2-digit',
+  month: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+})
+
+/** "quinta-feira, 02/10 às 14:00" — como a pessoa fala, não como o banco grava. */
+export function diaEHora(iso?: string | null): string {
+  if (!iso) return '—'
+  const momento = new Date(iso)
+  if (Number.isNaN(momento.getTime())) return dataComHora(iso)
+  const p = Object.fromEntries(
+    DIA_DA_SEMANA.formatToParts(momento).map((parte) => [parte.type, parte.value]),
+  )
+  return `${p.weekday}, ${p.day}/${p.month} às ${p.hour}:${p.minute}`
+}
+
+/**
+ * Quanto falta, em português de gente: "faltam 2 dias", "é amanhã", "é hoje".
+ *
+ * A conta é feita em dias de calendário, não em horas divididas por 24. Um
+ * agendamento às 9h de amanhã está a 17 horas de distância, e dizer "falta 1
+ * dia" seria mentira menor do que dizer "faltam 0 dias" — mas "é amanhã" é o
+ * que a pessoa entende sem pensar.
+ */
+export function quantoFalta(iso?: string | null): string | null {
+  if (!iso) return null
+  const alvo = new Date(iso)
+  if (Number.isNaN(alvo.getTime())) return null
+
+  const diaDe = (d: Date) => Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())
+  const dias = Math.round((diaDe(alvo) - diaDe(new Date())) / 86_400_000)
+
+  if (dias < 0) return 'o horário já passou'
+  if (dias === 0) return 'é hoje'
+  if (dias === 1) return 'é amanhã'
+  if (dias <= 30) return `faltam ${dias} dias`
+  return null
+}
+
+/** Link de mapa para um endereço escrito. Abre o app no celular. */
+export function linkDoMapa(endereco: string): string {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(endereco)}`
+}

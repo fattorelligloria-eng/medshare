@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { api } from '../api/cliente'
 import type { DoacaoNoBalcao, FotoEnviada, Pagina } from '../api/tipos'
 import { AvisoDeErro, AvisoDeSucesso } from '../componentes/Aviso'
+import { FotoDoCaso } from '../componentes/FotoDoCaso'
 import { Status } from '../componentes/Status'
 import { data, dataComHora } from '../formatos'
 
@@ -77,7 +78,7 @@ export function FilaDoBalcao() {
         <p>Doações agendadas e recebidas neste ponto de coleta.</p>
       </div>
 
-      <form className="bloco" onSubmit={buscar} style={{ maxWidth: 560 }}>
+      <form className="bloco form-busca" onSubmit={buscar}>
         <label className="campo">
           <span>Código de entrega — ou CPF / telefone do doador</span>
           <input
@@ -161,7 +162,7 @@ function CartaoDoBalcao({ doacao: d, aoErrar, aoConcluir }: {
         <Status status={d.status} />
       </div>
 
-      {d.fotoUrl && <img className="foto-caso" src={d.fotoUrl} alt={`Foto enviada pelo doador de ${d.medicamento}`} />}
+      {d.fotoUrl && <FotoDoCaso url={d.fotoUrl} descricao={`Foto enviada pelo doador de ${d.medicamento}`} />}
 
       <div className="grade">
         <div className="dado"><p className="rotulo">Doador</p><p className="valor">{d.doador}</p></div>

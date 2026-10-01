@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { api } from '../api/cliente'
 import type { CasoDaCentral, Pagina } from '../api/tipos'
 import { AvisoDeErro, AvisoDeSucesso } from '../componentes/Aviso'
+import { FotoDoCaso } from '../componentes/FotoDoCaso'
 import { data, dataComHora } from '../formatos'
 
 /**
@@ -122,9 +123,7 @@ export function FilaDaCentral() {
           </p>
 
           {caso.fotoUrl && (
-            <a href={caso.fotoUrl} target="_blank" rel="noreferrer">
-              <img className="foto-caso" src={caso.fotoUrl} alt={`Foto enviada pelo doador de ${caso.medicamento}`} />
-            </a>
+            <FotoDoCaso url={caso.fotoUrl} descricao={`Foto enviada pelo doador de ${caso.medicamento}`} />
           )}
 
           {caso.motivo && (

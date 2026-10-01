@@ -20,6 +20,10 @@ export interface Doacao {
   validade: string
   status: string
   pontoDeColeta: string | null
+  /** Quando entregar. Nulo enquanto não houver agendamento. */
+  agendadaPara: string | null
+  /** Endereço do ponto, para o botão de como chegar. Nulo sem agendamento. */
+  enderecoDoPonto: string | null
   criadoEm: string
   atualizadoEm: string
 }
@@ -226,4 +230,29 @@ export interface RespostaDoCadUnico {
 export interface FotoEnviada {
   nome: string
   url: string
+}
+
+/** A conta da própria pessoa. O CPF vem mascarado da API, de propósito. */
+export interface MeusDados {
+  nome: string
+  cpfMascarado: string | null
+  email: string
+  telefone: string | null
+  endereco: {
+    cep: string
+    logradouro: string
+    numero: string
+    complemento: string | null
+    bairro: string
+    municipioId: number | null
+    municipio: string | null
+  } | null
+  papeis: string[]
+  membroDesde: string
+}
+
+export interface MeuImpacto {
+  caixasDoadas: number
+  caixasEntregues: number
+  valorDosTratamentos: number | null
 }

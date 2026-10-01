@@ -122,19 +122,21 @@ function CartaoDaFarmacia({ ponto: p, outras, agir }: {
         <div className="linha-form">
           <label className="campo"><span>E-mail da conta no MedShare</span>
             <input type="email" value={email} onChange={(e) => definirEmail(e.target.value)} /></label>
-          <label className="campo" style={{ maxWidth: 140 }}><span>CRF</span>
+          <label className="campo" style={{ flex: '0 0 140px' }}><span>CRF</span>
             <input type="text" inputMode="numeric" value={crf} onChange={(e) => definirCrf(e.target.value.replace(/\D/g, '').slice(0, 8))} /></label>
-          <label className="campo" style={{ maxWidth: 80 }}><span>UF</span>
+          <label className="campo" style={{ flex: '0 0 72px', minWidth: 0 }}><span>UF</span>
             <input type="text" value={uf} onChange={(e) => definirUf(e.target.value.replace(/[^a-zA-Z]/g, '').slice(0, 2).toUpperCase())} /></label>
         </div>
-        <button
-          className="secundario"
-          disabled={!email.includes('@') || !crf || uf.length !== 2}
-          onClick={() => agir(() => api.post(`/admin/pontos/${p.id}/farmaceuticos`, { email, crf, ufCrf: uf }),
-            `Farmacêutico vinculado a ${p.nome}. A pessoa precisa sair e entrar de novo para ver o balcão.`)}
-        >
-          Vincular e ativar
-        </button>
+        <div className="acoes" style={{ marginTop: 4 }}>
+          <button
+            className="secundario"
+            disabled={!email.includes('@') || !crf || uf.length !== 2}
+            onClick={() => agir(() => api.post(`/admin/pontos/${p.id}/farmaceuticos`, { email, crf, ufCrf: uf }),
+              `Farmacêutico vinculado a ${p.nome}. A pessoa precisa sair e entrar de novo para ver o balcão.`)}
+          >
+            Vincular e ativar
+          </button>
+        </div>
       </div>
 
       <div style={{ marginTop: 18, paddingTop: 18, borderTop: '1px solid var(--linha)' }}>
@@ -287,7 +289,7 @@ function NovaFarmacia({ municipios, aoSalvar, aoCancelar }: {
       <div className="linha-form">
         <label className="campo"><span>Rua ou avenida</span>
           <input type="text" value={logradouro} onChange={(e) => definirLogradouro(e.target.value)} /></label>
-        <label className="campo" style={{ maxWidth: 120 }}><span>Número</span>
+        <label className="campo" style={{ flex: '0 0 120px', minWidth: 0 }}><span>Número</span>
           <input type="text" value={numero} onChange={(e) => definirNumero(e.target.value)} /></label>
       </div>
       <div className="linha-form">

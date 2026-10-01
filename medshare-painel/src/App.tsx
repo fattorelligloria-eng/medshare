@@ -15,6 +15,9 @@ import { NovoPedido } from './app/NovoPedido'
 import { EnvioDeReceita } from './app/EnvioDeReceita'
 import { Reservas } from './app/Reservas'
 import { Conta } from './app/Conta'
+import { Farmacias as FarmaciasDoApp } from './app/Farmacias'
+import { Ajuda } from './app/Ajuda'
+import { Sobre } from './app/Sobre'
 
 import { Layout } from './componentes/Layout'
 import { FilaDoBalcao } from './paginas/FilaDoBalcao'
@@ -66,7 +69,10 @@ export function App() {
             <Route path="/app/reservas" element={<Reservas />} />
           </>
         )}
+        <Route path="/app/farmacias" element={<FarmaciasDoApp />} />
         <Route path="/app/conta" element={<Conta />} />
+        <Route path="/app/ajuda" element={<Ajuda />} />
+        <Route path="/app/sobre" element={<Sobre />} />
       </Route>
 
       {/* --- telas internas do aplicativo, sem navegação de baixo --- */}

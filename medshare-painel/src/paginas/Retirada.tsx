@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { api, ErroDaApi } from '../api/cliente'
 import type { ConferenciaDaRetirada, Reserva } from '../api/tipos'
 import { AvisoDeErro, AvisoDeSucesso } from '../componentes/Aviso'
+import { FotoDoCaso } from '../componentes/FotoDoCaso'
 import { data, dataComHora } from '../formatos'
 
 /**
@@ -115,7 +116,7 @@ export function Retirada() {
         </AvisoDeSucesso>
       )}
 
-      <form className="bloco" onSubmit={buscar} style={{ maxWidth: 520 }}>
+      <form className="bloco form-busca" onSubmit={buscar}>
         <label className="campo">
           <span>Código de retirada</span>
           <input
@@ -181,13 +182,9 @@ export function Retirada() {
           </div>
 
           {conferencia.receitaFotoUrl && (
-            <a href={conferencia.receitaFotoUrl} target="_blank" rel="noreferrer">
-              <img
-                src={conferencia.receitaFotoUrl}
-                alt="Receita anexada pelo beneficiário"
-                style={{ display: 'block', width: '100%', maxHeight: 360, objectFit: 'contain', marginTop: 20, borderRadius: 'var(--raio)' }}
-              />
-            </a>
+            <div style={{ marginTop: 20 }}>
+              <FotoDoCaso url={conferencia.receitaFotoUrl} descricao="Receita anexada pelo beneficiário" />
+            </div>
           )}
 
           {conferencia.status !== 'ATIVA' && (

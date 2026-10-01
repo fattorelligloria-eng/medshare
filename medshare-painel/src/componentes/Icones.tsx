@@ -82,3 +82,38 @@ export const Camera = ({ tamanho = 20, cor = 'currentColor' }: Props) => (
     <circle cx="12" cy="13" r="4" />
   </svg>
 )
+
+export const Relogio = ({ tamanho = 14, cor = 'currentColor' }: Props) => (
+  <svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none"
+       stroke={cor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7v5l3 2" />
+  </svg>
+)
+
+export const Farmacia = ({ tamanho = 21, cor = 'currentColor' }: Props) => (
+  <svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none"
+       stroke={cor} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 9h16v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9Z" />
+    <path d="M3 9l2-4h14l2 4" />
+    <path d="M12 12v6M9 15h6" />
+  </svg>
+)
+
+export const Duvida = ({ tamanho = 21, cor = 'currentColor' }: Props) => (
+  <svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none"
+       stroke={cor} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="9" />
+    <path d="M9.5 9.5a2.6 2.6 0 1 1 3.3 2.5c-.6.2-.8.7-.8 1.3v.3" />
+    <path d="M12 17h.01" />
+  </svg>
+)
+
+export const Informacao = ({ tamanho = 21, cor = 'currentColor' }: Props) => (
+  <svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none"
+       stroke={cor} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 11v5" />
+    <path d="M12 8h.01" />
+  </svg>
+)

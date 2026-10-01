@@ -7,12 +7,12 @@ import { Sino } from './Icones'
 const INTERVALO_MS = 60_000
 
 /**
- * O sino do topo, com a contagem do que ainda não foi lido.
+ * A contagem do que não foi lido.
  *
- * Enquanto o push (Firebase) não está configurado, é por aqui que a pessoa
- * fica sabendo de oferta, lembrete de entrega e reserva expirando.
+ * Virou hook porque agora dois lugares precisam dela: o sino do topo e o item
+ * de Notificações no menu lateral.
  */
-export function BotaoDeNotificacoes({ para = '/app/notificacoes' }: { para?: string }) {
+export function useNaoLidas(): number {
   const [naoLidas, definirNaoLidas] = useState(0)
 
   useEffect(() => {
@@ -25,6 +25,18 @@ export function BotaoDeNotificacoes({ para = '/app/notificacoes' }: { para?: str
     const relogio = setInterval(atualizar, INTERVALO_MS)
     return () => { ativo = false; clearInterval(relogio) }
   }, [])
+
+  return naoLidas
+}
+
+/**
+ * O sino do topo, com a contagem do que ainda não foi lido.
+ *
+ * Enquanto o push (Firebase) não está configurado, é por aqui que a pessoa fica
+ * sabendo de oferta, lembrete de entrega e reserva expirando.
+ */
+export function BotaoDeNotificacoes({ para = '/app/notificacoes' }: { para?: string }) {
+  const naoLidas = useNaoLidas()
 
   return (
     <Link
