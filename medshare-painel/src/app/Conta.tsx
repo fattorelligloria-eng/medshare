@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Acessibilidade } from '../componentes/Acessibilidade'
 import { api } from '../api/cliente'
 import type { MeuImpacto, MeusDados } from '../api/tipos'
 import { useAutenticacao } from '../contexto/Autenticacao'
@@ -151,6 +152,16 @@ export function Conta() {
             <Link to="/painel" className="botao secundario">Abrir o painel</Link>
           </section>
         )}
+
+        {/* No computador estes controles ficam no menu lateral; no celular não
+            existe menu lateral, e é aqui que a pessoa vem procurar. */}
+        <section className="cartao-conta so-no-celular" aria-labelledby="t-acesso">
+          <h2 id="t-acesso" className="humano">Acessibilidade</h2>
+          <p className="explicacao-secao">
+            Tamanho da letra e alto contraste. Fica guardado neste aparelho.
+          </p>
+          <Acessibilidade />
+        </section>
 
         {/* Fica no fim, e não no rodapé que gruda: sair não é a ação principal
             desta tela, e grudado ele cobria os dados enquanto a pessoa rolava. */}

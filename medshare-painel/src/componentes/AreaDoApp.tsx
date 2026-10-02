@@ -3,6 +3,7 @@ import { Caixa, Duvida, Farmacia, Informacao, Lupa, Pessoa, Receita, Sino } from
 import { Marca } from './Logo'
 import { useAutenticacao } from '../contexto/Autenticacao'
 import { useNaoLidas } from './BotaoDeNotificacoes'
+import { Acessibilidade } from './Acessibilidade'
 
 /**
  * A casca das telas do cidadão.
@@ -82,6 +83,7 @@ function Casca({ comNavegacao = false }: { comNavegacao?: boolean }) {
         </nav>
 
         <div className="rodape">
+          <Acessibilidade />
           <p className="quem">{sessao?.nome}</p>
           <button className="secundario" onClick={sair}>Sair</button>
         </div>

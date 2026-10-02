@@ -882,3 +882,332 @@ button:focus-visible,
   line-height: 19px;
   text-align: center;
 }
+
+/* =============================================================================
+   Cadastro de doação em passos
+   ========================================================================== */
+
+.passos {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 22px;
+  gap: 6px;
+}
+.passos li {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+/* A linha que liga um passo ao seguinte nasce do próprio item, para acompanhar
+   a largura quando a fonte aumenta — uma régua de largura fixa descolaria. */
+.passos li::before {
+  content: '';
+  position: absolute;
+  top: 11px;
+  right: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--linha);
+}
+.passos li:first-child::before { display: none; }
+.passos li.feito::before,
+.passos li.atual::before { background: var(--verde); }
+
+.passos .bolinha {
+  position: relative;
+  z-index: 1;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--fundo);
+  border: 2px solid var(--linha);
+  color: var(--tinta-fraca);
+}
+.passos li.atual .bolinha {
+  background: var(--verde);
+  border-color: var(--verde);
+  color: #FFFFFF;
+}
+.passos li.feito .bolinha {
+  background: var(--verde-claro);
+  border-color: var(--verde);
+  color: var(--verde-escuro);
+}
+.passos .nome {
+  font-size: 11.5px;
+  line-height: 1.25;
+  text-align: center;
+  color: var(--tinta-fraca);
+}
+.passos li.atual .nome { color: var(--verde-escuro); font-weight: 700; }
+.passos li.feito .nome { color: var(--tinta-media); }
+
+.resumo-medicamento {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding-bottom: 16px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--linha);
+}
+.resumo-medicamento h2 { margin: 0; }
+.resumo-medicamento .detalhe { margin: 3px 0 0; font-size: 13.5px; color: var(--tinta-media); }
+
+.foto-da-caixa {
+  width: 100%;
+  height: 190px;
+  object-fit: cover;
+  border-radius: var(--raio);
+  display: block;
+}
+
+/* --- conferência antes de enviar --- */
+
+.conferencia { list-style: none; padding: 0; margin: 0; }
+.conferencia li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--linha);
+}
+.conferencia li:last-child { border-bottom: 0; }
+.conferencia .rotulo { margin: 0 0 2px; }
+.conferencia .valor { margin: 0; font-size: 15px; font-weight: 600; }
+
+.declaracao-conferida {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 18px 0 0;
+  padding: 12px 14px;
+  border-radius: var(--raio);
+  background: var(--verde-tenue);
+  color: var(--verde-escuro);
+  font-size: 13.5px;
+  line-height: 1.4;
+}
+
+/* --- confirmação --- */
+
+.confirmacao { padding-top: 34px; }
+.selo-pronto {
+  width: 68px;
+  height: 68px;
+  margin: 0 auto 18px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: var(--verde-claro);
+  color: var(--verde-escuro);
+}
+.texto-confirmacao {
+  margin: 10px 0 24px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--tinta-media);
+  text-align: center;
+}
+.lista-de-codigos {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+.lista-de-codigos li {
+  padding: 9px 14px;
+  border-radius: var(--raio);
+  background: var(--verde-tenue);
+  color: var(--verde-escuro);
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+/* =============================================================================
+   Comprovante de entrega: código, QR e ações
+   ========================================================================== */
+
+.codigo-linha {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.codigo-grande { position: relative; }
+.codigo-grande .copiado {
+  position: absolute;
+  right: 16px;
+  bottom: 10px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--verde-escuro);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity .18s ease, transform .18s ease;
+}
+.codigo-grande .copiado.visivel { opacity: 1; transform: translateY(0); }
+
+.area-do-qr {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.qr {
+  border-radius: var(--raio);
+  /* Área livre branca própria: sobre o fundo cinza do app, um QR sem margem
+     clara simplesmente não é lido. */
+  background: #FFFFFF;
+  padding: 0;
+  display: block;
+}
+.legenda-do-qr {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--tinta-fraca);
+  text-align: center;
+}
+
+.acoes-do-comprovante { display: flex; gap: 10px; }
+.acoes-do-comprovante .botao { flex: 1; }
+
+/* =============================================================================
+   Linha do tempo com o responsável de cada passo
+   ========================================================================== */
+
+.tempo.com-responsavel li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+.tempo.com-responsavel .passo { min-width: 0; }
+.tempo.com-responsavel .responsavel {
+  flex-shrink: 0;
+  max-width: 42%;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: right;
+  color: var(--tinta-fraca);
+}
+
+@media (max-width: 420px) {
+  /* No celular estreito a coluna da direita espremia o texto do evento em
+     duas letras por linha. Abaixo deste ponto ela desce. */
+  .tempo.com-responsavel li { flex-direction: column; gap: 2px; }
+  .tempo.com-responsavel .responsavel { max-width: none; text-align: left; }
+}
+
+/* =============================================================================
+   Acessibilidade: tamanho da letra e alto contraste
+   ========================================================================== */
+
+.acessibilidade {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: 12px;
+}
+.acessibilidade .medida-da-fonte {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  color: var(--tinta-fraca);
+}
+.acessibilidade .icone-botao:disabled { opacity: .35; cursor: default; }
+.acessibilidade .icone-botao.ligado {
+  background: var(--verde-tenue);
+  color: var(--verde-escuro);
+}
+
+.so-no-celular { display: none; }
+@media (max-width: 760px) { .so-no-celular { display: block; } }
+
+/* --- alto contraste ---
+   Preto sobre branco puro (21:1), linhas visíveis e foco grosso. Só trocam os
+   tokens: nenhuma regra de layout muda, então não há risco de a tela andar de
+   lugar quando a pessoa liga o modo. */
+:root[data-contraste='alto'] {
+  --tinta: #000000;
+  --tinta-media: #1A1A1A;
+  --tinta-fraca: #2E2E2E;
+  --fundo: #FFFFFF;
+  --fundo-app: #FFFFFF;
+  --linha: #000000;
+  --verde: #004D3A;
+  --verde-escuro: #003528;
+  --verde-tenue: #FFFFFF;
+  --verde-claro: #FFFFFF;
+  --terracota: #8A0000;
+  --terracota-texto: #6B0000;
+  --terracota-tenue: #FFFFFF;
+}
+:root[data-contraste='alto'] .cartao,
+:root[data-contraste='alto'] .cartao-conta,
+:root[data-contraste='alto'] .codigo-grande,
+:root[data-contraste='alto'] .declaracao-conferida,
+:root[data-contraste='alto'] .aviso,
+:root[data-contraste='alto'] .lista-de-codigos li {
+  border: 2px solid #000000;
+}
+:root[data-contraste='alto'] .botao.principal,
+:root[data-contraste='alto'] button.principal {
+  background: #000000;
+  color: #FFFFFF;
+  border: 2px solid #000000;
+}
+:root[data-contraste='alto'] .botao.secundario,
+:root[data-contraste='alto'] button.secundario {
+  background: #FFFFFF;
+  color: #000000;
+  border: 2px solid #000000;
+}
+:root[data-contraste='alto'] *:focus-visible {
+  outline: 3px solid #000000;
+  outline-offset: 2px;
+}
+:root[data-contraste='alto'] .passos .bolinha { border-color: #000000; }
+:root[data-contraste='alto'] .passos li.atual .bolinha { background: #000000; color: #FFFFFF; }
+
+/* =============================================================================
+   Impressão: o comprovante, e só ele
+   ========================================================================== */
+
+@media print {
+  .menu-app,
+  .nav-app,
+  .topo-app,
+  .acoes-do-comprovante,
+  .nao-imprimir,
+  .tempo { display: none !important; }
+
+  body { background: #FFFFFF; }
+  .area-app, .tela, .conteudo-app { display: block; padding: 0; }
+
+  .comprovante {
+    border: 1px solid #000000;
+    border-radius: 8px;
+    padding: 18px;
+    page-break-inside: avoid;
+  }
+  .codigo-grande { background: #FFFFFF; }
+  .codigo-grande .valor { color: #000000; }
+  .codigo-grande .icone-botao { display: none; }
+  .qr { background: #FFFFFF; }
+}
