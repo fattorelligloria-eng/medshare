@@ -29,8 +29,16 @@ public class ControladorDeNecessidade {
         this.usuarioLogado = usuarioLogado;
     }
 
-    /** RN08 - precisa acontecer antes de qualquer reserva. */
+    /**
+     * RN08 - precisa acontecer antes de qualquer reserva.
+     *
+     * Unico ponto desta classe aberto a quem ainda nao e beneficiario, e por
+     * isso tem @PreAuthorize proprio: e justamente aqui que alguem deixa de nao
+     * ser. Quem ja doa e resolve que tambem precisa chega por esta porta sem
+     * ter o papel ainda; e a confirmacao do NIS que o concede, la no servico.
+     */
     @PostMapping("/cadunico")
+    @PreAuthorize("isAuthenticated()")
     public Map<String, Object> verificarCadUnico(
             @Valid @RequestBody PedidoDeVerificacaoCadUnico pedido) {
         var resultado = servico.verificarCadUnico(pedido.nis(), usuarioLogado.obrigatorio());

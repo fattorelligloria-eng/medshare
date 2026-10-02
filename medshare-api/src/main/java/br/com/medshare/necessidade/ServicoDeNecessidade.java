@@ -8,6 +8,7 @@ import br.com.medshare.notificacao.ServicoDeNotificacao;
 import br.com.medshare.notificacao.TipoNotificacao;
 import br.com.medshare.reserva.ServicoDeOferta;
 import br.com.medshare.usuario.Papel;
+import br.com.medshare.usuario.ServicoDeUsuario;
 import br.com.medshare.usuario.Usuario;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +35,7 @@ public class ServicoDeNecessidade {
     private final ServicoDeNotificacao notificacoes;
     private final ServicoDeOferta ofertas;
     private final PropriedadesDoMedShare propriedades;
+    private final ServicoDeUsuario usuarios;
 
     public ServicoDeNecessidade(NecessidadeRepository necessidades, ReceitaRepository receitas,
                                 VerificacaoCadUnicoRepository verificacoes,
@@ -42,7 +44,8 @@ public class ServicoDeNecessidade {
                                 ConsultaDeCadUnico consultaCadUnico,
                                 ServicoDeNotificacao notificacoes,
                                 ServicoDeOferta ofertas,
-                                PropriedadesDoMedShare propriedades) {
+                                PropriedadesDoMedShare propriedades,
+                                ServicoDeUsuario usuarios) {
         this.necessidades = necessidades;
         this.receitas = receitas;
         this.verificacoes = verificacoes;
@@ -52,12 +55,19 @@ public class ServicoDeNecessidade {
         this.notificacoes = notificacoes;
         this.ofertas = ofertas;
         this.propriedades = propriedades;
+        this.usuarios = usuarios;
     }
 
     // --- RN08: CadUnico ------------------------------------------------------
 
     /**
      * RN08 - verifica o NIS e guarda o resultado por 12 meses.
+     *
+     * E aqui, e so aqui, que alguem vira beneficiario: o papel e concedido
+     * quando a verificacao confirma, nunca a pedido. Quem doa e resolve que
+     * tambem precisa passa por esta porta; se o NIS nao confirmar, nada muda e
+     * as telas de quem recebe continuam invisiveis para essa pessoa. Decisao da
+     * Gloria: quem nao tem CadUnico nao precisa nem saber que elas existem.
      *
      * Formato invalido e recusado na hora (a pessoa corrige). "Nao encontrado"
      * vai para conferencia humana: a consulta oficial so enxerga quem recebe
@@ -81,6 +91,7 @@ public class ServicoDeNecessidade {
         verificacoes.save(verificacao);
 
         if (resultado.confirmado()) {
+            usuarios.tornarBeneficiario(beneficiario);
             ofertarParaPedidosDe(beneficiario);
         }
         String observacao = resultado.precisaDeAnaliseHumana()
@@ -111,6 +122,7 @@ public class ServicoDeNecessidade {
                 .orElseThrow(() -> new RecursoNaoEncontrado("Verificação de NIS", beneficiarioId));
 
         pendente.confirmarManualmente(propriedades.cadunico().mesesDeValidade());
+        usuarios.tornarBeneficiario(pendente.getUsuario());
         avisarConfirmacao(pendente);
         return pendente;
     }
@@ -126,6 +138,7 @@ public class ServicoDeNecessidade {
             }
             verificacao.registrarNovaConsulta(resultado.confirmado(), propriedades.cadunico().mesesDeValidade());
             if (resultado.confirmado()) {
+                usuarios.tornarBeneficiario(verificacao.getUsuario());
                 avisarConfirmacao(verificacao);
             }
         }

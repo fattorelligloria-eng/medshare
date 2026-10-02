@@ -1259,3 +1259,43 @@ button:focus-visible,
   border: 2px solid var(--terracota-texto);
   color: var(--terracota-texto);
 }
+
+/* =============================================================================
+   Par de ações: seguir e desistir, lado a lado
+   ========================================================================== */
+
+/* O principal fica maior porque é o caminho esperado; cancelar fica do lado,
+   vermelho e sem preenchimento. Visível o suficiente para quem quer sair,
+   discreto o suficiente para não competir com o botão que resolve a tela. */
+.dupla-de-acoes { display: flex; gap: 10px; align-items: stretch; }
+.dupla-de-acoes .principal { flex: 1; }
+
+.cancelar {
+  padding: 13px 20px;
+  border-radius: var(--raio);
+  border: 1px solid var(--terracota-tenue);
+  background: transparent;
+  color: var(--terracota-texto);
+  font-family: inherit;
+  font-size: 0.9063rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s ease, border-color .15s ease;
+}
+.cancelar:hover:not(:disabled) {
+  background: var(--terracota-tenue);
+  border-color: var(--terracota);
+}
+.cancelar:disabled { opacity: .5; cursor: default; }
+.cancelar:focus-visible { outline: 2px solid var(--terracota); outline-offset: 2px; }
+
+:root[data-contraste='alto'] .cancelar {
+  border: 2px solid var(--terracota-texto);
+  color: var(--terracota-texto);
+}
+
+@media (max-width: 380px) {
+  /* Em tela bem estreita os dois lado a lado espremem o texto; cancelar desce. */
+  .dupla-de-acoes { flex-direction: column; }
+}

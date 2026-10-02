@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../api/cliente'
-import type { RespostaDoCadUnico } from '../api/tipos'
+import type { RespostaDoCadUnico, Sessao } from '../api/tipos'
+import { useAutenticacao } from '../contexto/Autenticacao'
 import { AvisoDeErro, AvisoDeSucesso } from '../componentes/Aviso'
 import { CabecalhoInterno } from '../componentes/CabecalhoInterno'
 import { Senha } from '../componentes/Icones'
@@ -14,9 +15,19 @@ import { data } from '../formatos'
  * pessoa desistir, ou desconfiar com razão. Por isso a tela explica de onde
  * vem o critério antes de pedir o número: ele não foi inventado pelo projeto,
  * é o cadastro oficial do governo federal para programas sociais.
+ *
+ * É também a porta por onde um doador vira beneficiário. O papel chega do
+ * servidor junto com a confirmação, e está dentro do token — por isso a sessão
+ * é renovada aqui, no mesmo instante. Sem renovar, o banco diria que a pessoa
+ * é beneficiária e o crachá na mão dela diria que não, e as telas de Pedidos
+ * continuariam fechadas.
+ *
+ * Quem não confirma sai daqui exatamente como entrou: nenhuma tela nova
+ * aparece, e o botão de cancelar existe para essa saída não ser um beco.
  */
 export function CadUnico() {
   const navegar = useNavigate()
+  const { sessao, definirSessaoManualmente } = useAutenticacao()
   const [parametros] = useSearchParams()
   const acabouDeSeCadastrar = parametros.get('novo') === '1'
 
@@ -30,7 +41,17 @@ export function CadUnico() {
     definirResposta(null)
     definirEnviando(true)
     try {
-      definirResposta(await api.post<RespostaDoCadUnico>('/necessidades/cadunico', { nis }))
+      const resultado = await api.post<RespostaDoCadUnico>('/necessidades/cadunico', { nis })
+      definirResposta(resultado)
+
+      if (resultado.confirmado) {
+        // O papel acabou de ser concedido no servidor; sem trocar o token, a
+        // rota de Pedidos ainda recusaria a entrada.
+        const renovada = await api.post<Sessao>('/autenticacao/renovacao', {
+          tokenDeRenovacao: sessao?.tokenDeRenovacao,
+        })
+        definirSessaoManualmente(renovada)
+      }
     } catch (e) {
       definirErro(e)
     } finally {
@@ -108,9 +129,22 @@ export function CadUnico() {
             Entendi, voltar para a conta
           </button>
         ) : (
-          <button className="principal" disabled={nis.length !== 11 || enviando} onClick={verificar}>
-            {enviando ? 'Consultando…' : 'Verificar'}
-          </button>
+          <div className="dupla-de-acoes">
+            <button className="principal" disabled={nis.length !== 11 || enviando} onClick={verificar}>
+              {enviando ? 'Consultando…' : 'Verificar'}
+            </button>
+            {/* Desistir tem que ser tão fácil quanto seguir. Quem chegou aqui
+                por curiosidade, ou não tem o número à mão, sai sem ter mexido
+                em nada da conta. */}
+            <button
+              type="button"
+              className="cancelar"
+              disabled={enviando}
+              onClick={() => navegar('/app/conta', { replace: true })}
+            >
+              Cancelar
+            </button>
+          </div>
         )}
       </div>
     </>
