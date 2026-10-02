@@ -85,9 +85,15 @@ export function App() {
             <Route path="/app/doacoes/:codigo/agendar" element={<Agendamento />} />
           </>
         )}
+        {/* A tela do NIS fica fora do portao do papel de proposito: quem doa e
+            resolveu que tambem precisa chega aqui vindo da conta, e no instante
+            do clique a sessao antiga ainda diz so DOADOR. Antes disso, a rota
+            caia no curinga "*" e a pessoa era devolvida para as doacoes — era
+            exatamente o que parecia um botao quebrado. A tela em si so explica
+            o CadUnico e pede o numero; quem decide o que pode e o servidor. */}
+        <Route path="/app/cadunico" element={<CadUnico />} />
         {temPapel('BENEFICIARIO') && (
           <>
-            <Route path="/app/cadunico" element={<CadUnico />} />
             <Route path="/app/pedidos/novo" element={<NovoPedido />} />
             <Route path="/app/pedidos/:id/receita" element={<EnvioDeReceita />} />
           </>

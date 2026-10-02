@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Acessibilidade } from '../componentes/Acessibilidade'
+import { QueroTambemReceber } from '../componentes/QueroTambemReceber'
 import { api } from '../api/cliente'
 import type { MeuImpacto, MeusDados } from '../api/tipos'
 import { useAutenticacao } from '../contexto/Autenticacao'
@@ -62,8 +63,8 @@ export function Conta() {
       </div>
 
       <div className="conteudo-app cresce" style={{ paddingTop: 28 }}>
-        <h1 className="humano" style={{ fontSize: 26 }}>{dados?.nome ?? sessao?.nome}</h1>
-        <p style={{ margin: '6px 0 0', fontSize: 14, color: 'var(--tinta-media)' }}>
+        <h1 className="humano" style={{ fontSize: '1.625rem' }}>{dados?.nome ?? sessao?.nome}</h1>
+        <p style={{ margin: '6px 0 0', fontSize: '0.875rem', color: 'var(--tinta-media)' }}>
           {(dados?.papeis ?? sessao?.papeis ?? [])
             .map((p) => NOME_DO_PAPEL[p] ?? p.toLowerCase())
             .join(' · ')}
@@ -126,20 +127,7 @@ export function Conta() {
           </section>
         )}
 
-        {/* --- virar beneficiário: item 36, só com NIS --- */}
-        {!temPapel('BENEFICIARIO') && (
-          <section className="cartao-conta" aria-labelledby="t-virar">
-            <h2 id="t-virar" className="humano">Precisa de um medicamento?</h2>
-            <p className="explicacao-secao">
-              Quem doa hoje pode precisar amanhã. Para pedir medicamentos pela
-              mesma conta, informe seu NIS do CadÚnico — é o critério oficial
-              que decide quem recebe, e sem ele não dá para seguir.
-            </p>
-            <Link to="/app/cadunico?novo=1" className="botao secundario">
-              Quero também receber
-            </Link>
-          </section>
-        )}
+        {!temPapel('BENEFICIARIO') && <QueroTambemReceber />}
 
         {temPapel('BENEFICIARIO') && <Procuradores />}
 
@@ -164,9 +152,11 @@ export function Conta() {
         </section>
 
         {/* Fica no fim, e não no rodapé que gruda: sair não é a ação principal
-            desta tela, e grudado ele cobria os dados enquanto a pessoa rolava. */}
+            desta tela, e grudado ele cobria os dados enquanto a pessoa rolava.
+            Agora é o único lugar do aplicativo onde sair aparece — o menu
+            lateral não tem mais esse botão. */}
         <section className="cartao-conta" style={{ paddingBottom: 28 }}>
-          <button className="secundario" onClick={sair}>Sair da conta</button>
+          <button className="sair-da-conta" onClick={sair}>Sair da conta</button>
         </section>
       </div>
     </>

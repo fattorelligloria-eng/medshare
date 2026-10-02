@@ -39,6 +39,23 @@ public class ControladorDeUsuario {
         return MeusDados.de(servico.atualizar(usuarioLogado.obrigatorio(), pedido));
     }
 
+    /**
+     * UC04 — o doador diz que tambem quer receber.
+     *
+     * Nao recebe papel no corpo de proposito: o endpoint concede BENEFICIARIO e
+     * nada mais. Se o papel viesse do cliente, bastaria trocar uma palavra no
+     * JSON para virar FARMACEUTICO e ganhar o balcao.
+     *
+     * Depois disto o papel mudou no banco, mas o token em maos ainda e o antigo
+     * — quem chama precisa renovar a sessao em /autenticacao/renovacao para o
+     * novo papel valer de fato.
+     */
+    @PostMapping("/eu/papeis/beneficiario")
+    public ResponseEntity<Void> tambemQueroReceber() {
+        servico.tornarBeneficiario(usuarioLogado.obrigatorio());
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/eu/senha")
     public ResponseEntity<Void> trocarSenha(@Valid @RequestBody PedidoDeNovaSenha pedido) {
         servico.trocarSenha(usuarioLogado.obrigatorio(), pedido);

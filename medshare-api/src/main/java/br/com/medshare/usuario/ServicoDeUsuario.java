@@ -42,6 +42,38 @@ public class ServicoDeUsuario {
         return usuarios.save(usuario);
     }
 
+    /**
+     * UC04 — quem ja tem conta passa a tambem poder receber, sem abrir outra.
+     *
+     * Acrescenta o papel, nao troca: a pessoa continua doadora. Era o buraco do
+     * fluxo — o botao "Quero tambem receber" existia na tela de conta, mas nada
+     * no servidor concedia o papel, entao a tela de NIS nem abria.
+     *
+     * Conceder o papel NAO afrouxa a RN08. Ele so abre as telas de quem recebe;
+     * pedir medicamento, entrar na fila e receber oferta continuam exigindo
+     * CadUnico vigente, conferido em {@code exigirCadUnicoVigente}, no
+     * ServicoDeOferta e no ServicoDeMatching. E a mesma situacao de quem se
+     * cadastra direto como beneficiario e ainda nao informou o NIS.
+     *
+     * Só concede BENEFICIARIO, nunca um papel escolhido por quem chama:
+     * FARMACEUTICO e ADMIN dao acesso a conferencia de lacre e a decisao sobre
+     * doacoes, e continuam sendo concedidos so pela equipe.
+     *
+     * Idempotente: chamar duas vezes nao muda nada nem da erro.
+     */
+    @Transactional
+    public boolean tornarBeneficiario(Usuario usuario) {
+        if (usuario.temPapel(Papel.BENEFICIARIO)) return false;
+
+        // O usuario vem do token e esta destacado; recarrega para salvar.
+        Usuario gerenciado = usuarios.findById(usuario.getId())
+                .orElseThrow(() -> new RegraDeNegocioViolada("AUTENTICACAO",
+                        "Sessão inválida. Entre de novo."));
+        gerenciado.adicionarPapel(Papel.BENEFICIARIO);
+        usuarios.save(gerenciado);
+        return true;
+    }
+
     @Transactional
     public void trocarSenha(Usuario usuario, PedidoDeNovaSenha pedido) {
         // Sem conferir a senha atual, quem pegasse o celular destravado trocaria
