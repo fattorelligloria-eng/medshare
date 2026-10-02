@@ -85,11 +85,12 @@ public class ControladorDeDoacao {
     @GetMapping("/{codigo}")
     @Transactional(readOnly = true)
     public DoacaoDetalhada detalhar(@PathVariable String codigo) {
-        Doacao doacao = servico.detalharPara(codigo, usuarioLogado.obrigatorio());
+        Usuario quemVe = usuarioLogado.obrigatorio();
+        Doacao doacao = servico.detalharPara(codigo, quemVe);
         Agendamento agendamento = servico.agendamentoAtualDe(doacao).orElse(null);
         return DoacaoDetalhada.de(doacao,
                 eventos.findByDoacaoIdOrderByOcorridoEmAscIdAsc(doacao.getId()),
-                agendamento, servico.podeReagendar(doacao));
+                agendamento, servico.podeReagendar(doacao), quemVe);
     }
 
     /** UC02 - agenda (ou reagenda, uma vez, depois de um cancelamento). */

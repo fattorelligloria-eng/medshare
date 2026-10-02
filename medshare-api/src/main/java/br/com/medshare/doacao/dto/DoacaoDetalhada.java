@@ -3,6 +3,7 @@ package br.com.medshare.doacao.dto;
 import br.com.medshare.doacao.Agendamento;
 import br.com.medshare.doacao.Doacao;
 import br.com.medshare.doacao.EventoHistorico;
+import br.com.medshare.usuario.Usuario;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -31,16 +32,22 @@ public record DoacaoDetalhada(
         }
     }
 
+    /**
+     * {@code quemVe} atravessa ate o {@link EventoResumido} porque o rotulo do
+     * responsavel depende de quem esta lendo: o mesmo evento vira "Você" para
+     * quem o registrou e "Farmacêutico(a) Ana" para os demais.
+     */
     public static DoacaoDetalhada de(Doacao doacao, List<EventoHistorico> eventos,
-                                     Agendamento agendamento, boolean podeReagendar) {
+                                     Agendamento agendamento, boolean podeReagendar,
+                                     Usuario quemVe) {
         return new DoacaoDetalhada(
                 DoacaoResumida.de(doacao),
                 agendamento == null ? null : AgendamentoAtual.de(agendamento),
                 podeReagendar,
-                eventos.stream().map(EventoResumido::de).toList());
+                eventos.stream().map(evento -> EventoResumido.de(evento, quemVe)).toList());
     }
 
     public static DoacaoDetalhada de(Doacao doacao, List<EventoHistorico> eventos) {
-        return de(doacao, eventos, null, false);
+        return de(doacao, eventos, null, false, null);
     }
 }

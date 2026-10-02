@@ -34,6 +34,11 @@ export interface Evento {
   descricao: string
   statusAnterior: string | null
   statusNovo: string | null
+  /**
+   * Rotulo de quem registrou o passo, ja tratado pelo servidor: nunca o nome
+   * de quem recebe (RN05). Nulo quando o passo foi automatico.
+   */
+  responsavel: string | null
 }
 
 /** O agendamento atual traz o codigo que o doador mostra no balcao (UC03). */
