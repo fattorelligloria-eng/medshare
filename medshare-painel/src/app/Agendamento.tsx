@@ -78,8 +78,8 @@ export function Agendamento() {
       <div className="conteudo-app cresce" style={{ paddingTop: 22 }}>
         <AvisoDeErro erro={erro} />
 
-        <h1 className="humano" style={{ fontSize: 25 }}>Onde você vai entregar?</h1>
-        <p style={{ margin: '9px 0 20px', fontSize: 14, color: 'var(--tinta-media)', lineHeight: 1.5 }}>
+        <h1 className="humano" style={{ fontSize: '1.5625rem' }}>Onde você vai entregar?</h1>
+        <p style={{ margin: '9px 0 20px', fontSize: '0.875rem', color: 'var(--tinta-media)', lineHeight: 1.5 }}>
           As mais próximas do seu endereço aparecem primeiro.
         </p>
 
@@ -100,9 +100,9 @@ export function Agendamento() {
         {escolhido !== null && (
           <div style={{ marginTop: 22 }}>
             <p className="rotulo">Quando você vai levar?</p>
-            {carregandoHorarios && <p style={{ color: 'var(--tinta-fraca)', fontSize: 14 }}>Carregando horários…</p>}
+            {carregandoHorarios && <p style={{ color: 'var(--tinta-fraca)', fontSize: '0.875rem' }}>Carregando horários…</p>}
             {!carregandoHorarios && horarios.length === 0 && (
-              <p style={{ fontSize: 14, color: 'var(--tinta-media)' }}>
+              <p style={{ fontSize: '0.875rem', color: 'var(--tinta-media)' }}>
                 Esta farmácia não tem horário livre nas próximas duas semanas. Escolha outra.
               </p>
             )}

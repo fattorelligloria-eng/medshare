@@ -47,8 +47,8 @@ export function Procuradores() {
 
   return (
     <div style={{ marginTop: 28, paddingTop: 22, borderTop: '1px solid var(--linha)' }}>
-      <h2 className="humano" style={{ fontSize: 19 }}>Quem pode retirar por você</h2>
-      <p style={{ margin: '8px 0 14px', fontSize: 14, lineHeight: 1.5, color: 'var(--tinta-media)' }}>
+      <h2 className="humano" style={{ fontSize: '1.1875rem' }}>Quem pode retirar por você</h2>
+      <p style={{ margin: '8px 0 14px', fontSize: '0.875rem', lineHeight: 1.5, color: 'var(--tinta-media)' }}>
         Se você não puder ir à farmácia, cadastre aqui quem vai. A pessoa leva o próprio documento,
         a receita e o código de retirada.
       </p>
@@ -56,7 +56,7 @@ export function Procuradores() {
 
       {lista.map((p) => (
         <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' }}>
-          <span style={{ fontSize: 14 }}>{p.nome} · CPF final {p.cpf.slice(-4)}</span>
+          <span style={{ fontSize: '0.875rem' }}>{p.nome} · CPF final {p.cpf.slice(-4)}</span>
           <button type="button" className="texto-botao" onClick={() => remover(p)}>Remover</button>
         </div>
       ))}

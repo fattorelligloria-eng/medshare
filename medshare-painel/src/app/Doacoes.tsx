@@ -80,7 +80,7 @@ export function Doacoes() {
       </div>
 
       <div className="conteudo-app" style={{ paddingTop: 28 }}>
-        <h1 className="humano" style={{ fontSize: 26, margin: '0 0 12px' }}>
+        <h1 className="humano" style={{ fontSize: '1.625rem', margin: '0 0 12px' }}>
           Oi, {primeiroNome(sessao?.nome ?? '')}
         </h1>
 
@@ -96,7 +96,7 @@ export function Doacoes() {
             </div>
 
             {entregues.length > 0 && (
-              <p style={{ margin: '14px 0 0', fontSize: 14, color: 'var(--tinta-media)' }}>
+              <p style={{ margin: '14px 0 0', fontSize: '0.875rem', color: 'var(--tinta-media)' }}>
                 {entregues.length === 1
                   ? 'Uma delas já chegou a alguém.'
                   : `${entregues.length} delas já chegaram a alguém.`}
@@ -104,7 +104,7 @@ export function Doacoes() {
             )}
           </>
         ) : !carregando && (
-          <p style={{ margin: 0, fontSize: 15.5, lineHeight: 1.5, color: 'var(--tinta-media)' }}>
+          <p style={{ margin: 0, fontSize: '0.9688rem', lineHeight: 1.5, color: 'var(--tinta-media)' }}>
             Sobrou caixa lacrada de um tratamento? Ela pode ser o tratamento de
             outra pessoa.
           </p>

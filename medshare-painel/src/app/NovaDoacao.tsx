@@ -113,7 +113,7 @@ export function NovaDoacao() {
         <div className="conteudo-app cresce confirmacao">
           <div className="selo-pronto" aria-hidden="true"><Confere tamanho={34} /></div>
 
-          <h1 className="humano" style={{ fontSize: 26, textAlign: 'center' }}>
+          <h1 className="humano" style={{ fontSize: '1.625rem', textAlign: 'center' }}>
             {uma ? 'Doação cadastrada' : `${criadas.length} doações cadastradas`}
           </h1>
           <p className="texto-confirmacao">
@@ -187,7 +187,7 @@ export function NovaDoacao() {
               aoTrocar={() => definirPasso(0)}
             />
 
-            <p style={{ margin: '0 0 14px', fontSize: 14.5, lineHeight: 1.5, color: 'var(--tinta-media)' }}>
+            <p style={{ margin: '0 0 14px', fontSize: '0.9062rem', lineHeight: 1.5, color: 'var(--tinta-media)' }}>
               Fotografe a caixa fechada, mostrando o lacre e a aba onde estão
               impressos o lote e a validade. É essa foto que a conferência
               automática compara com o que você digitar no próximo passo.
@@ -309,7 +309,7 @@ function ResumoDoMedicamento({
   return (
     <div className="resumo-medicamento">
       <div>
-        <h2 className="humano" style={{ fontSize: 19 }}>{medicamento.nomeComercial}</h2>
+        <h2 className="humano" style={{ fontSize: '1.1875rem' }}>{medicamento.nomeComercial}</h2>
         <p className="detalhe">{medicamento.apresentacao}</p>
       </div>
       <button type="button" className="texto-botao" onClick={aoTrocar}>Trocar</button>
@@ -345,7 +345,7 @@ function Conferencia({
 
   return (
     <>
-      <p style={{ margin: '0 0 16px', fontSize: 14.5, lineHeight: 1.5, color: 'var(--tinta-media)' }}>
+      <p style={{ margin: '0 0 16px', fontSize: '0.9062rem', lineHeight: 1.5, color: 'var(--tinta-media)' }}>
         Confira o lote e a validade com a caixa na mão. Eles são comparados com
         a foto, e um caractere trocado manda a doação para análise.
       </p>

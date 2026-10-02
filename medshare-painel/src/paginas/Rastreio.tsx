@@ -72,7 +72,7 @@ export function Rastreio() {
             <Status status={resultado.doacao.status} />
           </div>
 
-          <p style={{ margin: '0 0 20px', color: 'var(--tinta-media)', fontSize: 14.5 }}>
+          <p style={{ margin: '0 0 20px', color: 'var(--tinta-media)', fontSize: '0.9062rem' }}>
             {explicar(resultado.doacao.status)}
           </p>
 

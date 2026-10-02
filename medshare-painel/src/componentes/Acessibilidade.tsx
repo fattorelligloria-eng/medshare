@@ -7,10 +7,15 @@ import { Contraste, Letra, Menos, Mais } from './Icones'
  * Ficam juntos porque quem mexe num costuma precisar do outro: a mesma pessoa
  * que aumenta a letra e a que reclama de cinza claro sobre branco.
  *
- * O ajuste é feito na raiz do documento, não neste componente: todo o CSS do
- * aplicativo está em rem, então mudar a fonte do <html> move a interface
- * inteira junto — margens, botões e altura de linha — em vez de só esticar o
- * texto e estourar as caixas.
+ * O ajuste é feito na raiz do documento, não neste componente: mudar a fonte
+ * do <html> move junto tudo que estiver em rem.
+ *
+ * É por causa deste botão que o CSS do aplicativo está em rem. Ele nasceu
+ * mexendo no <html> enquanto os 73 tamanhos do estilos.css e os 68 em linha
+ * nos componentes ainda estavam em px — ou seja, apertar mais e menos não
+ * mudava nada, porque não havia nada para mudar. Se um tamanho novo entrar em
+ * px, ele simplesmente deixa de obedecer a este controle, sem erro nenhum.
+ * A conta é tamanho em px dividido por 16.
  *
  * A escolha fica no navegador da pessoa, não na conta: é preferência daquele
  * aparelho. Em aba anônima ou com o armazenamento bloqueado, ler e gravar

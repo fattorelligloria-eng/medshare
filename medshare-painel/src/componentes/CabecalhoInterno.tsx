@@ -31,7 +31,7 @@ export function CabecalhoInterno({
         <button type="button" className="icone-botao" aria-label="Voltar" onClick={voltar}>
           <Voltar />
         </button>
-        <span style={{ fontSize: 15, fontWeight: 600 }}>{titulo}</span>
+        <span style={{ fontSize: '0.9375rem', fontWeight: 600 }}>{titulo}</span>
         <span style={{ width: 34 }} />
       </div>
     </div>

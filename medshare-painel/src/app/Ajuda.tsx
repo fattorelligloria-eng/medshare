@@ -82,8 +82,8 @@ export function Ajuda() {
       </div>
 
       <div className="conteudo-app cresce" style={{ paddingTop: 28 }}>
-        <h1 className="humano" style={{ fontSize: 26 }}>Perguntas frequentes</h1>
-        <p style={{ margin: '8px 0 24px', fontSize: 14.5, lineHeight: 1.5, color: 'var(--tinta-media)' }}>
+        <h1 className="humano" style={{ fontSize: '1.625rem' }}>Perguntas frequentes</h1>
+        <p style={{ margin: '8px 0 24px', fontSize: '0.9062rem', lineHeight: 1.5, color: 'var(--tinta-media)' }}>
           O que as pessoas mais perguntam antes de doar pela primeira vez.
         </p>
 
@@ -105,7 +105,7 @@ export function Ajuda() {
           ))}
         </div>
 
-        <p style={{ marginTop: 30, fontSize: 14, color: 'var(--tinta-media)' }}>
+        <p style={{ marginTop: 30, fontSize: '0.875rem', color: 'var(--tinta-media)' }}>
           Não achou o que procurava? Veja <Link to="/app/sobre">sobre o MedShare</Link>.
         </p>
       </div>

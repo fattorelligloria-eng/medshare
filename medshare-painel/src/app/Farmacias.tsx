@@ -40,8 +40,8 @@ export function Farmacias() {
       </div>
 
       <div className="conteudo-app cresce" style={{ paddingTop: 28 }}>
-        <h1 className="humano" style={{ fontSize: 26 }}>Farmácias parceiras</h1>
-        <p style={{ margin: '8px 0 24px', fontSize: 14.5, lineHeight: 1.5, color: 'var(--tinta-media)' }}>
+        <h1 className="humano" style={{ fontSize: '1.625rem' }}>Farmácias parceiras</h1>
+        <p style={{ margin: '8px 0 24px', fontSize: '0.9062rem', lineHeight: 1.5, color: 'var(--tinta-media)' }}>
           Da mais perto para a mais longe, a partir do endereço do seu cadastro.
           É numa delas que você entrega a caixa — e é lá que um farmacêutico
           confere o lacre antes de ela seguir.
@@ -65,7 +65,7 @@ export function Farmacias() {
 
         {pontos.map((p) => (
           <article className="item" key={p.id}>
-            <h2 className="humano" style={{ fontSize: 19 }}>{p.nome}</h2>
+            <h2 className="humano" style={{ fontSize: '1.1875rem' }}>{p.nome}</h2>
             <p className="detalhe">{p.endereco}</p>
             <p className="explicacao">{p.bairro} · {p.municipio}</p>
 

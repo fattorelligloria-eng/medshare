@@ -30,7 +30,7 @@ export function Notificacoes({ noPainel = false }: { noPainel?: boolean }) {
   const lista = (
     <>
       <AvisoDeErro erro={erro} />
-      {carregando && <p style={{ color: 'var(--tinta-fraca)', fontSize: 14 }}>Carregando…</p>}
+      {carregando && <p style={{ color: 'var(--tinta-fraca)', fontSize: '0.875rem' }}>Carregando…</p>}
       {!carregando && itens.length === 0 && (
         <div className="vazio">
           <h3>Nenhuma notificação</h3>

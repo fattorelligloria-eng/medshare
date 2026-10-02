@@ -18,7 +18,7 @@ export function Sobre() {
       </div>
 
       <div className="conteudo-app cresce" style={{ paddingTop: 28 }}>
-        <h1 className="humano" style={{ fontSize: 26 }}>Sobre o MedShare</h1>
+        <h1 className="humano" style={{ fontSize: '1.625rem' }}>Sobre o MedShare</h1>
 
         <p className="texto-sobre">
           Todo ano, caixas lacradas de medicamento de alto custo vencem dentro de
@@ -34,7 +34,7 @@ export function Sobre() {
           precisa — e a retirada exige receita válida, conferida no balcão.
         </p>
 
-        <h2 className="humano" style={{ fontSize: 20, marginTop: 30 }}>O que ele não é</h2>
+        <h2 className="humano" style={{ fontSize: '1.25rem', marginTop: 30 }}>O que ele não é</h2>
 
         <ul className="lista-sobre">
           <li>
@@ -58,19 +58,19 @@ export function Sobre() {
           </li>
         </ul>
 
-        <h2 className="humano" style={{ fontSize: 20, marginTop: 30 }}>Onde ele funciona</h2>
+        <h2 className="humano" style={{ fontSize: '1.25rem', marginTop: 30 }}>Onde ele funciona</h2>
 
         <p className="texto-sobre">
           Nos 39 municípios da Região Metropolitana de São Paulo.
         </p>
 
-        <h2 className="humano" style={{ fontSize: 20, marginTop: 30 }}>Quem fez</h2>
+        <h2 className="humano" style={{ fontSize: '1.25rem', marginTop: 30 }}>Quem fez</h2>
 
         <p className="texto-sobre">
           Trabalho de Modelagem de Software da Universidade São Judas Tadeu.
         </p>
 
-        <p style={{ marginTop: 30, fontSize: 14, color: 'var(--tinta-media)' }}>
+        <p style={{ marginTop: 30, fontSize: '0.875rem', color: 'var(--tinta-media)' }}>
           Dúvidas de quem vai doar estão nas <Link to="/app/ajuda">perguntas frequentes</Link>.
         </p>
       </div>

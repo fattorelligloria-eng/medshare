@@ -65,7 +65,7 @@ export function BuscaDeMedicamento({ aoEscolher }: { aoEscolher: (m: Medicamento
         </div>
       )}
 
-      {buscando && <p style={{ color: 'var(--tinta-fraca)', fontSize: 14 }}>Buscando…</p>}
+      {buscando && <p style={{ color: 'var(--tinta-fraca)', fontSize: '0.875rem' }}>Buscando…</p>}
 
       {!buscando && termo.trim().length >= 2 && resultados.length === 0 && (
         <div className="vazio">
@@ -85,10 +85,10 @@ export function BuscaDeMedicamento({ aoEscolher }: { aoEscolher: (m: Medicamento
             padding: '18px 0', borderRadius: 0, fontWeight: 400,
           }}
         >
-          <h3 className="humano" style={{ fontSize: 19 }}>{m.nomeComercial}</h3>
+          <h3 className="humano" style={{ fontSize: '1.1875rem' }}>{m.nomeComercial}</h3>
           <p className="detalhe">{m.principioAtivo}</p>
           <p className="detalhe">{m.apresentacao}</p>
-          <p style={{ margin: '7px 0 0', fontSize: 13, color: 'var(--verde-escuro)', fontWeight: 600 }}>
+          <p style={{ margin: '7px 0 0', fontSize: '0.8125rem', color: 'var(--verde-escuro)', fontWeight: 600 }}>
             Preço de referência {reais(m.pmc)}
           </p>
         </button>

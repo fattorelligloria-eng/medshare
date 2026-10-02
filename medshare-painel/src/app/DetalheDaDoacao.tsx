@@ -88,13 +88,13 @@ export function DetalheDaDoacao() {
 
       <div className="conteudo-app cresce" style={{ paddingTop: 22 }}>
         <AvisoDeErro erro={erro} />
-        {carregando && <p style={{ color: 'var(--tinta-fraca)', fontSize: 14 }}>Carregando…</p>}
+        {carregando && <p style={{ color: 'var(--tinta-fraca)', fontSize: '0.875rem' }}>Carregando…</p>}
 
         {detalhe && (
           <>
             <Status status={detalhe.doacao.status} />
-            <h1 className="humano" style={{ fontSize: 27 }}>{detalhe.doacao.medicamento}</h1>
-            <p style={{ margin: '10px 0 0', fontSize: 14.5, lineHeight: 1.5, color: 'var(--tinta-media)' }}>
+            <h1 className="humano" style={{ fontSize: '1.6875rem' }}>{detalhe.doacao.medicamento}</h1>
+            <p style={{ margin: '10px 0 0', fontSize: '0.9062rem', lineHeight: 1.5, color: 'var(--tinta-media)' }}>
               {explicar(detalhe.doacao.status)}
             </p>
 
@@ -138,10 +138,10 @@ export function DetalheDaDoacao() {
                   </p>
                 </div>
 
-                <p style={{ margin: '12px 0 0', fontSize: 14, fontWeight: 600 }}>
+                <p style={{ margin: '12px 0 0', fontSize: '0.875rem', fontWeight: 600 }}>
                   {dataComHora(detalhe.agendamento.dataHora)} — {detalhe.agendamento.pontoDeColeta}
                 </p>
-                <p style={{ margin: '4px 0 14px', fontSize: 13.5, color: 'var(--tinta-media)' }}>
+                <p style={{ margin: '4px 0 14px', fontSize: '0.8438rem', color: 'var(--tinta-media)' }}>
                   {detalhe.agendamento.endereco}
                 </p>
 
@@ -184,7 +184,7 @@ export function DetalheDaDoacao() {
             )}
 
             <p className="rotulo" style={{ marginBottom: 4 }}>Por onde passou</p>
-            <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--tinta-media)' }}>
+            <p style={{ margin: '0 0 16px', fontSize: '0.8125rem', color: 'var(--tinta-media)' }}>
               Registro completo e imutável desta caixa.
             </p>
 

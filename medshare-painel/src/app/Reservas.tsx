@@ -56,7 +56,7 @@ export function Reservas() {
       </div>
 
       <div className="conteudo-app cresce" style={{ paddingTop: 26 }}>
-        <h1 className="humano" style={{ fontSize: 26, marginBottom: 18 }}>Suas reservas</h1>
+        <h1 className="humano" style={{ fontSize: '1.625rem', marginBottom: 18 }}>Suas reservas</h1>
 
         <AvisoDeErro erro={erro} />
         {recemCriada && (
@@ -65,7 +65,7 @@ export function Reservas() {
           </AvisoDeSucesso>
         )}
 
-        {carregando && <p style={{ color: 'var(--tinta-fraca)', fontSize: 14 }}>Carregando…</p>}
+        {carregando && <p style={{ color: 'var(--tinta-fraca)', fontSize: '0.875rem' }}>Carregando…</p>}
 
         {!carregando && reservas.length === 0 && (
           <div className="vazio">
@@ -80,7 +80,7 @@ export function Reservas() {
         {reservas.map((r) => (
           <div key={r.codigoRetirada} style={{ marginBottom: 26 }}>
             <Status status={r.status} />
-            <h2 className="humano" style={{ fontSize: 21 }}>{r.medicamento}</h2>
+            <h2 className="humano" style={{ fontSize: '1.3125rem' }}>{r.medicamento}</h2>
             <p className="detalhe">{r.apresentacao}</p>
 
             {r.status === 'ATIVA' && (
@@ -89,10 +89,10 @@ export function Reservas() {
                   <p className="rotulo">Código de retirada</p>
                   <p className="valor">{r.codigoRetirada}</p>
                 </div>
-                <p style={{ margin: '12px 0 0', fontSize: 14, fontWeight: 600 }}>
+                <p style={{ margin: '12px 0 0', fontSize: '0.875rem', fontWeight: 600 }}>
                   Retire até {dataComHora(r.expiraEm)}
                 </p>
-                <p style={{ margin: '4px 0 0', fontSize: 13.5, color: 'var(--tinta-media)' }}>
+                <p style={{ margin: '4px 0 0', fontSize: '0.8438rem', color: 'var(--tinta-media)' }}>
                   Leve um documento com foto e a receita. Se outra pessoa for buscar, ela precisa estar
                   cadastrada como procuradora na sua conta.
                 </p>

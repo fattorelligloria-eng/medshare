@@ -49,16 +49,16 @@ export function CadUnico() {
 
         <div style={{ marginTop: acabouDeSeCadastrar ? 18 : 0 }}>
           <Senha tamanho={30} cor="var(--verde)" />
-          <h1 className="humano" style={{ fontSize: 26, marginTop: 14 }}>
+          <h1 className="humano" style={{ fontSize: '1.625rem', marginTop: 14 }}>
             Precisamos confirmar seu NIS
           </h1>
-          <p style={{ margin: '12px 0 0', fontSize: 14.5, lineHeight: 1.55, color: 'var(--tinta-media)' }}>
+          <p style={{ margin: '12px 0 0', fontSize: '0.9062rem', lineHeight: 1.55, color: 'var(--tinta-media)' }}>
             Os medicamentos desta rede são caros e são poucos. Para que cheguem a
             quem mais precisa, usamos o <strong>CadÚnico</strong> — o cadastro do
             governo federal para programas sociais. O critério não é nosso, é o
             oficial.
           </p>
-          <p style={{ margin: '12px 0 0', fontSize: 13.5, lineHeight: 1.5, color: 'var(--tinta-fraca)' }}>
+          <p style={{ margin: '12px 0 0', fontSize: '0.8438rem', lineHeight: 1.5, color: 'var(--tinta-fraca)' }}>
             Seu NIS está no Cartão do Cidadão, no aplicativo CadÚnico ou no
             extrato do Bolsa Família. A verificação vale por 12 meses.
           </p>
@@ -99,6 +99,13 @@ export function CadUnico() {
         {resposta?.confirmado ? (
           <button className="principal" onClick={() => navegar('/app/pedidos', { replace: true })}>
             Continuar
+          </button>
+        ) : resposta?.precisaDeAnaliseHumana ? (
+          /* Sem isto a tela virava beco sem saída: o NIS foi para conferência
+             humana, não há "Continuar", e a pessoa ficava parada olhando o
+             aviso. Ela avisa quando a equipe responder. */
+          <button className="principal" onClick={() => navegar('/app/conta', { replace: true })}>
+            Entendi, voltar para a conta
           </button>
         ) : (
           <button className="principal" disabled={nis.length !== 11 || enviando} onClick={verificar}>

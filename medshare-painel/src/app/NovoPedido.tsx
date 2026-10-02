@@ -39,7 +39,7 @@ export function NovoPedido() {
           </Link>
         )}
         {enviando
-          ? <p style={{ color: 'var(--tinta-fraca)', fontSize: 14 }}>Registrando…</p>
+          ? <p style={{ color: 'var(--tinta-fraca)', fontSize: '0.875rem' }}>Registrando…</p>
           : <BuscaDeMedicamento aoEscolher={pedir} />}
       </div>
     </>

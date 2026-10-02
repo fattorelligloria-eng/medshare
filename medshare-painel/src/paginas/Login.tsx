@@ -39,10 +39,10 @@ export function Login() {
           <div>
             <Logo tamanho={52} />
 
-            <h1 className="humano" style={{ fontSize: 31, marginTop: 26, lineHeight: 1.15 }}>
+            <h1 className="humano" style={{ fontSize: '1.9375rem', marginTop: 26, lineHeight: 1.15 }}>
               Remédio que sobrou<br />de um tratamento
             </h1>
-            <p style={{ margin: '12px 0 0', fontSize: 15.5, lineHeight: 1.5, color: 'var(--tinta-media)' }}>
+            <p style={{ margin: '12px 0 0', fontSize: '0.9688rem', lineHeight: 1.5, color: 'var(--tinta-media)' }}>
               chegando a quem não tem como comprar. Doador e quem recebe nunca
               se encontram: tudo passa por uma farmácia parceira.
             </p>

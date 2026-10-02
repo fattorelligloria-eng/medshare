@@ -156,8 +156,8 @@ export function Cadastro() {
 
             {passo === 1 && (
               <>
-                <h1 className="humano" style={{ fontSize: 27 }}>O que traz você aqui?</h1>
-                <p style={{ margin: '10px 0 22px', color: 'var(--tinta-media)', fontSize: 14.5, lineHeight: 1.5 }}>
+                <h1 className="humano" style={{ fontSize: '1.6875rem' }}>O que traz você aqui?</h1>
+                <p style={{ margin: '10px 0 22px', color: 'var(--tinta-media)', fontSize: '0.9062rem', lineHeight: 1.5 }}>
                   Pode marcar os dois. Quem doa hoje pode precisar amanhã.
                 </p>
 
@@ -191,8 +191,8 @@ export function Cadastro() {
 
             {passo === 2 && (
               <>
-                <h1 className="humano" style={{ fontSize: 27 }}>Seus dados</h1>
-                <p style={{ margin: '10px 0 22px', color: 'var(--tinta-media)', fontSize: 14.5 }}>
+                <h1 className="humano" style={{ fontSize: '1.6875rem' }}>Seus dados</h1>
+                <p style={{ margin: '10px 0 22px', color: 'var(--tinta-media)', fontSize: '0.9062rem' }}>
                   O CPF é usado só para identificar você na farmácia, na hora da entrega.
                 </p>
 
@@ -241,8 +241,8 @@ export function Cadastro() {
 
             {passo === 3 && (
               <>
-                <h1 className="humano" style={{ fontSize: 27 }}>Onde você mora</h1>
-                <p style={{ margin: '10px 0 22px', color: 'var(--tinta-media)', fontSize: 14.5, lineHeight: 1.5 }}>
+                <h1 className="humano" style={{ fontSize: '1.6875rem' }}>Onde você mora</h1>
+                <p style={{ margin: '10px 0 22px', color: 'var(--tinta-media)', fontSize: '0.9062rem', lineHeight: 1.5 }}>
                   O MedShare atende os 39 municípios da Grande São Paulo. É o
                   endereço que define qual farmácia fica mais perto de você.
                 </p>

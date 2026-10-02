@@ -160,7 +160,7 @@ function CartaoDaFarmacia({ ponto: p, outras, agir }: {
       {p.ativo && (
         <div style={{ marginTop: 18, paddingTop: 18, borderTop: '1px solid var(--linha)' }}>
           <p className="rotulo" style={{ marginBottom: 8 }}>Desativar</p>
-          <p style={{ margin: '0 0 10px', fontSize: 13.5, color: 'var(--tinta-media)' }}>
+          <p style={{ margin: '0 0 10px', fontSize: '0.8438rem', color: 'var(--tinta-media)' }}>
             Antes, transfira o estoque disponível. Caixas agendadas ou reservadas precisam terminar o ciclo.
           </p>
           <div className="linha-form">

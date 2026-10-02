@@ -82,10 +82,10 @@ export function Pedidos() {
       </div>
 
       <div className="conteudo-app" style={{ paddingTop: 28 }}>
-        <p className="humano" style={{ fontSize: 26, margin: '0 0 10px' }}>
+        <p className="humano" style={{ fontSize: '1.625rem', margin: '0 0 10px' }}>
           Oi, {primeiroNome(sessao?.nome ?? '')}
         </p>
-        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5, color: 'var(--tinta-media)' }}>
+        <p style={{ margin: 0, fontSize: '0.9375rem', lineHeight: 1.5, color: 'var(--tinta-media)' }}>
           Quando uma caixa do que você precisa aparecer, ela é oferecida a você aqui e no sino.
         </p>
       </div>
@@ -96,14 +96,14 @@ export function Pedidos() {
         {ofertas.map((o) => (
           <div key={o.id} className="faixa-boa" style={{ display: 'block', marginBottom: 18, padding: 16 }}>
             <p className="rotulo" style={{ margin: 0 }}>Chegou para você</p>
-            <h3 className="humano" style={{ margin: '6px 0 2px', fontSize: 20 }}>{o.medicamento}</h3>
+            <h3 className="humano" style={{ margin: '6px 0 2px', fontSize: '1.25rem' }}>{o.medicamento}</h3>
             <p className="detalhe" style={{ margin: 0 }}>{o.apresentacao} · validade {data(o.validade)}</p>
             <div className="linha-icone">
               <Lugar cor="var(--verde)" />
               <span>{o.pontoDeColeta} — {o.enderecoDoPonto}</span>
             </div>
             <p className="detalhe" style={{ margin: '4px 0 0' }}>{o.horarioDoPonto}</p>
-            <p style={{ margin: '10px 0 12px', fontSize: 13.5, fontWeight: 600 }}>
+            <p style={{ margin: '10px 0 12px', fontSize: '0.8438rem', fontWeight: 600 }}>
               Aceite até {dataComHora(o.expiraEm)}. Depois disso a caixa vai para a próxima pessoa.
             </p>
             <div style={{ display: 'flex', gap: 10 }}>
@@ -117,7 +117,7 @@ export function Pedidos() {
           </div>
         ))}
 
-        {carregando && <p style={{ color: 'var(--tinta-fraca)', fontSize: 14 }}>Carregando…</p>}
+        {carregando && <p style={{ color: 'var(--tinta-fraca)', fontSize: '0.875rem' }}>Carregando…</p>}
 
         {!carregando && pedidos.length === 0 && (
           <div className="vazio">

@@ -64,11 +64,11 @@ export function EnvioDeReceita() {
       <div className="conteudo-app cresce" style={{ paddingTop: 22 }}>
         <AvisoDeErro erro={erro} />
 
-        <h1 className="humano" style={{ fontSize: 25 }}>A receita do médico</h1>
-        <p style={{ margin: '10px 0 0', fontSize: 14.5, lineHeight: 1.5, color: 'var(--tinta-media)' }}>
+        <h1 className="humano" style={{ fontSize: '1.5625rem' }}>A receita do médico</h1>
+        <p style={{ margin: '10px 0 0', fontSize: '0.9062rem', lineHeight: 1.5, color: 'var(--tinta-media)' }}>
           Fotografe a receita inteira, com o carimbo e a assinatura visíveis.
         </p>
-        <p style={{ margin: '10px 0 18px', fontSize: 13, lineHeight: 1.5, color: 'var(--tinta-fraca)' }}>
+        <p style={{ margin: '10px 0 18px', fontSize: '0.8125rem', lineHeight: 1.5, color: 'var(--tinta-fraca)' }}>
           Ela é aberta apenas pelo farmacêutico, na hora da retirada. Nunca sai
           da rede nem passa por leitura automática.
         </p>

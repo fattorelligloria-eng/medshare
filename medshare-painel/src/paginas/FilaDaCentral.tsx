@@ -117,7 +117,7 @@ export function FilaDaCentral() {
             )}
           </div>
 
-          <p style={{ margin: '0 0 14px', fontSize: 13, color: 'var(--tinta-fraca)' }}>
+          <p style={{ margin: '0 0 14px', fontSize: '0.8125rem', color: 'var(--tinta-fraca)' }}>
             Esperando desde {dataComHora(caso.esperandoDesde)}
             {caso.lacreDeclarado ? ' · doador declarou a embalagem lacrada' : ''}
           </p>
@@ -127,7 +127,7 @@ export function FilaDaCentral() {
           )}
 
           {caso.motivo && (
-            <p style={{ margin: '0 0 18px', fontSize: 14, color: 'var(--tinta-media)', lineHeight: 1.5 }}>
+            <p style={{ margin: '0 0 18px', fontSize: '0.875rem', color: 'var(--tinta-media)', lineHeight: 1.5 }}>
               <strong>Leitura ({caso.avaliador}):</strong> {caso.motivo}
             </p>
           )}

@@ -124,7 +124,7 @@ export function Retirada() {
             value={codigo}
             onChange={(e) => { definirCodigo(e.target.value.toUpperCase()); recomecar() }}
             placeholder="Ex.: MASV846J"
-            style={{ fontFamily: 'ui-monospace, Menlo, monospace', letterSpacing: '0.1em', fontSize: 17 }}
+            style={{ fontFamily: 'ui-monospace, Menlo, monospace', letterSpacing: '0.1em', fontSize: '1.0625rem' }}
             required
           />
         </label>

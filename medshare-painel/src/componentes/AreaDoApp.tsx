@@ -36,7 +36,7 @@ export function TelaInterna() {
 }
 
 function Casca({ comNavegacao = false }: { comNavegacao?: boolean }) {
-  const { sessao, sair, temPapel } = useAutenticacao()
+  const { sessao, temPapel } = useAutenticacao()
   const naoLidas = useNaoLidas()
 
   const ehDoador = temPapel('DOADOR')
@@ -82,10 +82,13 @@ function Casca({ comNavegacao = false }: { comNavegacao?: boolean }) {
           </div>
         </nav>
 
+        {/* Sair saiu daqui de propósito. Um botão desse tamanho, sozinho no
+            canto, lido como a última coisa do menu, parece um convite a ir
+            embora — e não é isso que o aplicativo quer de ninguém. Ele agora
+            vive no fim da tela de Conta, que é onde se procura por ele. */}
         <div className="rodape">
           <Acessibilidade />
-          <p className="quem">{sessao?.nome}</p>
-          <button className="secundario" onClick={sair}>Sair</button>
+          <NavLink to="/app/conta" className="quem">{sessao?.nome}</NavLink>
         </div>
       </aside>
 

@@ -52,7 +52,7 @@ body {
   font-family: 'Libre Franklin', system-ui, sans-serif;
   background: var(--fundo-app);
   color: var(--tinta);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
@@ -64,7 +64,7 @@ h1, h2, h3 { margin: 0; line-height: 1.2; letter-spacing: -0.02em; }
 
 /* --- rótulo de seção: caixa alta pequena, como no estilo escolhido --- */
 .rotulo {
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.11em;
   text-transform: uppercase;
@@ -109,13 +109,13 @@ h1, h2, h3 { margin: 0; line-height: 1.2; letter-spacing: -0.02em; }
 .menu-app nav a {
   display: flex; align-items: center; gap: 10px;
   padding: 9px 11px; border-radius: 9px;
-  font-size: 14px; font-weight: 500;
+  font-size: 0.875rem; font-weight: 500;
   color: var(--tinta-media); text-decoration: none;
 }
 .menu-app nav a:hover { background: #F4F7F5; color: var(--tinta); }
 .menu-app nav a.ativo { background: var(--verde-tenue); color: var(--verde-escuro); font-weight: 700; }
 .menu-app .rodape { border-top: 1px solid var(--linha); padding-top: 15px; }
-.menu-app .quem { font-size: 13px; color: var(--tinta-media); margin: 0 0 10px; line-height: 1.4; }
+.menu-app .quem { font-size: 0.8125rem; color: var(--tinta-media); margin: 0 0 10px; line-height: 1.4; }
 
 /* --- a coluna de conteúdo --- */
 .tela {
@@ -221,18 +221,18 @@ h1, h2, h3 { margin: 0; line-height: 1.2; letter-spacing: -0.02em; }
 
 .marca { display: flex; align-items: center; gap: 10px; }
 .marca img { width: 27px; height: 27px; border-radius: 8px; display: block; }
-.marca span { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+.marca span { font-size: 0.9375rem; font-weight: 700; letter-spacing: -0.01em; }
 
 /* --- o número do impacto --- */
 .impacto { display: flex; align-items: flex-end; gap: 12px; }
 .impacto .numero {
   font-family: Fraunces, Georgia, serif;
-  font-size: 66px;
+  font-size: 4.125rem;
   font-weight: 700;
   line-height: 0.82;
   color: var(--verde);
 }
-.impacto p { margin: 0 0 5px; font-size: 15.5px; line-height: 1.32; }
+.impacto p { margin: 0 0 5px; font-size: 0.9688rem; line-height: 1.32; }
 
 /* --- faixa de boa notícia --- */
 .faixa-boa {
@@ -243,7 +243,7 @@ h1, h2, h3 { margin: 0; line-height: 1.2; letter-spacing: -0.02em; }
   background: var(--verde-tenue);
   border-radius: var(--raio);
   color: #1C3A30;
-  font-size: 13.5px;
+  font-size: 0.8438rem;
   line-height: 1.45;
 }
 .faixa-boa svg { flex-shrink: 0; }
@@ -255,15 +255,15 @@ h1, h2, h3 { margin: 0; line-height: 1.2; letter-spacing: -0.02em; }
 
 .item { padding: 18px 0; border-bottom: 1px solid var(--linha); }
 .item:last-child { border-bottom: 0; }
-.item h3 { font-family: Fraunces, Georgia, serif; font-size: 19px; font-weight: 600; }
-.item .detalhe { margin: 3px 0 0; font-size: 13.5px; color: var(--tinta-media); }
-.item .explicacao { margin: 9px 0 0; font-size: 13px; line-height: 1.45; color: var(--tinta-fraca); }
+.item h3 { font-family: Fraunces, Georgia, serif; font-size: 1.1875rem; font-weight: 600; }
+.item .detalhe { margin: 3px 0 0; font-size: 0.8438rem; color: var(--tinta-media); }
+.item .explicacao { margin: 9px 0 0; font-size: 0.8125rem; line-height: 1.45; color: var(--tinta-fraca); }
 
 /* --- status: bolinha + caixa alta --- */
 .status { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .status .ponto { width: 7px; height: 7px; border-radius: 999px; flex-shrink: 0; }
 .status .texto {
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.11em;
   text-transform: uppercase;
@@ -276,7 +276,7 @@ h1, h2, h3 { margin: 0; line-height: 1.2; letter-spacing: -0.02em; }
 .status.neutro .texto { color: #5C6B63; }
 
 /* --- linha com ícone (endereço, horário) --- */
-.linha-icone { display: flex; gap: 7px; align-items: center; margin-top: 10px; font-size: 13.5px; }
+.linha-icone { display: flex; gap: 7px; align-items: center; margin-top: 10px; font-size: 0.8438rem; }
 .linha-icone svg { flex-shrink: 0; }
 
 /* =============================================================================
@@ -294,7 +294,7 @@ button, .botao {
   justify-content: center;
   gap: 9px;
   padding: 16px;
-  font-size: 15.5px;
+  font-size: 0.9688rem;
   font-weight: 700;
 }
 button:disabled, .botao[aria-disabled='true'] { opacity: .45; cursor: not-allowed; }
@@ -315,7 +315,7 @@ button:disabled, .botao[aria-disabled='true'] { opacity: .45; cursor: not-allowe
 
 .texto-botao {
   background: none; padding: 8px 0; color: var(--verde-escuro);
-  font-size: 14px; font-weight: 600; width: auto;
+  font-size: 0.875rem; font-weight: 600; width: auto;
 }
 
 .icone-botao {
@@ -328,12 +328,12 @@ button:disabled, .botao[aria-disabled='true'] { opacity: .45; cursor: not-allowe
 label.campo { display: block; margin-bottom: 14px; }
 label.campo > span {
   display: block;
-  font-size: 12.5px;
+  font-size: 0.7812rem;
   font-weight: 600;
   color: var(--tinta-media);
   margin-bottom: 6px;
 }
-label.campo .apoio { font-weight: 400; font-size: 12px; color: var(--tinta-fraca); margin-top: 5px; }
+label.campo .apoio { font-weight: 400; font-size: 0.75rem; color: var(--tinta-fraca); margin-top: 5px; }
 
 input[type='text'], input[type='email'], input[type='password'],
 input[type='tel'], input[type='date'], input[type='number'], select, textarea {
@@ -392,25 +392,25 @@ button:focus-visible,
 .escolha:hover { border-color: var(--verde); }
 .escolha.marcada { border-color: var(--verde); background: var(--verde-tenue); }
 .escolha input { position: absolute; opacity: 0; pointer-events: none; }
-.escolha .titulo { font-family: Fraunces, Georgia, serif; font-size: 18px; font-weight: 600; }
-.escolha .sub { margin: 5px 0 0; font-size: 13.5px; line-height: 1.45; color: var(--tinta-media); }
+.escolha .titulo { font-family: Fraunces, Georgia, serif; font-size: 1.125rem; font-weight: 600; }
+.escolha .sub { margin: 5px 0 0; font-size: 0.8438rem; line-height: 1.45; color: var(--tinta-media); }
 
 /* --- caixa de marcar --- */
 .marcar { display: flex; gap: 11px; align-items: flex-start; margin-bottom: 12px; cursor: pointer; }
 .marcar input { width: 19px; height: 19px; margin: 2px 0 0; flex-shrink: 0; accent-color: var(--verde); }
-.marcar span { font-size: 14px; line-height: 1.45; }
+.marcar span { font-size: 0.875rem; line-height: 1.45; }
 
 /* =============================================================================
    Avisos
    ========================================================================== */
 
-.aviso { border-radius: var(--raio); padding: 13px 15px; margin-bottom: 16px; font-size: 13.5px; line-height: 1.45; }
+.aviso { border-radius: var(--raio); padding: 13px 15px; margin-bottom: 16px; font-size: 0.8438rem; line-height: 1.45; }
 .aviso.erro { background: var(--terracota-tenue); color: #6E3319; }
 .aviso.erro .regra {
   display: inline-block;
   font-family: ui-monospace, Menlo, monospace;
   font-weight: 700;
-  font-size: 11.5px;
+  font-size: 0.7188rem;
   letter-spacing: 0.04em;
   margin-right: 7px;
 }
@@ -419,8 +419,8 @@ button:focus-visible,
 .aviso .secundario { width: auto; }
 
 .vazio { padding: 48px 26px; text-align: center; color: var(--tinta-media); }
-.vazio h3 { font-family: Fraunces, Georgia, serif; font-size: 19px; margin-bottom: 7px; color: var(--tinta); }
-.vazio p { margin: 0; font-size: 14px; line-height: 1.5; }
+.vazio h3 { font-family: Fraunces, Georgia, serif; font-size: 1.1875rem; margin-bottom: 7px; color: var(--tinta); }
+.vazio p { margin: 0; font-size: 0.875rem; line-height: 1.5; }
 
 /* =============================================================================
    Navegação de baixo (app)
@@ -445,7 +445,7 @@ button:focus-visible,
 }
 .nav-app a {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
-  font-size: 11px; color: var(--tinta-fraca); text-decoration: none; font-weight: 500;
+  font-size: 0.6875rem; color: var(--tinta-fraca); text-decoration: none; font-weight: 500;
 }
 .nav-app a.ativo { color: var(--verde-escuro); font-weight: 700; }
 
@@ -481,7 +481,7 @@ button:focus-visible,
 .codigo-grande .rotulo { margin-bottom: 6px; color: var(--verde-escuro); }
 .codigo-grande .valor {
   font-family: ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 34px;
+  font-size: 2.125rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   color: var(--verde-escuro);
@@ -509,18 +509,18 @@ button:focus-visible,
   border-radius: 9px;
   color: var(--tinta-media);
   text-decoration: none;
-  font-size: 14.5px;
+  font-size: 0.9062rem;
   font-weight: 500;
 }
 .lateral nav a:hover { background: #F4F7F5; color: var(--tinta); }
 .lateral nav a.ativo { background: var(--verde-tenue); color: var(--verde-escuro); font-weight: 700; }
 .lateral .rodape { border-top: 1px solid var(--linha); padding-top: 16px; }
-.lateral .quem { font-size: 13px; color: var(--tinta-media); margin-bottom: 11px; line-height: 1.4; }
+.lateral .quem { font-size: 0.8125rem; color: var(--tinta-media); margin-bottom: 11px; line-height: 1.4; }
 
 .area { flex: 1; padding: 34px 40px; max-width: 980px; }
 .titulo-area { margin-bottom: 26px; }
-.titulo-area h1 { font-family: Fraunces, Georgia, serif; font-size: 29px; font-weight: 600; }
-.titulo-area p { margin: 7px 0 0; color: var(--tinta-media); font-size: 14.5px; max-width: 62ch; }
+.titulo-area h1 { font-family: Fraunces, Georgia, serif; font-size: 1.8125rem; font-weight: 600; }
+.titulo-area p { margin: 7px 0 0; color: var(--tinta-media); font-size: 0.9062rem; max-width: 62ch; }
 
 .bloco {
   background: var(--branco);
@@ -530,16 +530,16 @@ button:focus-visible,
   margin-bottom: 14px;
 }
 .bloco-topo { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 14px; }
-.bloco h2 { font-family: Fraunces, Georgia, serif; font-size: 21px; font-weight: 600; }
-.codigo { font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: var(--tinta-media); letter-spacing: 0.03em; }
+.bloco h2 { font-family: Fraunces, Georgia, serif; font-size: 1.3125rem; font-weight: 600; }
+.codigo { font-family: ui-monospace, Menlo, monospace; font-size: 0.8125rem; color: var(--tinta-media); letter-spacing: 0.03em; }
 
 .grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; }
 .dado .rotulo { margin-bottom: 3px; }
-.dado .valor { font-size: 15px; }
+.dado .valor { font-size: 0.9375rem; }
 .dado .valor.divergente { color: var(--terracota-texto); font-weight: 600; }
 
 .acoes { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
-.acoes button, .acoes .botao { width: auto; padding: 12px 20px; font-size: 14.5px; }
+.acoes button, .acoes .botao { width: auto; padding: 12px 20px; font-size: 0.9062rem; }
 
 /* --- linha do tempo do rastreio --- */
 .tempo { list-style: none; padding: 0; margin: 0; }
@@ -557,9 +557,9 @@ button:focus-visible,
 }
 .tempo li:last-child { padding-bottom: 0; }
 .tempo li:last-child::after { display: none; }
-.tempo .quando { font-size: 12px; color: var(--tinta-fraca); }
-.tempo .titulo { font-weight: 600; font-size: 14.5px; }
-.tempo .descricao { font-size: 13.5px; color: var(--tinta-media); line-height: 1.45; }
+.tempo .quando { font-size: 0.75rem; color: var(--tinta-fraca); }
+.tempo .titulo { font-weight: 600; font-size: 0.9062rem; }
+.tempo .descricao { font-size: 0.8438rem; color: var(--tinta-media); line-height: 1.45; }
 
 @media (max-width: 860px) {
   .painel { flex-direction: column; }
@@ -574,27 +574,27 @@ button:focus-visible,
   position: absolute; top: 2px; right: 2px;
   min-width: 16px; height: 16px; padding: 0 4px;
   border-radius: 999px; background: var(--terracota); color: var(--branco);
-  font-size: 10.5px; font-weight: 700; line-height: 16px; text-align: center;
+  font-size: 0.6562rem; font-weight: 700; line-height: 16px; text-align: center;
 }
 .notificacao { padding: 14px 0; border-bottom: 1px solid var(--linha); }
 .notificacao.nova .titulo::before {
   content: ''; display: inline-block; width: 7px; height: 7px; margin-right: 7px;
   border-radius: 999px; background: var(--verde); vertical-align: middle;
 }
-.notificacao .titulo { margin: 0; font-size: 14.5px; font-weight: 600; }
-.notificacao .corpo { margin: 4px 0 0; font-size: 13.5px; line-height: 1.45; color: var(--tinta-media); }
-.notificacao .quando { margin: 6px 0 0; font-size: 12px; color: var(--tinta-fraca); }
+.notificacao .titulo { margin: 0; font-size: 0.9062rem; font-weight: 600; }
+.notificacao .corpo { margin: 4px 0 0; font-size: 0.8438rem; line-height: 1.45; color: var(--tinta-media); }
+.notificacao .quando { margin: 6px 0 0; font-size: 0.75rem; color: var(--tinta-fraca); }
 
 /* --- agendamento: horarios com vaga --- */
 .horarios { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 8px; margin-top: 8px; }
 .horarios button {
-  padding: 9px 0; font-size: 14px; font-weight: 600; border-radius: 10px;
+  padding: 9px 0; font-size: 0.875rem; font-weight: 600; border-radius: 10px;
   background: var(--fundo); color: var(--tinta); border: 1px solid var(--linha);
 }
 .horarios button.marcado { background: var(--verde); color: var(--branco); border-color: var(--verde); }
 .dias { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
 .dias button {
-  flex-shrink: 0; padding: 8px 12px; font-size: 13px; border-radius: 10px;
+  flex-shrink: 0; padding: 8px 12px; font-size: 0.8125rem; border-radius: 10px;
   background: var(--fundo); color: var(--tinta-media); border: 1px solid var(--linha);
 }
 .dias button.marcado { border-color: var(--verde); color: var(--verde-escuro); background: var(--verde-tenue); font-weight: 600; }
@@ -619,13 +619,13 @@ button:focus-visible,
   padding: 20px 22px 22px;
 }
 .proximo-passo .rotulo { color: var(--verde-escuro); margin-bottom: 8px; }
-.proximo-passo h2 { font-size: 20px; line-height: 1.25; }
+.proximo-passo h2 { font-size: 1.25rem; line-height: 1.25; }
 .proximo-passo .quando {
   display: flex;
   align-items: center;
   gap: 7px;
   margin: 10px 0 0;
-  font-size: 14.5px;
+  font-size: 0.9062rem;
   color: var(--tinta-media);
 }
 .proximo-passo .quando svg { flex-shrink: 0; }
@@ -651,7 +651,7 @@ button:focus-visible,
   border: 1px solid var(--linha);
   background: var(--branco);
   color: var(--tinta-media);
-  font-size: 13.5px;
+  font-size: 0.8438rem;
   font-weight: 500;
   width: auto;
 }
@@ -663,7 +663,7 @@ button:focus-visible,
   font-weight: 700;
 }
 .filtro .conta {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
   color: var(--tinta-fraca);
 }
@@ -671,7 +671,7 @@ button:focus-visible,
 
 .nada-no-filtro {
   margin: 22px 0;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--tinta-media);
 }
 
@@ -705,10 +705,10 @@ button:focus-visible,
   max-width: 420px;
 }
 .tela-vazia .desenho { margin-bottom: 6px; }
-.tela-vazia h3 { font-size: 20px; margin-bottom: 8px; }
+.tela-vazia h3 { font-size: 1.25rem; margin-bottom: 8px; }
 .tela-vazia p {
   margin: 0;
-  font-size: 14.5px;
+  font-size: 0.9062rem;
   line-height: 1.5;
   color: var(--tinta-media);
 }
@@ -747,10 +747,10 @@ button:focus-visible,
   border-top: 1px solid var(--linha);
   max-width: 560px;
 }
-.cartao-conta h2 { font-size: 19px; }
+.cartao-conta h2 { font-size: 1.1875rem; }
 .cartao-conta .explicacao-secao {
   margin: 8px 0 16px;
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.5;
   color: var(--tinta-media);
 }
@@ -776,13 +776,13 @@ button:focus-visible,
 }
 .lista-de-dados > div:last-child { border-bottom: 0; }
 .lista-de-dados dt {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.07em;
   text-transform: uppercase;
   color: var(--tinta-fraca);
 }
-.lista-de-dados dd { margin: 0; font-size: 14.5px; }
+.lista-de-dados dd { margin: 0; font-size: 0.9062rem; }
 
 @media (max-width: 560px) {
   .lista-de-dados > div { grid-template-columns: 1fr; gap: 3px; }
@@ -793,15 +793,15 @@ button:focus-visible,
 .cartao-conta .numeros .n {
   display: block;
   font-family: Fraunces, Georgia, serif;
-  font-size: 40px;
+  font-size: 2.5rem;
   font-weight: 700;
   line-height: 1;
   color: var(--verde-escuro);
 }
-.cartao-conta .numeros .r { font-size: 13.5px; color: var(--tinta-media); }
+.cartao-conta .numeros .r { font-size: 0.8438rem; color: var(--tinta-media); }
 .cartao-conta .nota {
   margin: 18px 0 0;
-  font-size: 14.5px;
+  font-size: 0.9062rem;
   line-height: 1.5;
   color: var(--tinta);
 }
@@ -810,7 +810,7 @@ button:focus-visible,
 .erro-de-campo {
   display: block;
   margin-top: 6px;
-  font-size: 12.5px;
+  font-size: 0.7812rem;
   color: var(--terracota-texto);
 }
 
@@ -828,15 +828,15 @@ button:focus-visible,
   background: none;
   border: 0;
   text-align: left;
-  font-size: 15.5px;
+  font-size: 0.9688rem;
   font-weight: 600;
   color: var(--tinta);
 }
 .pergunta button:hover { color: var(--verde-escuro); }
-.pergunta .seta { font-size: 20px; color: var(--verde-escuro); line-height: 1; }
+.pergunta .seta { font-size: 1.25rem; color: var(--verde-escuro); line-height: 1; }
 .pergunta p {
   margin: 0 0 18px;
-  font-size: 14.5px;
+  font-size: 0.9062rem;
   line-height: 1.6;
   color: var(--tinta-media);
   max-width: 62ch;
@@ -845,13 +845,13 @@ button:focus-visible,
 /* --- sobre --- */
 .texto-sobre {
   margin: 0 0 16px;
-  font-size: 15.5px;
+  font-size: 0.9688rem;
   line-height: 1.6;
   max-width: 62ch;
   color: var(--tinta-media);
 }
 .lista-sobre { margin: 14px 0 0; padding-left: 20px; max-width: 62ch; }
-.lista-sobre li { margin-bottom: 12px; font-size: 14.5px; line-height: 1.55; color: var(--tinta-media); }
+.lista-sobre li { margin-bottom: 12px; font-size: 0.9062rem; line-height: 1.55; color: var(--tinta-media); }
 .lista-sobre strong { color: var(--tinta); }
 
 /* --- menu: rodapé e selo de não lidas --- */
@@ -871,15 +871,15 @@ button:focus-visible,
 }
 .menu-app .selo {
   margin-left: auto;
-  min-width: 19px;
-  height: 19px;
+  min-width: 1.1875rem;
+  height: 1.1875rem;
   padding: 0 5px;
   border-radius: 999px;
   background: var(--terracota);
   color: var(--branco);
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-weight: 700;
-  line-height: 19px;
+  line-height: 1.1875rem;
   text-align: center;
 }
 
@@ -920,12 +920,12 @@ button:focus-visible,
 .passos .bolinha {
   position: relative;
   z-index: 1;
-  width: 24px;
-  height: 24px;
+  width: 1.5rem;
+  height: 1.5rem;
   border-radius: 999px;
   display: grid;
   place-items: center;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   background: var(--fundo);
   border: 2px solid var(--linha);
@@ -942,7 +942,7 @@ button:focus-visible,
   color: var(--verde-escuro);
 }
 .passos .nome {
-  font-size: 11.5px;
+  font-size: 0.7188rem;
   line-height: 1.25;
   text-align: center;
   color: var(--tinta-fraca);
@@ -960,7 +960,7 @@ button:focus-visible,
   border-bottom: 1px solid var(--linha);
 }
 .resumo-medicamento h2 { margin: 0; }
-.resumo-medicamento .detalhe { margin: 3px 0 0; font-size: 13.5px; color: var(--tinta-media); }
+.resumo-medicamento .detalhe { margin: 3px 0 0; font-size: 0.8438rem; color: var(--tinta-media); }
 
 .foto-da-caixa {
   width: 100%;
@@ -983,7 +983,7 @@ button:focus-visible,
 }
 .conferencia li:last-child { border-bottom: 0; }
 .conferencia .rotulo { margin: 0 0 2px; }
-.conferencia .valor { margin: 0; font-size: 15px; font-weight: 600; }
+.conferencia .valor { margin: 0; font-size: 0.9375rem; font-weight: 600; }
 
 .declaracao-conferida {
   display: flex;
@@ -994,7 +994,7 @@ button:focus-visible,
   border-radius: var(--raio);
   background: var(--verde-tenue);
   color: var(--verde-escuro);
-  font-size: 13.5px;
+  font-size: 0.8438rem;
   line-height: 1.4;
 }
 
@@ -1002,8 +1002,8 @@ button:focus-visible,
 
 .confirmacao { padding-top: 34px; }
 .selo-pronto {
-  width: 68px;
-  height: 68px;
+  width: 4.25rem;
+  height: 4.25rem;
   margin: 0 auto 18px;
   border-radius: 999px;
   display: grid;
@@ -1013,7 +1013,7 @@ button:focus-visible,
 }
 .texto-confirmacao {
   margin: 10px 0 24px;
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.55;
   color: var(--tinta-media);
   text-align: center;
@@ -1052,7 +1052,7 @@ button:focus-visible,
   position: absolute;
   right: 16px;
   bottom: 10px;
-  font-size: 11.5px;
+  font-size: 0.7188rem;
   font-weight: 700;
   color: var(--verde-escuro);
   opacity: 0;
@@ -1078,7 +1078,7 @@ button:focus-visible,
 }
 .legenda-do-qr {
   margin: 0;
-  font-size: 12.5px;
+  font-size: 0.7812rem;
   color: var(--tinta-fraca);
   text-align: center;
 }
@@ -1101,7 +1101,7 @@ button:focus-visible,
   flex-shrink: 0;
   max-width: 42%;
   margin: 0;
-  font-size: 12px;
+  font-size: 0.75rem;
   line-height: 1.35;
   text-align: right;
   color: var(--tinta-fraca);
@@ -1210,4 +1210,52 @@ button:focus-visible,
   .codigo-grande .valor { color: #000000; }
   .codigo-grande .icone-botao { display: none; }
   .qr { background: #FFFFFF; }
+}
+
+/* =============================================================================
+   Sair da conta
+   ========================================================================== */
+
+/* Vermelho e sem preenchimento: é uma saída, não um destino. Discreto o
+   bastante para não convidar ninguém, visível o bastante para quem procura.
+   Fica só aqui — tirar o botão do canto do menu foi parte da mesma decisão. */
+.sair-da-conta {
+  width: 100%;
+  padding: 13px 18px;
+  border-radius: var(--raio);
+  border: 1px solid var(--terracota-tenue);
+  background: transparent;
+  color: var(--terracota-texto);
+  font-family: inherit;
+  font-size: 0.9063rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+}
+.sair-da-conta:hover {
+  background: var(--terracota-tenue);
+  border-color: var(--terracota);
+}
+.sair-da-conta:focus-visible {
+  outline: 2px solid var(--terracota);
+  outline-offset: 2px;
+}
+
+/* O nome no rodapé do menu virou o atalho para a conta, já que o botão de
+   sair saiu de lá. */
+.menu-app .rodape .quem {
+  display: block;
+  text-decoration: none;
+  color: var(--tinta-media);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  padding: 8px 10px;
+  border-radius: var(--raio);
+  margin: 0;
+}
+.menu-app .rodape .quem:hover { background: #F4F7F5; color: var(--tinta); }
+
+:root[data-contraste='alto'] .sair-da-conta {
+  border: 2px solid var(--terracota-texto);
+  color: var(--terracota-texto);
 }
