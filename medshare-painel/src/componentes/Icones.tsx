@@ -117,3 +117,52 @@ export const Informacao = ({ tamanho = 21, cor = 'currentColor' }: Props) => (
     <path d="M12 8h.01" />
   </svg>
 )
+
+export const Copiar = ({ tamanho = 18, cor = 'currentColor' }: Props) => (
+  <svg {...base(tamanho, cor)}>
+    <rect x="9" y="9" width="12" height="12" rx="2" />
+    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+  </svg>
+)
+
+export const Compartilhar = ({ tamanho = 18, cor = 'currentColor' }: Props) => (
+  <svg {...base(tamanho, cor)}>
+    <circle cx="18" cy="5" r="3" />
+    <circle cx="6" cy="12" r="3" />
+    <circle cx="18" cy="19" r="3" />
+    <path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" />
+  </svg>
+)
+
+export const Imprimir = ({ tamanho = 18, cor = 'currentColor' }: Props) => (
+  <svg {...base(tamanho, cor)}>
+    <path d="M6 9V2h12v7" />
+    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+    <rect x="6" y="14" width="12" height="8" rx="1" />
+  </svg>
+)
+
+export const Letra = ({ tamanho = 18, cor = 'currentColor' }: Props) => (
+  <svg {...base(tamanho, cor)}>
+    <path d="M3 20 9.5 4l6.5 16" />
+    <path d="M5.6 14h7.8" />
+    <path d="M17.5 20 21 11.5" />
+    <path d="M17.5 20 14 11.5" />
+    <path d="M15.3 17h4.4" />
+  </svg>
+)
+
+export const Contraste = ({ tamanho = 18, cor = 'currentColor' }: Props) => (
+  <svg {...base(tamanho, cor)}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 3a9 9 0 0 0 0 18z" fill={cor} stroke="none" />
+  </svg>
+)
+
+export const Menos = ({ tamanho = 18, cor = 'currentColor' }: Props) => (
+  <svg {...base(tamanho, cor)}><path d="M5 12h14" /></svg>
+)
+
+export const Fechar = ({ tamanho = 18, cor = 'currentColor' }: Props) => (
+  <svg {...base(tamanho, cor)}><path d="M18 6 6 18M6 6l12 12" /></svg>
+)

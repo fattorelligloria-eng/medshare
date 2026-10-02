@@ -1,52 +1,85 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { api } from '../api/cliente'
 import type { Doacao, FotoEnviada, Medicamento } from '../api/tipos'
 import { AvisoDeErro } from '../componentes/Aviso'
 import { BuscaDeMedicamento } from '../componentes/BuscaDeMedicamento'
 import { CabecalhoInterno } from '../componentes/CabecalhoInterno'
-import { Camera } from '../componentes/Icones'
+import { CodigoCopiavel } from '../componentes/CodigoCopiavel'
+import { Camera, Confere } from '../componentes/Icones'
+import { Passos } from '../componentes/Passos'
+import { data } from '../formatos'
 
 /**
- * Cadastro de uma doação: escolher o medicamento, fotografar a caixa,
- * informar lote e validade.
+ * Cadastro de uma doação, em passos.
  *
- * A validade é conferida aqui também, antes de enviar. Não para substituir a
- * regra do servidor — ela continua valendo — mas para a pessoa não fotografar
- * a caixa e preencher tudo só para receber um "não" no final.
+ * Era uma tela só, com tudo junto. Virou fluxo por um motivo prático: lote e
+ * validade são copiados de uma caixa na mão, e errar um caractere só vira
+ * divergência com a leitura automática — ou seja, vira análise na central e
+ * dias de espera. A tela de conferência existe para esse erro aparecer antes
+ * de virar problema, com a foto ao lado para comparar.
+ *
+ * O estado mora todo aqui, num objeto só, e os passos leem dele. Assim voltar
+ * um passo não perde nada do que já foi preenchido, que é o que a pessoa
+ * espera quando aperta "voltar" — e é o que fazia a versão anterior parecer
+ * hostil.
+ *
+ * As regras conferidas aqui (RN01, RN02) não substituem o servidor; elas só
+ * evitam que a pessoa preencha tudo para receber um "não" no fim.
  */
+
+const PASSOS = ['Medicamento', 'Foto', 'Dados', 'Conferir']
+
+type Rascunho = {
+  medicamento: Medicamento | null
+  arquivo: File | null
+  previa: string | null
+  lote: string
+  validade: string
+  quantidade: number
+  lacreDeclarado: boolean
+}
+
+const VAZIO: Rascunho = {
+  medicamento: null,
+  arquivo: null,
+  previa: null,
+  lote: '',
+  validade: '',
+  quantidade: 1,
+  lacreDeclarado: false,
+}
+
 export function NovaDoacao() {
-  const navegar = useNavigate()
-  const [medicamento, definirMedicamento] = useState<Medicamento | null>(null)
-  const [lote, definirLote] = useState('')
-  const [validade, definirValidade] = useState('')
-  const [quantidade, definirQuantidade] = useState(1)
-  const [lacreDeclarado, definirLacreDeclarado] = useState(false)
-  const [arquivo, definirArquivo] = useState<File | null>(null)
-  const [previa, definirPrevia] = useState<string | null>(null)
+  const [passo, definirPasso] = useState(0)
+  const [rascunho, definirRascunho] = useState<Rascunho>(VAZIO)
   const [erro, definirErro] = useState<unknown>(null)
   const [enviando, definirEnviando] = useState(false)
+  const [criadas, definirCriadas] = useState<Doacao[] | null>(null)
 
-  const diasDeValidade = validade
-    ? Math.round((new Date(validade).getTime() - Date.now()) / 86_400_000)
+  const mudar = (parte: Partial<Rascunho>) => definirRascunho((r) => ({ ...r, ...parte }))
+
+  const diasDeValidade = rascunho.validade
+    ? Math.round((new Date(rascunho.validade).getTime() - Date.now()) / 86_400_000)
     : null
   const validadeCurta = diasDeValidade !== null && diasDeValidade < 30
 
   function escolherFoto(evento: React.ChangeEvent<HTMLInputElement>) {
     const escolhido = evento.target.files?.[0] ?? null
-    definirArquivo(escolhido)
-    definirPrevia(escolhido ? URL.createObjectURL(escolhido) : null)
+    if (rascunho.previa) URL.revokeObjectURL(rascunho.previa)
+    mudar({ arquivo: escolhido, previa: escolhido ? URL.createObjectURL(escolhido) : null })
   }
 
-  const podeEnviar =
-    medicamento !== null &&
-    lote.trim() !== '' &&
-    validade !== '' &&
-    !validadeCurta &&
-    arquivo !== null &&
-    lacreDeclarado
+  /** O que falta para liberar o botão de cada passo. */
+  const podeAvancar = [
+    rascunho.medicamento !== null,
+    rascunho.arquivo !== null,
+    rascunho.lote.trim() !== '' && rascunho.validade !== '' && !validadeCurta && rascunho.lacreDeclarado,
+    true,
+  ][passo]
 
   async function enviar() {
+    const { medicamento, arquivo } = rascunho
     if (!medicamento || !arquivo) return
     definirErro(null)
     definirEnviando(true)
@@ -56,128 +89,301 @@ export function NovaDoacao() {
       // Cada caixa vira uma doação com código próprio (RN06).
       const doacoes = await api.post<Doacao[]>('/doacoes', {
         medicamentoId: medicamento.id,
-        lote: lote.trim().toUpperCase(),
-        validade,
+        lote: rascunho.lote.trim().toUpperCase(),
+        validade: rascunho.validade,
         fotoUrl: foto.url,
-        quantidade,
-        lacreDeclarado,
+        quantidade: rascunho.quantidade,
+        lacreDeclarado: rascunho.lacreDeclarado,
       })
-      navegar(doacoes.length === 1 ? `/app/doacoes/${doacoes[0].codigo}` : '/app/doacoes', { replace: true })
+      definirCriadas(doacoes)
     } catch (e) {
       definirErro(e)
+    } finally {
       definirEnviando(false)
     }
   }
 
-  if (!medicamento) {
+  // ------------------------------------------------------- confirmação --
+
+  if (criadas) {
+    const uma = criadas.length === 1
     return (
       <>
-        <CabecalhoInterno titulo="Qual medicamento?" para="/app/doacoes" />
-        <div className="conteudo-app cresce" style={{ paddingTop: 22 }}>
-          <BuscaDeMedicamento aoEscolher={definirMedicamento} />
+        <CabecalhoInterno titulo="Pronto" para="/app/doacoes" />
+        <div className="conteudo-app cresce confirmacao">
+          <div className="selo-pronto" aria-hidden="true"><Confere tamanho={34} /></div>
+
+          <h1 className="humano" style={{ fontSize: 26, textAlign: 'center' }}>
+            {uma ? 'Doação cadastrada' : `${criadas.length} doações cadastradas`}
+          </h1>
+          <p className="texto-confirmacao">
+            {uma
+              ? 'Estamos conferindo a foto da caixa. Assim que ela for liberada, você escolhe a farmácia e o horário da entrega.'
+              : 'Cada caixa tem código e caminho próprios. Estamos conferindo a foto; assim que forem liberadas, você agenda a entrega de cada uma.'}
+          </p>
+
+          {uma ? (
+            <CodigoCopiavel codigo={criadas[0].codigo} rotulo="Código da doação" />
+          ) : (
+            <ul className="lista-de-codigos">
+              {criadas.map((d) => (
+                <li key={d.codigo}><span>{d.codigo}</span></li>
+              ))}
+            </ul>
+          )}
+
+          <div className="rodape-acao" style={{ paddingBottom: 26 }}>
+            <Link
+              className="botao principal"
+              to={uma ? `/app/doacoes/${criadas[0].codigo}` : '/app/doacoes'}
+            >
+              {uma ? 'Acompanhar esta doação' : 'Ver minhas doações'}
+            </Link>
+            <button
+              type="button"
+              className="texto-botao"
+              style={{ marginTop: 12 }}
+              onClick={() => {
+                definirCriadas(null)
+                definirRascunho(VAZIO)
+                definirPasso(0)
+              }}
+            >
+              Doar outro medicamento
+            </button>
+          </div>
         </div>
       </>
     )
   }
 
+  // ------------------------------------------------------------ passos --
+
   return (
     <>
-      <CabecalhoInterno titulo="Dados da caixa" />
+      <CabecalhoInterno
+        titulo={PASSOS[passo]}
+        para={passo === 0 ? '/app/doacoes' : undefined}
+        aoVoltar={passo === 0 ? undefined : () => definirPasso((p) => p - 1)}
+      />
 
-      <div className="conteudo-app cresce" style={{ paddingTop: 22 }}>
+      <div className="conteudo-app cresce" style={{ paddingTop: 16 }}>
+        <Passos passos={PASSOS} atual={passo} />
         <AvisoDeErro erro={erro} />
 
-        <div style={{ paddingBottom: 18, borderBottom: '1px solid var(--linha)', marginBottom: 20 }}>
-          <h2 className="humano" style={{ fontSize: 21 }}>{medicamento.nomeComercial}</h2>
-          <p className="detalhe">{medicamento.apresentacao}</p>
-          <button
-            type="button"
-            className="texto-botao"
-            onClick={() => definirMedicamento(null)}
-          >
-            Trocar medicamento
-          </button>
-        </div>
-
-        <p className="rotulo">Foto da caixa</p>
-        <p style={{ margin: '6px 0 12px', fontSize: 13.5, lineHeight: 1.45, color: 'var(--tinta-media)' }}>
-          Fotografe a caixa fechada, mostrando o lacre e a aba onde estão
-          impressos o lote e a validade. A leitura automática confere os dois
-          com o que você digitar.
-        </p>
-
-        {previa ? (
-          <>
-            <img
-              src={previa}
-              alt="Foto da caixa"
-              style={{ width: '100%', height: 190, objectFit: 'cover', borderRadius: 'var(--raio)' }}
-            />
-            <label className="botao secundario" style={{ marginTop: 10 }}>
-              <Camera /> Tirar outra foto
-              <input type="file" accept="image/*" capture="environment" onChange={escolherFoto} hidden />
-            </label>
-          </>
-        ) : (
-          <label className="botao secundario">
-            <Camera /> Fotografar a caixa
-            <input type="file" accept="image/*" capture="environment" onChange={escolherFoto} hidden />
-          </label>
+        {passo === 0 && (
+          <BuscaDeMedicamento
+            aoEscolher={(m) => {
+              mudar({ medicamento: m })
+              definirPasso(1)
+            }}
+          />
         )}
 
-        <div style={{ marginTop: 24 }}>
-          <label className="campo">
-            <span>Lote</span>
-            <input
-              type="text"
-              value={lote}
-              onChange={(e) => definirLote(e.target.value.toUpperCase())}
-              placeholder="Ex.: ALC2026A"
+        {passo === 1 && (
+          <>
+            <ResumoDoMedicamento
+              medicamento={rascunho.medicamento!}
+              aoTrocar={() => definirPasso(0)}
             />
-            <span className="apoio">Está impresso na lateral ou no fundo da caixa</span>
-          </label>
 
-          <label className="campo">
-            <span>Validade</span>
-            <input type="date" value={validade} onChange={(e) => definirValidade(e.target.value)} />
-          </label>
+            <p style={{ margin: '0 0 14px', fontSize: 14.5, lineHeight: 1.5, color: 'var(--tinta-media)' }}>
+              Fotografe a caixa fechada, mostrando o lacre e a aba onde estão
+              impressos o lote e a validade. É essa foto que a conferência
+              automática compara com o que você digitar no próximo passo.
+            </p>
 
-          <label className="campo">
-            <span>Quantas caixas iguais (mesmo lote)?</span>
-            <input
-              type="number"
-              min={1}
-              max={10}
-              value={quantidade}
-              onChange={(e) => definirQuantidade(Math.min(10, Math.max(1, Number(e.target.value) || 1)))}
+            {rascunho.previa ? (
+              <>
+                <img src={rascunho.previa} alt="Foto da caixa que você tirou" className="foto-da-caixa" />
+                <label className="botao secundario" style={{ marginTop: 10 }}>
+                  <Camera /> Tirar outra foto
+                  <input type="file" accept="image/*" capture="environment" onChange={escolherFoto} hidden />
+                </label>
+              </>
+            ) : (
+              <label className="botao secundario">
+                <Camera /> Fotografar a caixa
+                <input type="file" accept="image/*" capture="environment" onChange={escolherFoto} hidden />
+              </label>
+            )}
+          </>
+        )}
+
+        {passo === 2 && (
+          <>
+            <ResumoDoMedicamento
+              medicamento={rascunho.medicamento!}
+              aoTrocar={() => definirPasso(0)}
             />
-            <span className="apoio">Cada caixa ganha um código e segue seu próprio caminho.</span>
-          </label>
 
-          <label className="marcar">
-            <input
-              type="checkbox"
-              checked={lacreDeclarado}
-              onChange={(e) => definirLacreDeclarado(e.target.checked)}
-            />
-            <span>Declaro que a embalagem está lacrada de fábrica e nunca foi aberta.</span>
-          </label>
-        </div>
+            <label className="campo">
+              <span>Lote</span>
+              <input
+                type="text"
+                value={rascunho.lote}
+                onChange={(e) => mudar({ lote: e.target.value.toUpperCase() })}
+                placeholder="Ex.: ALC2026A"
+                autoComplete="off"
+              />
+              <span className="apoio">Está impresso na lateral ou no fundo da caixa</span>
+            </label>
 
-        {validadeCurta && (
-          <div className="aviso erro">
-            <span className="regra">RN02</span>
-            Essa caixa vence em {diasDeValidade} dia(s). A rede precisa de pelo
-            menos 30 dias de validade para dar tempo de chegar a quem precisa.
-          </div>
+            <label className="campo">
+              <span>Validade</span>
+              <input
+                type="date"
+                value={rascunho.validade}
+                onChange={(e) => mudar({ validade: e.target.value })}
+              />
+              {diasDeValidade !== null && !validadeCurta && (
+                <span className="apoio">Faltam {diasDeValidade} dias. Serve.</span>
+              )}
+            </label>
+
+            {validadeCurta && (
+              <div className="aviso erro">
+                <span className="regra">RN02</span>
+                Essa caixa vence em {diasDeValidade} dia(s). A rede precisa de pelo
+                menos 30 dias de validade para dar tempo de a caixa ser conferida,
+                reservada e retirada por alguém.
+              </div>
+            )}
+
+            <label className="campo">
+              <span>Quantas caixas iguais (mesmo lote)?</span>
+              <input
+                type="number"
+                min={1}
+                max={10}
+                value={rascunho.quantidade}
+                onChange={(e) =>
+                  mudar({ quantidade: Math.min(10, Math.max(1, Number(e.target.value) || 1)) })
+                }
+              />
+              <span className="apoio">Cada caixa ganha um código e segue seu próprio caminho.</span>
+            </label>
+
+            <label className="marcar">
+              <input
+                type="checkbox"
+                checked={rascunho.lacreDeclarado}
+                onChange={(e) => mudar({ lacreDeclarado: e.target.checked })}
+              />
+              <span>Declaro que a embalagem está lacrada de fábrica e nunca foi aberta.</span>
+            </label>
+          </>
+        )}
+
+        {passo === 3 && (
+          <Conferencia rascunho={rascunho} aoCorrigir={definirPasso} />
         )}
       </div>
 
       <div className="rodape-acao" style={{ paddingBottom: 26 }}>
-        <button className="principal" disabled={!podeEnviar || enviando} onClick={enviar}>
-          {enviando ? 'Enviando…' : 'Enviar doação'}
-        </button>
+        {passo < 3 ? (
+          <button
+            className="principal"
+            disabled={!podeAvancar}
+            onClick={() => definirPasso((p) => p + 1)}
+          >
+            Continuar
+          </button>
+        ) : (
+          <button className="principal" disabled={enviando} onClick={enviar}>
+            {enviando ? 'Enviando…' : 'Confirmar e enviar'}
+          </button>
+        )}
       </div>
+    </>
+  )
+}
+
+function ResumoDoMedicamento({
+  medicamento,
+  aoTrocar,
+}: {
+  medicamento: Medicamento
+  aoTrocar: () => void
+}) {
+  return (
+    <div className="resumo-medicamento">
+      <div>
+        <h2 className="humano" style={{ fontSize: 19 }}>{medicamento.nomeComercial}</h2>
+        <p className="detalhe">{medicamento.apresentacao}</p>
+      </div>
+      <button type="button" className="texto-botao" onClick={aoTrocar}>Trocar</button>
+    </div>
+  )
+}
+
+/**
+ * O último passo antes de enviar.
+ *
+ * Cada linha tem o seu próprio "corrigir", que leva direto ao passo de onde o
+ * dado veio. Um botão único de "voltar" obrigaria a pessoa a percorrer o fluxo
+ * inteiro de novo só para trocar um caractere do lote.
+ */
+function Conferencia({
+  rascunho,
+  aoCorrigir,
+}: {
+  rascunho: Rascunho
+  aoCorrigir: (passo: number) => void
+}) {
+  const linhas: { rotulo: string; valor: string; passo: number }[] = [
+    { rotulo: 'Medicamento', valor: rascunho.medicamento?.nomeComercial ?? '—', passo: 0 },
+    { rotulo: 'Apresentação', valor: rascunho.medicamento?.apresentacao ?? '—', passo: 0 },
+    { rotulo: 'Lote', valor: rascunho.lote || '—', passo: 2 },
+    { rotulo: 'Validade', valor: rascunho.validade ? data(rascunho.validade) : '—', passo: 2 },
+    {
+      rotulo: 'Quantidade',
+      valor: rascunho.quantidade === 1 ? '1 caixa' : `${rascunho.quantidade} caixas`,
+      passo: 2,
+    },
+  ]
+
+  return (
+    <>
+      <p style={{ margin: '0 0 16px', fontSize: 14.5, lineHeight: 1.5, color: 'var(--tinta-media)' }}>
+        Confira o lote e a validade com a caixa na mão. Eles são comparados com
+        a foto, e um caractere trocado manda a doação para análise.
+      </p>
+
+      {rascunho.previa && (
+        <img src={rascunho.previa} alt="Foto da caixa que você tirou" className="foto-da-caixa" />
+      )}
+      <button
+        type="button"
+        className="texto-botao"
+        style={{ margin: '8px 0 20px' }}
+        onClick={() => aoCorrigir(1)}
+      >
+        Trocar a foto
+      </button>
+
+      <ul className="conferencia">
+        {linhas.map((linha) => (
+          <li key={linha.rotulo}>
+            <div>
+              <p className="rotulo">{linha.rotulo}</p>
+              <p className="valor">{linha.valor}</p>
+            </div>
+            <button
+              type="button"
+              className="texto-botao"
+              onClick={() => aoCorrigir(linha.passo)}
+              aria-label={`Corrigir ${linha.rotulo.toLowerCase()}`}
+            >
+              Corrigir
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      <p className="declaracao-conferida">
+        <Confere tamanho={16} /> Você declarou que a embalagem está lacrada de fábrica.
+      </p>
     </>
   )
 }

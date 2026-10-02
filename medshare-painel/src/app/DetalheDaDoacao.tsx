@@ -4,7 +4,9 @@ import { api } from '../api/cliente'
 import type { DoacaoDetalhada, FotoEnviada } from '../api/tipos'
 import { AvisoDeErro } from '../componentes/Aviso'
 import { CabecalhoInterno } from '../componentes/CabecalhoInterno'
-import { Camera } from '../componentes/Icones'
+import { CodigoCopiavel } from '../componentes/CodigoCopiavel'
+import { Camera, Compartilhar, Imprimir } from '../componentes/Icones'
+import { QrCode } from '../componentes/QrCode'
 import { Status, explicar } from '../componentes/Status'
 import { NOME_DO_EVENTO } from '../componentes/Eventos'
 import { data, dataComHora } from '../formatos'
@@ -53,6 +55,27 @@ export function DetalheDaDoacao() {
       carregar()
     } catch (e) {
       definirErro(e)
+    }
+  }
+
+  /**
+   * Compartilhar usa a folha nativa do sistema (Web Share API), que so existe
+   * em contexto seguro e em geral so no celular. Quando nao existe, o botao
+   * nem aparece — melhor do que um botao que nao faz nada.
+   */
+  const podeCompartilhar = typeof navigator !== 'undefined' && typeof navigator.share === 'function'
+
+  async function compartilhar() {
+    if (!detalhe?.agendamento) return
+    const a = detalhe.agendamento
+    try {
+      await navigator.share({
+        title: 'Entrega MedShare',
+        text: `Código de entrega ${a.codigoEntrega}\n${a.pontoDeColeta}\n${a.endereco}\n`
+          + `${dataComHora(a.dataHora)}`,
+      })
+    } catch {
+      // A pessoa fechou a folha de compartilhamento. Nao e erro.
     }
   }
 
@@ -105,18 +128,40 @@ export function DetalheDaDoacao() {
             )}
 
             {detalhe.doacao.status === 'AGENDADA' && detalhe.agendamento && (
-              <div style={{ marginBottom: 24 }}>
-                <div className="codigo-grande">
-                  <p className="rotulo">Código de entrega</p>
-                  <p className="valor">{detalhe.agendamento.codigoEntrega}</p>
+              <div className="comprovante" style={{ marginBottom: 24 }}>
+                <CodigoCopiavel codigo={detalhe.agendamento.codigoEntrega} />
+
+                <div className="area-do-qr">
+                  <QrCode valor={detalhe.agendamento.codigoEntrega} tamanho={168} />
+                  <p className="legenda-do-qr">
+                    O balcão pode ler o código pelo leitor, sem digitar.
+                  </p>
                 </div>
+
                 <p style={{ margin: '12px 0 0', fontSize: 14, fontWeight: 600 }}>
                   {dataComHora(detalhe.agendamento.dataHora)} — {detalhe.agendamento.pontoDeColeta}
                 </p>
-                <p style={{ margin: '4px 0 12px', fontSize: 13.5, color: 'var(--tinta-media)' }}>
-                  {detalhe.agendamento.endereco}. Mostre este código no balcão.
+                <p style={{ margin: '4px 0 14px', fontSize: 13.5, color: 'var(--tinta-media)' }}>
+                  {detalhe.agendamento.endereco}
                 </p>
-                <button type="button" className="texto-botao" onClick={cancelarAgendamento}>
+
+                <div className="acoes-do-comprovante">
+                  {podeCompartilhar && (
+                    <button type="button" className="botao secundario" onClick={compartilhar}>
+                      <Compartilhar /> Compartilhar
+                    </button>
+                  )}
+                  <button type="button" className="botao secundario" onClick={() => window.print()}>
+                    <Imprimir /> Imprimir
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  className="texto-botao nao-imprimir"
+                  style={{ marginTop: 14 }}
+                  onClick={cancelarAgendamento}
+                >
                   Cancelar agendamento
                 </button>
               </div>
@@ -143,12 +188,15 @@ export function DetalheDaDoacao() {
               Registro completo e imutável desta caixa.
             </p>
 
-            <ul className="tempo">
+            <ul className="tempo com-responsavel">
               {detalhe.historico.map((evento, i) => (
                 <li key={`${evento.quando}-${i}`}>
-                  <p className="quando">{dataComHora(evento.quando)}</p>
-                  <p className="titulo">{NOME_DO_EVENTO[evento.tipo] ?? evento.tipo}</p>
-                  <p className="descricao">{evento.descricao}</p>
+                  <div className="passo">
+                    <p className="quando">{dataComHora(evento.quando)}</p>
+                    <p className="titulo">{NOME_DO_EVENTO[evento.tipo] ?? evento.tipo}</p>
+                    <p className="descricao">{evento.descricao}</p>
+                  </div>
+                  <p className="responsavel">{evento.responsavel ?? 'Sistema'}</p>
                 </li>
               ))}
             </ul>
