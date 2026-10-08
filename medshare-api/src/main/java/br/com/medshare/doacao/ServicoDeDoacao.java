@@ -255,7 +255,10 @@ public class ServicoDeDoacao {
                                OffsetDateTime dataHora, Usuario doador) {
         Doacao doacao = buscarPorCodigo(codigo);
         exigirQueSejaODoador(doacao, doador);
-        PontoDeColeta ponto = buscarPontoAtivo(pontoDeColetaId);
+        // Travado: a contagem de vagas e a gravacao acontecem sem outro
+        // agendamento do mesmo ponto no meio (ver PontoDeColetaRepository).
+        PontoDeColeta ponto = exigirAtivo(pontos.travarPorId(pontoDeColetaId)
+                .orElseThrow(() -> new RecursoNaoEncontrado("Ponto de coleta", pontoDeColetaId)));
         exigirHorarioComVaga(ponto, dataHora);
 
         if (doacao.getStatus() == StatusDoacao.CANCELADA) {
@@ -488,8 +491,11 @@ public class ServicoDeDoacao {
     }
 
     private PontoDeColeta buscarPontoAtivo(Long pontoDeColetaId) {
-        PontoDeColeta ponto = pontos.findById(pontoDeColetaId)
-                .orElseThrow(() -> new RecursoNaoEncontrado("Ponto de coleta", pontoDeColetaId));
+        return exigirAtivo(pontos.findById(pontoDeColetaId)
+                .orElseThrow(() -> new RecursoNaoEncontrado("Ponto de coleta", pontoDeColetaId)));
+    }
+
+    private PontoDeColeta exigirAtivo(PontoDeColeta ponto) {
         if (!ponto.isAtivo()) {
             throw new RegraDeNegocioViolada("PONTO",
                     "%s não está recebendo doações no momento".formatted(ponto.getNome()));
