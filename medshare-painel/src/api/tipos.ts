@@ -143,6 +143,16 @@ export interface PontoDeColeta {
   bairro: string
   municipio: string
   horario: string
+  /** Para o mapa. Nulo quando o endereço da farmácia não foi geocodificado. */
+  latitude: number | null
+  longitude: number | null
+  /** Está funcionando neste momento, pelo horário cadastrado. */
+  abertaAgora: boolean
+  /**
+   * Horários livres nas próximas duas semanas, já descontando dia fechado e
+   * vaga ocupada. Zero quer dizer que não adianta escolher esta farmácia.
+   */
+  vagasProximosDias: number | null
 }
 
 /** UC08 - a farmacia como o administrador ve. */
