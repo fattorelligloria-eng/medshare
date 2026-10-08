@@ -439,20 +439,26 @@ private fun AbaDaConta(
         }
         Spacer(Modifier.height(16.dp))
 
+        // Aparece para todos: e confirmando o NIS que alguem vira beneficiario,
+        // entao quem so doa precisa achar esta porta.
+        Cartao {
+            Text(
+                if (sessao.ehBeneficiario()) "Verificação no CadÚnico" else "Precisa de um medicamento?",
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "Para receber medicamentos é preciso ter NIS ativo no CadÚnico. " +
+                    "A verificação vale por 12 meses.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(12.dp))
+            BotaoSecundario("Informar meu NIS", aoVerificarCadUnico)
+        }
+        Spacer(Modifier.height(16.dp))
+
         if (sessao.ehBeneficiario()) {
-            Cartao {
-                Text("Verificação no CadÚnico", style = MaterialTheme.typography.titleMedium)
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    "Para receber medicamentos é preciso ter NIS ativo no CadÚnico. " +
-                        "A verificação vale por 12 meses.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Spacer(Modifier.height(12.dp))
-                BotaoSecundario("Informar meu NIS", aoVerificarCadUnico)
-            }
-            Spacer(Modifier.height(16.dp))
             CartaoDeProcuradores(repositorio)
             Spacer(Modifier.height(16.dp))
         }

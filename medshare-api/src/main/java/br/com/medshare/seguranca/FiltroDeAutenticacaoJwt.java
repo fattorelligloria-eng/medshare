@@ -45,8 +45,8 @@ public class FiltroDeAutenticacaoJwt extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         extrairToken(requisicao)
-                .flatMap(tokens::emailDoTokenDeAcesso)
-                .ifPresent(email -> autenticar(email, requisicao));
+                .flatMap(tokens::lerTokenDeAcesso)
+                .ifPresent(token -> autenticar(token, requisicao));
 
         corrente.doFilter(requisicao, resposta);
     }
@@ -59,15 +59,20 @@ public class FiltroDeAutenticacaoJwt extends OncePerRequestFilter {
         return java.util.Optional.of(cabecalho.substring(PREFIXO.length()).trim());
     }
 
-    private void autenticar(String email, HttpServletRequest requisicao) {
+    private void autenticar(ServicoDeToken.TokenLido token, HttpServletRequest requisicao) {
         if (SecurityContextHolder.getContext().getAuthentication() != null) {
             return;
         }
         try {
-            UserDetails detalhes = usuarios.loadUserByUsername(email);
+            UserDetails detalhes = usuarios.loadUserByUsername(token.email());
             if (!detalhes.isEnabled()) {
                 // Conta desativada depois de o token ser emitido: o token
                 // continua assinado, mas deixa de valer na hora.
+                return;
+            }
+            if (detalhes instanceof UsuarioAutenticado autenticado
+                    && !autenticado.getUsuario().aceitaTokenEmitidoEm(token.emitidoEm())) {
+                // Token anterior a uma troca de senha: a sessao daquele aparelho cai.
                 return;
             }
             var autenticacao = new UsernamePasswordAuthenticationToken(

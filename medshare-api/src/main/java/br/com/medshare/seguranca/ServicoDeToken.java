@@ -65,15 +65,25 @@ public class ServicoDeToken {
         return validadeDoAcesso.toSeconds();
     }
 
-    /** Devolve o e-mail do dono do token, ou vazio se o token nao presta. */
-    public Optional<String> emailDoTokenDeAcesso(String token) {
-        return ler(token).filter(c -> TIPO_ACESSO.equals(c.get(CAMPO_TIPO)))
-                .map(Claims::getSubject);
+    /**
+     * O que interessa de um token valido: de quem e, e quando foi emitido —
+     * este para recusar tokens anteriores a uma troca de senha.
+     */
+    public record TokenLido(String email, Instant emitidoEm) { }
+
+    /** O dono e a emissao do token de acesso, ou vazio se o token nao presta. */
+    public Optional<TokenLido> lerTokenDeAcesso(String token) {
+        return lerDoTipo(token, TIPO_ACESSO);
     }
 
-    public Optional<String> emailDoTokenDeRenovacao(String token) {
-        return ler(token).filter(c -> TIPO_RENOVACAO.equals(c.get(CAMPO_TIPO)))
-                .map(Claims::getSubject);
+    public Optional<TokenLido> lerTokenDeRenovacao(String token) {
+        return lerDoTipo(token, TIPO_RENOVACAO);
+    }
+
+    private Optional<TokenLido> lerDoTipo(String token, String tipo) {
+        return ler(token).filter(c -> tipo.equals(c.get(CAMPO_TIPO)))
+                .map(c -> new TokenLido(c.getSubject(),
+                        c.getIssuedAt() == null ? null : c.getIssuedAt().toInstant()));
     }
 
     private String construir(Usuario usuario, String tipo, Duration validade) {

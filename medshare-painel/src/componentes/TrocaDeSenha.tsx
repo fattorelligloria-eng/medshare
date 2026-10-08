@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { api } from '../api/cliente'
+import type { Sessao } from '../api/tipos'
+import { useAutenticacao } from '../contexto/Autenticacao'
 import { AvisoDeErro } from './Aviso'
 
 /**
@@ -10,6 +12,7 @@ import { AvisoDeErro } from './Aviso'
  * aqui só evitamos a viagem quando a pessoa já errou algo óbvio.
  */
 export function TrocaDeSenha({ aoTrocar }: { aoTrocar: () => void }) {
+  const { definirSessaoManualmente } = useAutenticacao()
   const [aberto, definirAberto] = useState(false)
   const [atual, definirAtual] = useState('')
   const [nova, definirNova] = useState('')
@@ -31,7 +34,10 @@ export function TrocaDeSenha({ aoTrocar }: { aoTrocar: () => void }) {
     definirErro(null)
     definirEnviando(true)
     try {
-      await api.post('/usuarios/eu/senha', { senhaAtual: atual, novaSenha: nova })
+      // A troca derruba todos os tokens antigos, inclusive o desta aba; a
+      // resposta traz os novos, e guardá-los mantém a pessoa conectada aqui.
+      const novaSessao = await api.post<Sessao>('/usuarios/eu/senha', { senhaAtual: atual, novaSenha: nova })
+      definirSessaoManualmente(novaSessao)
       aoTrocar()
       fechar()
     } catch (e) {

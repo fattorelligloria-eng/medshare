@@ -90,10 +90,9 @@ export function Cadastro() {
     definirErro(null)
     definirEnviando(true)
     try {
-      const papeis = [
-        ...(querDoar ? ['DOADOR'] : []),
-        ...(querReceber ? ['BENEFICIARIO'] : []),
-      ]
+      // A conta nasce só doadora: o papel de quem recebe vem da confirmação do
+      // NIS, na tela do CadÚnico, para onde quem marcou "receber" vai em seguida.
+      const papeis = ['DOADOR']
       const sessao = await api.post<Sessao>('/autenticacao/cadastro', {
         nome: nome.trim(),
         cpf,

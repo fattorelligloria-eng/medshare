@@ -25,6 +25,10 @@ public record PedidoDeCadastro(
         Double latitude,
         Double longitude,
 
-        /** Apenas DOADOR e BENEFICIARIO; os demais papeis sao dados pela equipe. */
+        /**
+         * O que a pessoa marcou: DOADOR e/ou BENEFICIARIO (os demais sao
+         * recusados). A conta nasce so com DOADOR; BENEFICIARIO vem depois, com
+         * o NIS confirmado. Continua no pedido para o app antigo seguir valido.
+         */
         @NotEmpty Set<Papel> papeis
 ) { }

@@ -2,7 +2,9 @@ package br.com.medshare.usuario;
 
 import jakarta.persistence.*;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -43,6 +45,10 @@ public class Usuario {
     @Column(name = "criado_em", nullable = false, updatable = false)
     private OffsetDateTime criadoEm = OffsetDateTime.now();
 
+    /** Ultima troca de senha; tokens emitidos antes dela deixam de valer. */
+    @Column(name = "senha_alterada_em")
+    private OffsetDateTime senhaAlteradaEm;
+
     protected Usuario() { }
 
     public Usuario(String nome, String cpf, String email, String senhaHash,
@@ -81,6 +87,19 @@ public class Usuario {
 
     public void trocarSenha(String novoHash) {
         this.senhaHash = novoHash;
+        // Em segundos inteiros, como o "emitido em" do token: o token novo,
+        // emitido logo depois, cai no mesmo segundo e continua valendo.
+        this.senhaAlteradaEm = OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+    }
+
+    /**
+     * Um token emitido antes da ultima troca de senha nao vale mais. E o que
+     * derruba a sessao aberta em outro aparelho quando a pessoa troca a senha
+     * por desconfiar que alguem entrou na conta.
+     */
+    public boolean aceitaTokenEmitidoEm(Instant emitidoEm) {
+        return senhaAlteradaEm == null
+                || (emitidoEm != null && !emitidoEm.isBefore(senhaAlteradaEm.toInstant()));
     }
 
     public void desativar() {

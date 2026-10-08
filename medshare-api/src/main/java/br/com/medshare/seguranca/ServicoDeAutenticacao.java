@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.EnumSet;
 import java.util.Set;
 
 @Service
@@ -22,6 +23,8 @@ public class ServicoDeAutenticacao {
     private static final Set<Papel> PAPEIS_DE_AUTOCADASTRO = Set.of(Papel.DOADOR, Papel.BENEFICIARIO);
     private static final String CONTA_DESATIVADA =
             "Esta conta está desativada. Fale com a equipe do MedShare.";
+    private static final String TOKEN_DE_RENOVACAO_INVALIDO =
+            "Token de renovação inválido ou expirado. Faça login novamente.";
 
     private final UsuarioRepository usuarios;
     private final ServicoDeEndereco enderecos;
@@ -50,8 +53,12 @@ public class ServicoDeAutenticacao {
                 pedido.complemento(), pedido.bairro(), pedido.municipioId(),
                 pedido.latitude(), pedido.longitude());
 
-        Usuario novo = new Usuario(pedido.nome(), pedido.cpf(), pedido.email(),
-                codificador.encode(pedido.senha()), pedido.telefone(), endereco, pedido.papeis());
+        // Toda conta nasce so doadora, mesmo quem marcou "quero receber": o papel
+        // de beneficiario vem apenas da confirmacao do NIS (ServicoDeNecessidade).
+        // Quem quer receber e levado a tela do CadUnico logo depois do cadastro.
+        Usuario novo = new Usuario(pedido.nome(), pedido.cpf(), normalizar(pedido.email()),
+                codificador.encode(pedido.senha()), pedido.telefone(), endereco,
+                EnumSet.of(Papel.DOADOR));
 
         return montarResposta(usuarios.save(novo));
     }
@@ -59,28 +66,36 @@ public class ServicoDeAutenticacao {
     public RespostaDeLogin entrar(PedidoDeLogin pedido) {
         try {
             autenticador.authenticate(
-                    new UsernamePasswordAuthenticationToken(pedido.email(), pedido.senha()));
+                    new UsernamePasswordAuthenticationToken(normalizar(pedido.email()), pedido.senha()));
         } catch (BadCredentialsException e) {
             throw new RegraDeNegocioViolada("AUTENTICACAO", "E-mail ou senha incorretos");
         } catch (AccountStatusException e) {
             // Conta desativada: sem isso a excecao subia como erro 500.
             throw new RegraDeNegocioViolada("AUTENTICACAO", CONTA_DESATIVADA);
         }
-        Usuario usuario = usuarios.findByEmail(pedido.email())
+        Usuario usuario = usuarios.findByEmail(normalizar(pedido.email()))
                 .orElseThrow(() -> new RecursoNaoEncontrado("Usuario", pedido.email()));
         return montarResposta(usuario);
     }
 
     public RespostaDeLogin renovar(String tokenDeRenovacao) {
-        String email = tokens.emailDoTokenDeRenovacao(tokenDeRenovacao)
-                .orElseThrow(() -> new RegraDeNegocioViolada("AUTENTICACAO",
-                        "Token de renovação inválido ou expirado. Faça login novamente."));
-        Usuario usuario = usuarios.findByEmail(email)
-                .orElseThrow(() -> new RecursoNaoEncontrado("Usuario", email));
+        ServicoDeToken.TokenLido token = tokens.lerTokenDeRenovacao(tokenDeRenovacao)
+                .orElseThrow(() -> new RegraDeNegocioViolada("AUTENTICACAO", TOKEN_DE_RENOVACAO_INVALIDO));
+        Usuario usuario = usuarios.findByEmail(token.email())
+                .orElseThrow(() -> new RecursoNaoEncontrado("Usuario", token.email()));
         // O token de renovacao dura 14 dias; desativar a conta precisa valer antes disso.
         if (!usuario.isAtivo()) {
             throw new RegraDeNegocioViolada("AUTENTICACAO", CONTA_DESATIVADA);
         }
+        // E trocar a senha tambem: senao o outro aparelho renovaria a sessao.
+        if (!usuario.aceitaTokenEmitidoEm(token.emitidoEm())) {
+            throw new RegraDeNegocioViolada("AUTENTICACAO", TOKEN_DE_RENOVACAO_INVALIDO);
+        }
+        return montarResposta(usuario);
+    }
+
+    /** Tokens novos para quem acabou de trocar a senha, que continua conectado. */
+    public RespostaDeLogin novaSessao(Usuario usuario) {
         return montarResposta(usuario);
     }
 
@@ -97,7 +112,7 @@ public class ServicoDeAutenticacao {
     }
 
     private void recusarCadastroDuplicado(PedidoDeCadastro pedido) {
-        if (usuarios.existsByEmail(pedido.email())) {
+        if (usuarios.existsByEmail(normalizar(pedido.email()))) {
             throw new RegraDeNegocioViolada("CADASTRO", "Já existe uma conta com este e-mail");
         }
         if (usuarios.existsByCpf(pedido.cpf())) {
@@ -113,5 +128,15 @@ public class ServicoDeAutenticacao {
                 usuario.getId(),
                 usuario.getNome(),
                 UsuarioAutenticado.papeisDe(usuario));
+    }
+
+    /**
+     * O e-mail e gravado e procurado sempre em minusculas, sem espacos nas
+     * pontas. Sem isso "Ana@..." nao entrava na conta de "ana@...", e o
+     * cadastro aceitava as duas grafias como contas diferentes. O vinculo de
+     * farmaceutico (ServicoDeAdministracao) ja procurava assim.
+     */
+    static String normalizar(String email) {
+        return email == null ? null : email.trim().toLowerCase(java.util.Locale.ROOT);
     }
 }

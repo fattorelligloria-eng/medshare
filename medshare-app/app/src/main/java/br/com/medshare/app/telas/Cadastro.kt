@@ -94,10 +94,9 @@ fun TelaDeCadastro(
         erro = null
         enviando = true
         escopo.launch {
-            val papeis = buildList {
-                if (querDoar) add("DOADOR")
-                if (querReceber) add("BENEFICIARIO")
-            }
+            // A conta nasce so doadora; quem quer receber informa o NIS na aba
+            // Conta, e e essa confirmacao que concede o papel.
+            val papeis = listOf("DOADOR")
             repositorio.cadastrar(
                 PedidoDeCadastro(
                     nome = nome.trim(),

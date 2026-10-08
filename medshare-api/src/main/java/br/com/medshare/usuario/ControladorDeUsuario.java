@@ -1,6 +1,8 @@
 package br.com.medshare.usuario;
 
+import br.com.medshare.seguranca.ServicoDeAutenticacao;
 import br.com.medshare.seguranca.UsuarioLogado;
+import br.com.medshare.seguranca.dto.RespostaDeLogin;
 import br.com.medshare.usuario.dto.MeuImpacto;
 import br.com.medshare.usuario.dto.MeusDados;
 import br.com.medshare.usuario.dto.PedidoDeAtualizacaoDeCadastro;
@@ -22,10 +24,13 @@ import org.springframework.web.bind.annotation.*;
 public class ControladorDeUsuario {
 
     private final ServicoDeUsuario servico;
+    private final ServicoDeAutenticacao autenticacao;
     private final UsuarioLogado usuarioLogado;
 
-    public ControladorDeUsuario(ServicoDeUsuario servico, UsuarioLogado usuarioLogado) {
+    public ControladorDeUsuario(ServicoDeUsuario servico, ServicoDeAutenticacao autenticacao,
+                                UsuarioLogado usuarioLogado) {
         this.servico = servico;
+        this.autenticacao = autenticacao;
         this.usuarioLogado = usuarioLogado;
     }
 
@@ -39,10 +44,16 @@ public class ControladorDeUsuario {
         return MeusDados.de(servico.atualizar(usuarioLogado.obrigatorio(), pedido));
     }
 
+    /**
+     * Troca a senha e devolve tokens novos. Os antigos param de valer em todo
+     * aparelho (ver Usuario.aceitaTokenEmitidoEm); quem trocou continua
+     * conectado com os que vem nesta resposta.
+     */
     @PostMapping("/eu/senha")
-    public ResponseEntity<Void> trocarSenha(@Valid @RequestBody PedidoDeNovaSenha pedido) {
-        servico.trocarSenha(usuarioLogado.obrigatorio(), pedido);
-        return ResponseEntity.noContent().build();
+    public RespostaDeLogin trocarSenha(@Valid @RequestBody PedidoDeNovaSenha pedido) {
+        Usuario usuario = usuarioLogado.obrigatorio();
+        servico.trocarSenha(usuario, pedido);
+        return autenticacao.novaSessao(usuario);
     }
 
     @GetMapping("/eu/impacto")

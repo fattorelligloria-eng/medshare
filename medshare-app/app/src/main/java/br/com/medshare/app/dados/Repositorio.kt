@@ -139,6 +139,11 @@ class Repositorio(contexto: Context) {
 
     suspend fun verificarCadUnico(nis: String): Result<RespostaDoCadUnico> =
         chamar { it.verificarCadUnico(PedidoDeVerificacaoCadUnico(nis.filter(Char::isDigit))) }
+            .also { resultado ->
+                // O papel de beneficiario e concedido nesta confirmacao e viaja
+                // dentro do token: sem renovar, as abas de quem recebe nao abrem.
+                if (resultado.getOrNull()?.confirmado == true) renovarSessao()
+            }
 
     suspend fun minhasNecessidades(): Result<List<Necessidade>> = chamar { it.minhasNecessidades() }
 
