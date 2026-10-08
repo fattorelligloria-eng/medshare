@@ -67,7 +67,35 @@ public class ControladorDeFotos {
             throw new RegraDeNegocioViolada("FOTO",
                     "Envie uma imagem JPEG, PNG ou WebP. Recebemos: %s".formatted(tipo));
         }
+        if (!conteudoEDoTipo(arquivo, extensao)) {
+            throw new RegraDeNegocioViolada("FOTO",
+                    "O arquivo não é uma imagem %s de verdade. Tire a foto de novo pelo app."
+                            .formatted(tipo.substring("image/".length()).toUpperCase()));
+        }
         return extensao;
+    }
+
+    /**
+     * Confere os primeiros bytes do arquivo contra o tipo declarado.
+     *
+     * O tipo vem do aparelho e e so um rotulo: sem isto, qualquer arquivo
+     * chamado de image/jpeg era gravado e depois servido como foto.
+     */
+    static boolean conteudoEDoTipo(MultipartFile arquivo, String extensao) {
+        byte[] b;
+        try (var entrada = arquivo.getInputStream()) {
+            b = entrada.readNBytes(12);
+        } catch (IOException e) {
+            return false;
+        }
+        return switch (extensao) {
+            case ".jpg" -> b.length >= 3 && (b[0] & 0xFF) == 0xFF && (b[1] & 0xFF) == 0xD8 && (b[2] & 0xFF) == 0xFF;
+            case ".png" -> b.length >= 8 && (b[0] & 0xFF) == 0x89 && b[1] == 'P' && b[2] == 'N' && b[3] == 'G'
+                    && b[4] == 0x0D && b[5] == 0x0A && b[6] == 0x1A && b[7] == 0x0A;
+            case ".webp" -> b.length >= 12 && b[0] == 'R' && b[1] == 'I' && b[2] == 'F' && b[3] == 'F'
+                    && b[8] == 'W' && b[9] == 'E' && b[10] == 'B' && b[11] == 'P';
+            default -> false;
+        };
     }
 
     /** Usado pelo app para saber de antemao o que o servidor aceita. */
