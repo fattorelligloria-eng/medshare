@@ -226,20 +226,75 @@ public class ServicoDeDoacao {
     @Transactional(readOnly = true)
     public List<OffsetDateTime> horariosDisponiveis(Long pontoDeColetaId) {
         PontoDeColeta ponto = buscarPontoAtivo(pontoDeColetaId);
-        ZonedDateTime agora = ZonedDateTime.now(PontoDeColeta.FUSO);
-        ZonedDateTime inicio = agora.plusHours(2).truncatedTo(java.time.temporal.ChronoUnit.HOURS).plusHours(1);
-        ZonedDateTime fim = agora.toLocalDate().plusDays(DIAS_DE_AGENDA).atStartOfDay(PontoDeColeta.FUSO);
+        Janela janela = janelaDeAgenda();
 
-        Map<OffsetDateTime, Long> ocupados = agendamentos
-                .ocupadosNoPeriodo(ponto.getId(), inicio.toOffsetDateTime(), fim.toOffsetDateTime())
+        Map<OffsetDateTime, Long> ocupados = porHora(agendamentos
+                .ocupadosNoPeriodo(ponto.getId(), janela.inicio(), janela.fim()));
+
+        return livresEm(ponto, janela, ocupados);
+    }
+
+    /**
+     * Quantas vagas cada farmacia tem nas proximas duas semanas.
+     *
+     * Existe para a lista de farmacias conseguir dizer "sem vaga" antes de a
+     * pessoa escolher. Era o buraco: a tela de agendamento ja so oferece
+     * horario que existe, mas a escolha da farmacia vinha antes disso, entao
+     * dava para escolher uma e descobrir que nao tinha nada.
+     *
+     * Uma consulta so para todas as farmacias, e a contagem em memoria. Uma
+     * consulta por farmacia seria uma ida ao banco por linha da tela.
+     */
+    @Transactional(readOnly = true)
+    public Map<Long, Integer> vagasPorPonto(List<PontoDeColeta> pontosDaLista) {
+        if (pontosDaLista.isEmpty()) return Map.of();
+
+        Janela janela = janelaDeAgenda();
+        List<Long> ids = pontosDaLista.stream().map(PontoDeColeta::getId).toList();
+
+        Map<Long, Map<OffsetDateTime, Long>> ocupadosPorPonto = agendamentos
+                .ocupadosNoPeriodoDe(ids, janela.inicio(), janela.fim())
                 .stream()
                 .collect(Collectors.groupingBy(
-                        a -> a.getDataHora().atZoneSameInstant(PontoDeColeta.FUSO)
-                                .truncatedTo(java.time.temporal.ChronoUnit.HOURS).toOffsetDateTime(),
-                        Collectors.counting()));
+                        a -> a.getPontoDeColeta().getId(),
+                        Collectors.collectingAndThen(Collectors.toList(), ServicoDeDoacao::porHora)));
 
+        Map<Long, Integer> vagas = new java.util.HashMap<>();
+        for (PontoDeColeta ponto : pontosDaLista) {
+            Map<OffsetDateTime, Long> ocupados =
+                    ocupadosPorPonto.getOrDefault(ponto.getId(), Map.of());
+            vagas.put(ponto.getId(), livresEm(ponto, janela, ocupados).size());
+        }
+        return vagas;
+    }
+
+    /** De quando ate quando a agenda aceita marcacao. */
+    private record Janela(OffsetDateTime inicio, OffsetDateTime fim, ZonedDateTime deOnde, ZonedDateTime ate) { }
+
+    /**
+     * A agenda abre duas horas a frente, arredondado para a proxima hora
+     * cheia: ninguem sai de casa com o remedio em cima da hora.
+     */
+    private Janela janelaDeAgenda() {
+        ZonedDateTime agora = ZonedDateTime.now(PontoDeColeta.FUSO);
+        ZonedDateTime inicio = agora.plusHours(2)
+                .truncatedTo(java.time.temporal.ChronoUnit.HOURS).plusHours(1);
+        ZonedDateTime fim = agora.toLocalDate().plusDays(DIAS_DE_AGENDA)
+                .atStartOfDay(PontoDeColeta.FUSO);
+        return new Janela(inicio.toOffsetDateTime(), fim.toOffsetDateTime(), inicio, fim);
+    }
+
+    private static Map<OffsetDateTime, Long> porHora(List<Agendamento> marcados) {
+        return marcados.stream().collect(Collectors.groupingBy(
+                a -> a.getDataHora().atZoneSameInstant(PontoDeColeta.FUSO)
+                        .truncatedTo(java.time.temporal.ChronoUnit.HOURS).toOffsetDateTime(),
+                Collectors.counting()));
+    }
+
+    private static List<OffsetDateTime> livresEm(PontoDeColeta ponto, Janela janela,
+                                                 Map<OffsetDateTime, Long> ocupados) {
         List<OffsetDateTime> livres = new ArrayList<>();
-        for (ZonedDateTime hora = inicio; hora.isBefore(fim); hora = hora.plusHours(1)) {
+        for (ZonedDateTime hora = janela.deOnde(); hora.isBefore(janela.ate()); hora = hora.plusHours(1)) {
             OffsetDateTime candidato = hora.toOffsetDateTime();
             if (ponto.funcionaEm(candidato)
                     && ocupados.getOrDefault(candidato, 0L) < ponto.getVagasPorHora()) {

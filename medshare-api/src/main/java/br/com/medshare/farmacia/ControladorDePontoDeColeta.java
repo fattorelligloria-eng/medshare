@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/pontos-de-coleta")
@@ -28,9 +29,7 @@ public class ControladorDePontoDeColeta {
 
     @GetMapping
     public List<PontoDeColetaResumido> listar() {
-        return pontos.findByAtivoTrueOrderByNome().stream()
-                .map(PontoDeColetaResumido::de)
-                .toList();
+        return comVagas(pontos.findByAtivoTrueOrderByNome());
     }
 
     /**
@@ -44,9 +43,20 @@ public class ControladorDePontoDeColeta {
         if (!endereco.temCoordenadas()) {
             return listar();
         }
-        return pontos.maisProximosDe(endereco.getLatitude(), endereco.getLongitude(),
-                        QUANTIDADE_SUGERIDA).stream()
-                .map(PontoDeColetaResumido::de)
+        return comVagas(pontos.maisProximosDe(endereco.getLatitude(), endereco.getLongitude(),
+                QUANTIDADE_SUGERIDA));
+    }
+
+    /**
+     * Junta a contagem de vagas a cada farmacia.
+     *
+     * A contagem sai de uma consulta so para a lista inteira; por isso ela e
+     * feita aqui, de uma vez, e nao dentro do DTO de cada farmacia.
+     */
+    private List<PontoDeColetaResumido> comVagas(List<PontoDeColeta> lista) {
+        Map<Long, Integer> vagas = doacoes.vagasPorPonto(lista);
+        return lista.stream()
+                .map(ponto -> PontoDeColetaResumido.de(ponto, vagas.get(ponto.getId())))
                 .toList();
     }
 

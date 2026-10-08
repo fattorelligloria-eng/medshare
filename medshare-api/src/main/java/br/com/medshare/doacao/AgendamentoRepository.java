@@ -40,6 +40,22 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
                                         @Param("inicio") OffsetDateTime inicio,
                                         @Param("fim") OffsetDateTime fim);
 
+    /**
+     * A mesma coisa para varios pontos de uma vez.
+     *
+     * Existe porque a lista de farmacias precisa dizer quais tem vaga, e uma
+     * consulta por farmacia seria uma ida ao banco por linha da tela.
+     */
+    @Query("""
+            SELECT a FROM Agendamento a
+            WHERE a.pontoDeColeta.id IN :pontoIds
+              AND a.dataHora >= :inicio AND a.dataHora < :fim
+              AND a.doacao.status = br.com.medshare.doacao.StatusDoacao.AGENDADA
+            """)
+    List<Agendamento> ocupadosNoPeriodoDe(@Param("pontoIds") Collection<Long> pontoIds,
+                                          @Param("inicio") OffsetDateTime inicio,
+                                          @Param("fim") OffsetDateTime fim);
+
     /** UC02 passo 3 - lembrete da vespera. */
     @Query("""
             SELECT a FROM Agendamento a
