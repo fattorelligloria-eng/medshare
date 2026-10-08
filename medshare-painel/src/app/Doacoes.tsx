@@ -22,7 +22,10 @@ const ABAS: { chave: Aba; nome: string; cabe: (d: Doacao) => boolean }[] = [
   { chave: 'concluidas', nome: 'Concluídas', cabe: (d) => d.status === 'ENTREGUE' },
   {
     chave: 'recusadas',
-    nome: 'Recusadas',
+    // "Recusadas" ficou errado quando os estados foram renomeados: a aba junta
+    // caixa não aceita, reprovada no balcão, vencida e cancelada — e cancelada
+    // foi decisão da própria pessoa, ninguém recusou nada.
+    nome: 'Não seguiram',
     cabe: (d) => ['RECUSADA', 'REJEITADA', 'CANCELADA', 'DESCARTADA'].includes(d.status),
   },
 ]

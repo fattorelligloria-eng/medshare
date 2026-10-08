@@ -1299,3 +1299,160 @@ button:focus-visible,
   /* Em tela bem estreita os dois lado a lado espremem o texto; cancelar desce. */
   .dupla-de-acoes { flex-direction: column; }
 }
+
+/* =============================================================================
+   Cartão de "eu doei"
+   ========================================================================== */
+
+.bloco-do-cartao {
+  margin: 26px 0;
+  padding-top: 22px;
+  border-top: 1px solid var(--linha);
+}
+.bloco-do-cartao h2 { margin: 0 0 4px; }
+
+.cartao-compartilhar { margin-top: 14px; }
+
+/* O canvas é 1080×1080; na tela ele entra como quadrado fluido. A imagem
+   salva continua em 1080, que é o tamanho que o WhatsApp e o Instagram
+   querem — encolher aqui é só visual. */
+.previa-do-cartao {
+  display: block;
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--raio-g);
+  background: var(--verde-escuro);
+}
+
+.acoes-do-cartao { display: flex; gap: 10px; margin-top: 12px; max-width: 340px; }
+.acoes-do-cartao .botao { flex: 1; }
+
+.aviso-do-cartao {
+  margin: 10px 0 0;
+  max-width: 340px;
+  font-size: 0.7812rem;
+  line-height: 1.4;
+  color: var(--tinta-fraca);
+}
+
+@media print { .bloco-do-cartao { display: none; } }
+
+/* =============================================================================
+   Mapa das farmácias
+   ========================================================================== */
+
+.mapa-farmacias {
+  margin-bottom: 18px;
+  border-radius: var(--raio-g);
+  overflow: hidden;
+  border: 1px solid var(--linha);
+}
+.tela-do-mapa { height: 230px; width: 100%; background: var(--fundo-app); }
+
+/* O alfinete é um div, não o PNG do Leaflet: assim ele usa a cor da marca e
+   não depende de um arquivo que o empacotador move de lugar. */
+.alfinete span {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 3px solid #FFFFFF;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .35);
+}
+
+/* O Leaflet traz um azul próprio; alinha com a tipografia do app. */
+.leaflet-container { font-family: 'Libre Franklin', system-ui, sans-serif; }
+.leaflet-control-attribution { font-size: 0.625rem; }
+
+.ordenacao { margin: 12px 0 18px; }
+.campo-em-linha { display: flex; align-items: center; gap: 10px; }
+.campo-em-linha span { font-size: 0.8125rem; color: var(--tinta-media); }
+.campo-em-linha select {
+  flex: 1;
+  max-width: 230px;
+  padding: 9px 11px;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  background: var(--fundo);
+  color: var(--tinta);
+  font-family: inherit;
+  font-size: 0.875rem;
+}
+
+.linha-titulo-farmacia {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.linha-titulo-farmacia h2 { margin: 0; }
+
+.etiqueta {
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.etiqueta.aberta { background: var(--verde-claro); color: var(--verde-escuro); }
+.etiqueta.fechada { background: var(--fundo-app); color: var(--tinta-fraca); }
+
+.sem-vaga {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--raio);
+  background: var(--terracota-tenue);
+  color: var(--terracota-texto);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.nenhuma-com-filtro {
+  margin: 18px 0;
+  padding: 16px;
+  border-radius: var(--raio);
+  background: var(--fundo-app);
+  color: var(--tinta-media);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+/* Quem clica no alfinete precisa enxergar qual cartão o mapa apontou. */
+.item.em-foco {
+  background: var(--verde-tenue);
+  border-radius: var(--raio);
+  padding-left: 12px;
+  padding-right: 12px;
+  margin-left: -12px;
+  margin-right: -12px;
+}
+
+.credito-do-mapa {
+  margin: 22px 0 0;
+  font-size: 0.6875rem;
+  color: var(--tinta-fraca);
+}
+
+:root[data-contraste='alto'] .etiqueta.aberta,
+:root[data-contraste='alto'] .etiqueta.fechada { border: 1px solid #000000; }
+:root[data-contraste='alto'] .mapa-farmacias { border: 2px solid #000000; }
+
+@media print { .mapa-farmacias, .ordenacao { display: none; } }
+
+/* Enquanto o mapa não chega, o espaço já existe — assim a lista não pula
+   para baixo quando ele aparece. Mesmo brilho dos esqueletos de lista, para
+   os dois carregamentos parecerem a mesma coisa. */
+.carregando-mapa { position: relative; overflow: hidden; background: var(--fundo-app); }
+.carregando-mapa::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .6), transparent);
+  animation: brilho 1.4s infinite;
+}
+@media (prefers-reduced-motion: reduce) { .carregando-mapa::after { animation: none; } }

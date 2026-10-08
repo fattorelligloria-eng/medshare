@@ -143,7 +143,7 @@ export function DadosDoCadastro(
 
       <div className="linha-form">
         <label className="campo">
-          <span>Logradouro</span>
+          <span>Rua ou avenida</span>
           <input value={form.logradouro} onChange={(e) => mudar('logradouro', e.target.value)} />
         </label>
         <label className="campo" style={{ maxWidth: 120 }}>

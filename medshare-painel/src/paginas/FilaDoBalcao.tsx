@@ -75,7 +75,7 @@ export function FilaDoBalcao() {
     <>
       <div className="titulo-area">
         <h1>Balcão</h1>
-        <p>Doações agendadas e recebidas neste ponto de coleta.</p>
+        <p>Doações agendadas e recebidas nesta farmácia.</p>
       </div>
 
       <form className="bloco form-busca" onSubmit={buscar}>

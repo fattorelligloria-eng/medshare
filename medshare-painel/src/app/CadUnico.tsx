@@ -4,6 +4,7 @@ import { api } from '../api/cliente'
 import type { RespostaDoCadUnico, Sessao } from '../api/tipos'
 import { useAutenticacao } from '../contexto/Autenticacao'
 import { AvisoDeErro, AvisoDeSucesso } from '../componentes/Aviso'
+import { rotuloDaRegra } from '../componentes/Regras'
 import { CabecalhoInterno } from '../componentes/CabecalhoInterno'
 import { Senha } from '../componentes/Icones'
 import { data } from '../formatos'
@@ -96,7 +97,7 @@ export function CadUnico() {
 
           {resposta && !resposta.confirmado && resposta.precisaDeAnaliseHumana && (
             <div className="aviso erro">
-              <span className="regra">RN08</span>
+              <span className="regra">{rotuloDaRegra('RN08')}</span>
               Não encontramos esse NIS como beneficiário de programa social. Isso
               não é um não: seu caso foi para a nossa equipe, que confere à mão e
               responde em até 48 horas.

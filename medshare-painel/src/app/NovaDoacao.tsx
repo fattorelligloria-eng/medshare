@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { api } from '../api/cliente'
 import type { Doacao, FotoEnviada, Medicamento } from '../api/tipos'
 import { AvisoDeErro } from '../componentes/Aviso'
+import { rotuloDaRegra } from '../componentes/Regras'
 import { BuscaDeMedicamento } from '../componentes/BuscaDeMedicamento'
 import { CabecalhoInterno } from '../componentes/CabecalhoInterno'
 import { CodigoCopiavel } from '../componentes/CodigoCopiavel'
@@ -243,7 +244,7 @@ export function NovaDoacao() {
 
             {validadeCurta && (
               <div className="aviso erro">
-                <span className="regra">RN02</span>
+                <span className="regra">{rotuloDaRegra('RN02')}</span>
                 Essa caixa vence em {diasDeValidade} dia(s). A rede precisa de pelo
                 menos 30 dias de validade para dar tempo de a caixa ser conferida,
                 reservada e retirada por alguém.

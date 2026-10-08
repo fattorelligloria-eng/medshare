@@ -1,17 +1,21 @@
 import type { ReactNode } from 'react'
 import { ErroDaApi } from '../api/cliente'
+import { rotuloDaRegra } from './Regras'
 
 /**
- * O erro chega da API com a regra separada da mensagem — e é assim que aparece:
- * a sigla da regra em destaque, a explicação em texto corrido. Quem está no
- * balcão lê "RN01" e já sabe do que se trata; a frase ao lado explica a quem
- * não sabe.
+ * O erro chega da API com a regra separada da mensagem, e é assim que aparece:
+ * o nome da regra em destaque, a explicação em texto corrido.
+ *
+ * A etiqueta mostrava a sigla crua — "RN01", "RN08". A sigla é do nosso
+ * documento de modelagem, não do vocabulário de quem usa: ninguém no balcão
+ * decorou os números das nossas regras. Agora passa pelo mapa de Regras.ts e
+ * sai em português.
  */
 export function AvisoDeErro(
   { erro, aoTentarDeNovo }: { erro: unknown; aoTentarDeNovo?: () => void },
 ) {
   if (!erro) return null
-  const regra = erro instanceof ErroDaApi ? erro.regra : undefined
+  const regra = rotuloDaRegra(erro instanceof ErroDaApi ? erro.regra : undefined)
   const mensagem = erro instanceof Error ? erro.message : String(erro)
 
   return (

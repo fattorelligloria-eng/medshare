@@ -1,18 +1,29 @@
-/** Como cada status aparece para quem usa, e com que peso visual. */
+/**
+ * Como cada estado aparece para quem usa, e com que peso visual.
+ *
+ * O nome na tela não é o nome no banco. CADASTRADA, PRE_VALIDADA e VALIDADA
+ * descrevem onde a caixa está na máquina de estados; quem abre o aplicativo
+ * quer saber o que está acontecendo com a caixa dele.
+ *
+ * O par que mais importava separar é RECUSADA e REJEITADA: no banco são coisas
+ * diferentes — não entrou na rede, e o farmacêutico reprovou no balcão — mas
+ * em português as duas palavras dizem a mesma coisa, e quem lesse não saberia
+ * qual das duas aconteceu.
+ */
 const TEXTO: Record<string, string> = {
-  CADASTRADA: 'Cadastrada',
+  CADASTRADA: 'Em conferência',
   EM_ANALISE_CENTRAL: 'Em análise',
-  PRE_VALIDADA: 'Pré-validada',
+  PRE_VALIDADA: 'Liberada',
   AGENDADA: 'Agendada',
-  RECEBIDA: 'Recebida',
-  VALIDADA: 'Validada',
+  RECEBIDA: 'Na farmácia',
+  VALIDADA: 'Conferida',
   DISPONIVEL: 'Disponível',
-  RESERVADA: 'Reservada',
+  RESERVADA: 'Separada para alguém',
   ENTREGUE: 'Entregue',
-  RECUSADA: 'Recusada',
+  RECUSADA: 'Não aceita',
   CANCELADA: 'Cancelada',
-  REJEITADA: 'Rejeitada',
-  DESCARTADA: 'Descartada',
+  REJEITADA: 'Reprovada no balcão',
+  DESCARTADA: 'Vencida',
   ATIVA: 'Ativa',
   CONCLUIDA: 'Concluída',
   EXPIRADA: 'Expirada',
@@ -51,7 +62,7 @@ export function explicar(status: string): string {
     case 'RECUSADA': return 'Não pôde entrar na rede.'
     case 'CANCELADA': return 'O agendamento foi cancelado.'
     case 'REJEITADA': return 'Não passou na conferência do farmacêutico.'
-    case 'DESCARTADA': return 'Saiu do estoque por causa da validade.'
+    case 'DESCARTADA': return 'Passou da validade mínima e saiu do estoque.'
     default: return ''
   }
 }

@@ -4,6 +4,7 @@ import { api } from '../api/cliente'
 import type { DoacaoDetalhada, FotoEnviada } from '../api/tipos'
 import { AvisoDeErro } from '../componentes/Aviso'
 import { CabecalhoInterno } from '../componentes/CabecalhoInterno'
+import { CartaoParaCompartilhar } from '../componentes/CartaoParaCompartilhar'
 import { CodigoCopiavel } from '../componentes/CodigoCopiavel'
 import { Camera, Compartilhar, Imprimir } from '../componentes/Icones'
 import { QrCode } from '../componentes/QrCode'
@@ -181,6 +182,19 @@ export function DetalheDaDoacao() {
                   <input type="file" accept="image/*" capture="environment" onChange={enviarNovaFoto} hidden disabled={enviandoFoto} />
                 </label>
               </div>
+            )}
+
+            {detalhe.doacao.status === 'ENTREGUE' && (
+              <section className="bloco-do-cartao" aria-labelledby="t-cartao">
+                <h2 id="t-cartao" className="humano" style={{ fontSize: '1.1875rem' }}>
+                  Sua caixa chegou a alguém
+                </h2>
+                <p className="explicacao-secao">
+                  Se quiser contar, leve esta imagem. Ela não identifica você
+                  nem quem recebeu.
+                </p>
+                <CartaoParaCompartilhar principioAtivo={detalhe.doacao.principioAtivo} />
+              </section>
             )}
 
             <p className="rotulo" style={{ marginBottom: 4 }}>Por onde passou</p>

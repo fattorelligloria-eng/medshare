@@ -90,7 +90,7 @@ export function Rastreio() {
               <p className="valor">{data(resultado.doacao.validade)}</p>
             </div>
             <div className="dado">
-              <p className="rotulo">Ponto de coleta</p>
+              <p className="rotulo">Farmácia</p>
               <p className="valor">{resultado.doacao.pontoDeColeta ?? '—'}</p>
             </div>
           </div>

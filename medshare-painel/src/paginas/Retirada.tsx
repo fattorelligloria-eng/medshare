@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { api, ErroDaApi } from '../api/cliente'
 import type { ConferenciaDaRetirada, Reserva } from '../api/tipos'
 import { AvisoDeErro, AvisoDeSucesso } from '../componentes/Aviso'
+import { rotuloDaRegra } from '../componentes/Regras'
 import { FotoDoCaso } from '../componentes/FotoDoCaso'
 import { data, dataComHora } from '../formatos'
 
@@ -194,7 +195,7 @@ export function Retirada() {
           )}
           {conferencia.status === 'ATIVA' && !conferencia.receitaValida && (
             <div className="aviso erro" style={{ marginTop: 20 }}>
-              <span className="regra">RN03</span>
+              <span className="regra">{rotuloDaRegra('RN03')}</span>
               A receita anexada está vencida. O beneficiário precisa enviar uma nova pelo app.
             </div>
           )}
