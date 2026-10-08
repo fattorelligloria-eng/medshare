@@ -64,6 +64,8 @@ public class ConfiguracaoDeSeguranca {
                     .requestMatchers(HttpMethod.GET, "/fotos-locais/**").permitAll()
                     .requestMatchers("/actuator/health").permitAll()
                     .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                    // A raiz so redireciona para a documentacao (ControladorDaRaiz).
+                    .requestMatchers(HttpMethod.GET, "/").permitAll()
                     .anyRequest().authenticated())
             .addFilterBefore(filtroJwt, UsernamePasswordAuthenticationFilter.class);
 
