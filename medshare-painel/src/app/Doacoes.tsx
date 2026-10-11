@@ -66,8 +66,11 @@ export function Doacoes() {
   const ultimaEntregue = entregues[0]
 
   // A próxima entrega: a agendada mais perto de hoje que ainda não aconteceu.
+  // Só AGENDADA: depois que a farmácia recebe, o agendamento continua vindo
+  // da API, mas não há mais nada para a pessoa levar — antes a tela seguia
+  // dizendo "leve o remédio" para caixa que já estava na prateleira.
   const proxima = doacoes
-    .filter((d) => d.agendadaPara && !ENCERRADOS.includes(d.status))
+    .filter((d) => d.agendadaPara && d.status === 'AGENDADA')
     .sort((a, b) => (a.agendadaPara! < b.agendadaPara! ? -1 : 1))[0]
 
   const daAba = doacoes.filter(ABAS.find((a) => a.chave === aba)!.cabe)
@@ -247,7 +250,7 @@ export function Doacoes() {
 
                 {/* Relógio para hora, alfinete para lugar. Trocar os dois faz a
                     pessoa ler o ícone errado antes de ler o texto. */}
-                {d.agendadaPara && (
+                {d.agendadaPara && d.status === 'AGENDADA' && (
                   <div className="linha-icone">
                     <Relogio cor="var(--verde-escuro)" />
                     <span>{diaEHora(d.agendadaPara)}</span>
