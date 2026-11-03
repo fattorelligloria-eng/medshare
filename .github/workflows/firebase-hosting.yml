@@ -1,0 +1,75 @@
+# Publica o painel no Firebase Hosting.
+#
+# - Pull request para a main: sobe uma prévia num canal temporário (expira em
+#   7 dias) e comenta o link no PR, para revisar a tela antes de juntar.
+# - Push na main (PR aprovado e juntado): publica no site de verdade.
+#
+# Precisa, em Settings > Secrets and variables > Actions:
+#   secret   FIREBASE_SERVICE_ACCOUNT  JSON da conta de serviço do Firebase
+#   variável FIREBASE_PROJECT_ID       id do projeto (ex.: medshare-12345)
+#   variável VITE_MEDSHARE_API         endereço público da API, sem barra no fim
+
+name: firebase hosting
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Dois pushes seguidos no mesmo PR: o deploy antigo é cancelado, só o último vale.
+concurrency:
+  group: firebase-hosting-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: deploy do painel
+    runs-on: ubuntu-latest
+    # PR vindo de fork não recebe os secrets; sem eles o deploy só falharia.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: medshare-painel/package-lock.json
+
+      - name: Instalar dependências
+        working-directory: medshare-painel
+        run: npm ci
+
+      - name: Compilar
+        working-directory: medshare-painel
+        env:
+          VITE_MEDSHARE_API: ${{ vars.VITE_MEDSHARE_API }}
+        run: npm run build
+
+      - name: Prévia do PR
+        if: github.event_name == 'pull_request'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: ${{ vars.FIREBASE_PROJECT_ID }}
+          expires: 7d
+        env:
+          VITE_MEDSHARE_API: ${{ vars.VITE_MEDSHARE_API }}
+
+      - name: Publicar no site
+        if: github.event_name == 'push'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: ${{ vars.FIREBASE_PROJECT_ID }}
+          channelId: live
+        env:
+          VITE_MEDSHARE_API: ${{ vars.VITE_MEDSHARE_API }}
