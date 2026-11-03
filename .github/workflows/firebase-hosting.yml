@@ -6,7 +6,6 @@
 #
 # Precisa, em Settings > Secrets and variables > Actions:
 #   secret   FIREBASE_SERVICE_ACCOUNT  JSON da conta de serviço do Firebase
-#   variável FIREBASE_PROJECT_ID       id do projeto (ex.: medshare-12345)
 #   variável VITE_MEDSHARE_API         endereço público da API, sem barra no fim
 
 name: firebase hosting
@@ -58,7 +57,7 @@ jobs:
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          projectId: ${{ vars.FIREBASE_PROJECT_ID }}
+          projectId: medshare-5005
           expires: 7d
         env:
           VITE_MEDSHARE_API: ${{ vars.VITE_MEDSHARE_API }}
@@ -69,7 +68,7 @@ jobs:
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          projectId: ${{ vars.FIREBASE_PROJECT_ID }}
+          projectId: medshare-5005
           channelId: live
         env:
           VITE_MEDSHARE_API: ${{ vars.VITE_MEDSHARE_API }}

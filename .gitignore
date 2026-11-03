@@ -49,10 +49,10 @@ local.properties
 Thumbs.db
 
 # --- Firebase -------------------------------------------------------------
-# Cache do deploy e logs da CLI. O .firebaserc (qual projeto usar) fica de fora
-# também: cada um aponta para o seu com `firebase use --add`.
+# Cache do deploy e logs da CLI. O .firebaserc fica no Git: aponta para o
+# projeto medshare-5005, o mesmo que o CI usa.
 .firebase/
-.firebaserc
+
 firebase-debug.log*
 firebase-debug.*.log
 
