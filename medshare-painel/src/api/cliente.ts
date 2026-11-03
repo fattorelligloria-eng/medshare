@@ -2,6 +2,9 @@ import type { Sessao } from './tipos'
 
 const CHAVE_DA_SESSAO = 'medshare.sessao'
 
+/** Em produção a API mora em outro domínio; em desenvolvimento o proxy do Vite cuida de "/api". */
+const BASE_DA_API = `${(import.meta.env.VITE_MEDSHARE_API ?? '').replace(/\/+$/, '')}/api`
+
 /**
  * Erro vindo da API, ja traduzido.
  *
@@ -66,7 +69,7 @@ function renovarSessao(): Promise<boolean> {
     const sessao = lerSessao()
     if (!sessao?.tokenDeRenovacao) return false
     try {
-      const resposta = await fetch('/api/autenticacao/renovacao', {
+      const resposta = await fetch(`${BASE_DA_API}/autenticacao/renovacao`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tokenDeRenovacao: sessao.tokenDeRenovacao }),
@@ -103,7 +106,7 @@ async function comAutenticacao(montar: (cabecalhos: Record<string, string>) => R
     const sessao = lerSessao()
     const cabecalhos: Record<string, string> = sessao ? { Authorization: `Bearer ${sessao.tokenDeAcesso}` } : {}
     try {
-      return await fetch(`/api${caminho}`, montar(cabecalhos))
+      return await fetch(`${BASE_DA_API}${caminho}`, montar(cabecalhos))
     } catch {
       // O fetch só estoura assim quando a requisição não chegou a lugar nenhum:
       // sem rede, servidor fora, DNS. O navegador diz "Failed to fetch", em

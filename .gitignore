@@ -47,3 +47,15 @@ local.properties
 .vscode/
 .DS_Store
 Thumbs.db
+
+# --- Firebase -------------------------------------------------------------
+# Cache do deploy e logs da CLI. O .firebaserc (qual projeto usar) fica de fora
+# também: cada um aponta para o seu com `firebase use --add`.
+.firebase/
+.firebaserc
+firebase-debug.log*
+firebase-debug.*.log
+
+# --- Relatórios de crash da JVM -------------------------------------------
+hs_err_pid*.log
+replay_pid*.log
