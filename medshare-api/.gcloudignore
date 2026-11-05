@@ -1,0 +1,8 @@
+# O que NÃO sobe para o Cloud Build. Sem este arquivo, o .env iria no pacote.
+.env
+*.env.local
+dados/
+build/
+bin/
+.gradle/
+.git/

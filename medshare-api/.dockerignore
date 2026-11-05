@@ -1,0 +1,7 @@
+# Nada disto entra na imagem: segredos locais, fotos reais e saída de build.
+.env
+*.env.local
+dados/
+build/
+bin/
+.gradle/

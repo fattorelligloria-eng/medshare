@@ -1,0 +1,3 @@
+# Script de shell roda no Linux (Docker, CI): CRLF aqui quebra o build com
+# "./gradlew: not found", mesmo com o arquivo existindo.
+medshare-api/gradlew text eol=lf

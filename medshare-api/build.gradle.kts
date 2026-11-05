@@ -28,6 +28,9 @@ dependencies {
     implementation("org.flywaydb:flyway-database-postgresql")
     runtimeOnly("org.postgresql:postgresql")
 
+    // Conexao com o Cloud SQL em producao, sem IP liberado e sem senha no caminho aberto.
+    runtimeOnly("com.google.cloud.sql:postgres-socket-factory:1.21.0")
+
     // JWT: api em tempo de compilacao, implementacao so em runtime.
     implementation("io.jsonwebtoken:jjwt-api:0.12.6")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
