@@ -9,13 +9,19 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 /**
- * Le a primeira planilha de um arquivo .xlsx, linha por linha.
+ * Le as planilhas de um arquivo .xlsx em ordem, linha por linha.
+ *
+ * A ANVISA separou a lista em duas abas: "Cabecalho", com a data de publicacao,
+ * e os dados na seguinte. Ler todas cobre esse formato e o antigo, de aba unica.
  *
  * A lista da CMED tem 26 mil linhas e 74 colunas: o XML da planilha passa de
  * 60 MB. Carregar isso inteiro em memoria (como faz o Apache POI no modo
@@ -28,21 +34,38 @@ import java.util.zip.ZipFile;
  */
 public final class LeitorDeXlsx {
 
-    private static final String PLANILHA = "xl/worksheets/sheet1.xml";
+    private static final Pattern PLANILHA = Pattern.compile("xl/worksheets/sheet([0-9]+)[.]xml");
     private static final String TEXTOS = "xl/sharedStrings.xml";
 
     private LeitorDeXlsx() { }
+
+    /** Pelo numero, nao pelo nome: em ordem de texto, sheet10 viria antes de sheet2. */
+    private static List<ZipEntry> planilhasEmOrdem(ZipFile zip) {
+        List<ZipEntry> planilhas = new ArrayList<>();
+        zip.stream()
+                .filter(entrada -> PLANILHA.matcher(entrada.getName()).matches())
+                .forEach(planilhas::add);
+        planilhas.sort(Comparator.comparingInt(LeitorDeXlsx::numeroDaPlanilha));
+        return planilhas;
+    }
+
+    private static int numeroDaPlanilha(ZipEntry entrada) {
+        Matcher nome = PLANILHA.matcher(entrada.getName());
+        return nome.matches() ? Integer.parseInt(nome.group(1)) : Integer.MAX_VALUE;
+    }
 
     /** Chama {@code aoLerLinha} para cada linha, com as celulas nas posicoes das colunas. */
     public static void lerLinhas(Path arquivo, Consumer<List<String>> aoLerLinha) {
         try (ZipFile zip = new ZipFile(arquivo.toFile())) {
             List<String> textos = lerTextosCompartilhados(zip);
-            ZipEntry planilha = zip.getEntry(PLANILHA);
-            if (planilha == null) {
-                throw new ArquivoCmedInvalido("O arquivo não tem a planilha " + PLANILHA);
+            List<ZipEntry> planilhas = planilhasEmOrdem(zip);
+            if (planilhas.isEmpty()) {
+                throw new ArquivoCmedInvalido("O arquivo não tem nenhuma planilha");
             }
-            try (InputStream entrada = zip.getInputStream(planilha)) {
-                lerPlanilha(entrada, textos, aoLerLinha);
+            for (ZipEntry planilha : planilhas) {
+                try (InputStream entrada = zip.getInputStream(planilha)) {
+                    lerPlanilha(entrada, textos, aoLerLinha);
+                }
             }
         } catch (IOException e) {
             throw new UncheckedIOException("Não consegui abrir " + arquivo, e);
