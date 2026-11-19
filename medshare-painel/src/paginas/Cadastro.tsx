@@ -111,7 +111,7 @@ export function Cadastro() {
 
       // Quem vai receber cai direto na verificação do NIS: sem ela não há
       // reserva, e descobrir isso só na hora de reservar seria frustrante.
-      navegar(querReceber ? '/app/cadunico?novo=1' : '/app/doacoes', { replace: true })
+      navegar(querReceber ? '/app/cadunico?novo=1' : '/app/inicio', { replace: true })
     } catch (e) {
       definirErro(e)
       definirEnviando(false)

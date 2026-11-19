@@ -17,6 +17,11 @@ import { Reservas } from './app/Reservas'
 import { Conta } from './app/Conta'
 import { Farmacias as FarmaciasDoApp } from './app/Farmacias'
 import { Ajuda } from './app/Ajuda'
+import { Inicio } from './app/Inicio'
+import { Atendimento } from './app/Atendimento'
+import { Carteirinha } from './app/Carteirinha'
+import { FotoDePerfilTela } from './app/FotoDePerfilTela'
+import { Historias } from './app/Historias'
 import { Sobre } from './app/Sobre'
 
 import { Layout } from './componentes/Layout'
@@ -26,6 +31,7 @@ import { FilaDaCentral } from './paginas/FilaDaCentral'
 import { Rastreio } from './paginas/Rastreio'
 import { Farmacias } from './paginas/Farmacias'
 import { Notificacoes } from './paginas/Notificacoes'
+import { AtendimentoDaCentral } from './paginas/AtendimentoDaCentral'
 
 /**
  * Duas áreas, propositalmente diferentes:
@@ -50,11 +56,10 @@ export function App() {
     )
   }
 
-  const telaInicial = temPapel('DOADOR')
-    ? '/app/doacoes'
-    : temPapel('BENEFICIARIO')
-      ? '/app/pedidos'
-      : temPapel('FARMACEUTICO')
+  // Quem doa ou recebe começa pelo Início; a equipe, pela sua mesa de trabalho.
+  const telaInicial = temPapel('DOADOR') || temPapel('BENEFICIARIO')
+    ? '/app/inicio'
+    : temPapel('FARMACEUTICO')
         ? '/painel/balcao'
         : '/painel/central'
 
@@ -62,6 +67,8 @@ export function App() {
     <Routes>
       {/* --- o aplicativo, com navegação de baixo --- */}
       <Route element={<AreaDoApp />}>
+        <Route path="/app/inicio" element={<Inicio />} />
+        <Route path="/app/atendimento" element={<Atendimento />} />
         {temPapel('DOADOR') && <Route path="/app/doacoes" element={<Doacoes />} />}
         {temPapel('BENEFICIARIO') && (
           <>
@@ -78,6 +85,9 @@ export function App() {
       {/* --- telas internas do aplicativo, sem navegação de baixo --- */}
       <Route element={<TelaInterna />}>
         <Route path="/app/notificacoes" element={<Notificacoes />} />
+        <Route path="/app/carteirinha" element={<Carteirinha />} />
+        <Route path="/app/conta/foto" element={<FotoDePerfilTela />} />
+        <Route path="/app/historias" element={<Historias />} />
         {temPapel('DOADOR') && (
           <>
             <Route path="/app/doacoes/nova" element={<NovaDoacao />} />
@@ -112,6 +122,7 @@ export function App() {
           <>
             <Route path="/painel/central" element={<FilaDaCentral />} />
             <Route path="/painel/farmacias" element={<Farmacias />} />
+            <Route path="/painel/atendimento" element={<AtendimentoDaCentral />} />
           </>
         )}
         <Route path="/painel/notificacoes" element={<Notificacoes noPainel />} />

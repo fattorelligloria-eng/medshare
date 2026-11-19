@@ -17,7 +17,7 @@ export function SecaoRecolhivel({
   children,
 }: {
   titulo: string
-  icone: ReactNode
+  icone?: ReactNode
   className?: string
   abertaDeInicio?: boolean
   children: ReactNode

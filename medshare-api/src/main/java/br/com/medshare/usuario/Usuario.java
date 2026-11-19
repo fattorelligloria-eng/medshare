@@ -1,5 +1,6 @@
 package br.com.medshare.usuario;
 
+import br.com.medshare.comum.GeradorDeCodigo;
 import jakarta.persistence.*;
 
 import java.time.Instant;
@@ -49,6 +50,17 @@ public class Usuario {
     @Column(name = "senha_alterada_em")
     private OffsetDateTime senhaAlteradaEm;
 
+    /**
+     * Endereco canonico da foto de perfil (ver RepositorioDeFotos). Nunca sai
+     * da API assim: quem exibe recebe um link assinado e com prazo.
+     */
+    @Column(name = "foto_url", length = 300)
+    private String fotoUrl;
+
+    /** 12 digitos sorteados no cadastro; nao muda depois. */
+    @Column(name = "numero_carteirinha", nullable = false, unique = true, length = 12, updatable = false)
+    private String numeroCarteirinha;
+
     protected Usuario() { }
 
     public Usuario(String nome, String cpf, String email, String senhaHash,
@@ -62,6 +74,26 @@ public class Usuario {
         // EnumSet.copyOf estoura com colecao vazia; noneOf + addAll aceita.
         this.papeis = EnumSet.noneOf(Papel.class);
         this.papeis.addAll(papeis);
+        this.numeroCarteirinha = GeradorDeCodigo.numeroDeCarteirinha();
+    }
+
+    /**
+     * Sorteia outro numero antes de gravar, quando o sorteado ja e de alguem.
+     * Com 12 digitos isso quase nunca acontece, mas "quase nunca" nao e nunca.
+     */
+    public void sortearOutroNumeroDeCarteirinha() {
+        if (id != null) {
+            throw new IllegalStateException("O número da carteirinha não muda depois do cadastro.");
+        }
+        this.numeroCarteirinha = GeradorDeCodigo.numeroDeCarteirinha();
+    }
+
+    public void trocarFoto(String urlCanonica) {
+        this.fotoUrl = urlCanonica;
+    }
+
+    public void removerFoto() {
+        this.fotoUrl = null;
     }
 
     public boolean temPapel(Papel papel) {
@@ -163,5 +195,13 @@ public class Usuario {
 
     public OffsetDateTime getCriadoEm() {
         return criadoEm;
+    }
+
+    public String getFotoUrl() {
+        return fotoUrl;
+    }
+
+    public String getNumeroCarteirinha() {
+        return numeroCarteirinha;
     }
 }

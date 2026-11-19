@@ -196,8 +196,12 @@ public class DadosDeDemonstracao implements CommandLineRunner {
                                  double latitude, double longitude) {
         Endereco endereco = endereco("01310100", "Avenida Paulista", "1000", "Bela Vista",
                 "São Paulo", latitude, longitude);
-        return usuarios.save(new Usuario(nome, cpf, email,
-                codificador.encode(SENHA_DE_TESTE), "11999990000", endereco, papeis));
+        Usuario novo = new Usuario(nome, cpf, email,
+                codificador.encode(SENHA_DE_TESTE), "11999990000", endereco, papeis);
+        while (usuarios.existsByNumeroCarteirinha(novo.getNumeroCarteirinha())) {
+            novo.sortearOutroNumeroDeCarteirinha();
+        }
+        return usuarios.save(novo);
     }
 
     private Endereco endereco(String cep, String logradouro, String numero, String bairro,

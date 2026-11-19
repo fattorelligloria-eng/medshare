@@ -96,3 +96,30 @@ export function iniciais(nome: string): string {
   const ultima = partes.length > 1 ? partes[partes.length - 1][0] : ''
   return (primeira + ultima).toUpperCase()
 }
+
+/** "435760267570" vira "4357 6026 7570": em grupos de quatro, como numa carteirinha. */
+export function numeroDaCarteirinha(numero?: string | null): string {
+  if (!numero) return '—'
+  return numero.replace(/(\d{4})(?=\d)/g, '$1 ')
+}
+
+/** "2027-11-19" vira "11/2027": validade de carteirinha se diz pelo mês. */
+export function mesEAno(iso?: string | null): string {
+  if (!iso) return '—'
+  const [ano, mes] = iso.slice(0, 7).split('-')
+  return ano && mes ? `${mes}/${ano}` : iso
+}
+
+/**
+ * O que a pessoa faz no MedShare, sem supor gênero: "Doa e recebe medicamentos".
+ * Equipe da farmácia e da central não aparece aqui — a carteirinha é de quem
+ * doa ou recebe.
+ */
+export function perfilDaPessoa(papeis: string[]): string {
+  const doa = papeis.includes('DOADOR')
+  const recebe = papeis.includes('BENEFICIARIO')
+  if (doa && recebe) return 'Doa e recebe medicamentos'
+  if (recebe) return 'Recebe medicamentos'
+  if (doa) return 'Doa medicamentos'
+  return 'Equipe MedShare'
+}

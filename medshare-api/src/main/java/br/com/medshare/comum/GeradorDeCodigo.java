@@ -26,6 +26,21 @@ public class GeradorDeCodigo {
         return sortear(8);
     }
 
+    /**
+     * Numero da carteirinha digital: 12 digitos sorteados.
+     *
+     * So numeros, como em qualquer carteirinha, e nunca o id do cadastro — o id
+     * e uma sequencia e deixaria adivinhar o numero de outras pessoas. Estatico
+     * porque o proprio Usuario sorteia o seu ao nascer.
+     */
+    public static String numeroDeCarteirinha() {
+        StringBuilder numero = new StringBuilder(12);
+        for (int i = 0; i < 12; i++) {
+            numero.append(SORTEIO.nextInt(10));
+        }
+        return numero.toString();
+    }
+
     private String sortear(int tamanho) {
         StringBuilder codigo = new StringBuilder(tamanho);
         for (int i = 0; i < tamanho; i++) {

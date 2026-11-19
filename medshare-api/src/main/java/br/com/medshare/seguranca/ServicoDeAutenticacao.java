@@ -59,6 +59,9 @@ public class ServicoDeAutenticacao {
         Usuario novo = new Usuario(pedido.nome(), pedido.cpf(), normalizar(pedido.email()),
                 codificador.encode(pedido.senha()), pedido.telefone(), endereco,
                 EnumSet.of(Papel.DOADOR));
+        while (usuarios.existsByNumeroCarteirinha(novo.getNumeroCarteirinha())) {
+            novo.sortearOutroNumeroDeCarteirinha();
+        }
 
         return montarResposta(usuarios.save(novo));
     }

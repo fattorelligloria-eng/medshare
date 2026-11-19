@@ -195,3 +195,25 @@ export const Escudo = ({ tamanho = 20, cor = 'currentColor' }: Props) => (
     <path d="m9 12 2 2 4-4" />
   </svg>
 )
+
+export const Casa = ({ tamanho = 21, cor = 'currentColor' }: Props) => (
+  <svg {...base(tamanho, cor)}>
+    <path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />
+  </svg>
+)
+
+export const Fone = ({ tamanho = 21, cor = 'currentColor' }: Props) => (
+  <svg {...base(tamanho, cor)}>
+    <path d="M4 14v-2a8 8 0 0 1 16 0v2" />
+    <rect x="3" y="13" width="4" height="6" rx="1.5" />
+    <rect x="17" y="13" width="4" height="6" rx="1.5" />
+    <path d="M19 19c0 1.5-2 2.5-5 2.5" />
+  </svg>
+)
+
+export const Cartao = ({ tamanho = 21, cor = 'currentColor' }: Props) => (
+  <svg {...base(tamanho, cor)}>
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+    <path d="M3 10h18M7 15h4" />
+  </svg>
+)

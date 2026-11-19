@@ -3,14 +3,20 @@ package br.com.medshare.usuario;
 import br.com.medshare.comum.RegraDeNegocioViolada;
 import br.com.medshare.doacao.DoacaoRepository;
 import br.com.medshare.doacao.StatusDoacao;
+import br.com.medshare.integracao.RepositorioDeFotos;
+import br.com.medshare.necessidade.VerificacaoCadUnico;
+import br.com.medshare.necessidade.VerificacaoCadUnicoRepository;
 import br.com.medshare.usuario.dto.MeuImpacto;
+import br.com.medshare.usuario.dto.MeusDados;
 import br.com.medshare.usuario.dto.PedidoDeAtualizacaoDeCadastro;
 import br.com.medshare.usuario.dto.PedidoDeNovaSenha;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** A conta da propria pessoa: ver, corrigir e trocar a senha. */
+import java.time.LocalDate;
+
+/** A conta da propria pessoa: ver, corrigir, trocar a senha e a foto. */
 @Service
 public class ServicoDeUsuario {
 
@@ -18,13 +24,51 @@ public class ServicoDeUsuario {
     private final ServicoDeEndereco enderecos;
     private final DoacaoRepository doacoes;
     private final PasswordEncoder codificador;
+    private final RepositorioDeFotos fotos;
+    private final VerificacaoCadUnicoRepository verificacoes;
 
     public ServicoDeUsuario(UsuarioRepository usuarios, ServicoDeEndereco enderecos,
-                            DoacaoRepository doacoes, PasswordEncoder codificador) {
+                            DoacaoRepository doacoes, PasswordEncoder codificador,
+                            RepositorioDeFotos fotos, VerificacaoCadUnicoRepository verificacoes) {
         this.usuarios = usuarios;
         this.enderecos = enderecos;
         this.doacoes = doacoes;
         this.codificador = codificador;
+        this.fotos = fotos;
+        this.verificacoes = verificacoes;
+    }
+
+    /**
+     * O que a conta, o inicio e a carteirinha mostram.
+     *
+     * A validade do CadUnico so vai junto enquanto a verificacao vale: uma data
+     * vencida na carteirinha faria a pessoa achar que ainda pode pedir.
+     */
+    @Transactional(readOnly = true)
+    public MeusDados meusDados(Usuario usuario) {
+        LocalDate cadUnicoValidoAte = verificacoes.findFirstByUsuarioIdOrderByValidoAteDesc(usuario.getId())
+                .filter(VerificacaoCadUnico::estaVigente)
+                .map(VerificacaoCadUnico::getValidoAte)
+                .orElse(null);
+        return MeusDados.de(usuario, fotos.urlAssinada(usuario.getFotoUrl()), cadUnicoValidoAte);
+    }
+
+    /**
+     * Foto de perfil: so vale foto enviada pelo nosso /api/fotos, pelo mesmo
+     * motivo das fotos de embalagem — um endereco qualquer poderia apontar para
+     * a imagem de outra pessoa ou para dentro da rede do servidor.
+     */
+    @Transactional
+    public Usuario trocarFoto(Usuario usuario, String urlDaFoto) {
+        fotos.exigirFotoNossa(urlDaFoto);
+        usuario.trocarFoto(urlDaFoto);
+        return usuarios.save(usuario);
+    }
+
+    @Transactional
+    public Usuario removerFoto(Usuario usuario) {
+        usuario.removerFoto();
+        return usuarios.save(usuario);
     }
 
     /**

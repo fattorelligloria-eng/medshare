@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api/cliente'
 import type { Doacao, Pagina } from '../api/tipos'
-import { useAutenticacao } from '../contexto/Autenticacao'
 import { AvisoDeErro } from '../componentes/Aviso'
 import { Status, explicar } from '../componentes/Status'
 import { Marca } from '../componentes/Logo'
@@ -10,10 +9,10 @@ import { BotaoDeNotificacoes } from '../componentes/BotaoDeNotificacoes'
 import { EsqueletoDeLista } from '../componentes/Esqueleto'
 import { TelaVazia, DesenhoDeCaixa } from '../componentes/TelaVazia'
 import { Confere, Lugar, Mais, Relogio } from '../componentes/Icones'
-import { data, diaEHora, linkDoMapa, primeiroNome, quantoFalta } from '../formatos'
+import { data, diaEHora, linkDoMapa, quantoFalta } from '../formatos'
 
-/** Os estados em que a caixa parou de andar. */
-const ENCERRADOS = ['ENTREGUE', 'RECUSADA', 'CANCELADA', 'REJEITADA', 'DESCARTADA']
+/** Os estados em que a caixa parou de andar. O Início usa para contar as que estão andando. */
+export const ENCERRADOS = ['ENTREGUE', 'RECUSADA', 'CANCELADA', 'REJEITADA', 'DESCARTADA']
 
 type Aba = 'andamento' | 'concluidas' | 'recusadas'
 
@@ -45,7 +44,6 @@ const ABAS: { chave: Aba; nome: string; cabe: (d: Doacao) => boolean }[] = [
  * descobrir que precisava sair de casa na quinta.
  */
 export function Doacoes() {
-  const { sessao } = useAutenticacao()
   const [doacoes, definirDoacoes] = useState<Doacao[]>([])
   const [carregando, definirCarregando] = useState(true)
   const [erro, definirErro] = useState<unknown>(null)
@@ -89,8 +87,9 @@ export function Doacoes() {
           duas colunas — o resumo à esquerda, a lista à direita. No celular a
           ordem do HTML é a mesma de antes e tudo empilha. */}
       <div className="conteudo-app cabeca-doacoes" style={{ paddingTop: 28 }}>
+        {/* A saudação mora no Início; aqui a tela diz o que ela é. */}
         <h1 className="humano" style={{ fontSize: '1.625rem', margin: '0 0 12px' }}>
-          Oi, <em>{primeiroNome(sessao?.nome ?? '')}</em>
+          Minhas doações
         </h1>
         {doacoes.length > 0 && (
           <Link to="/app/doacoes/nova" className="botao principal so-no-computador">

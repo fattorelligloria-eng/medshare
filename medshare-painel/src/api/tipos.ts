@@ -283,6 +283,33 @@ export interface MeusDados {
   } | null
   papeis: string[]
   membroDesde: string
+  /** Link assinado e com prazo (15 min). Ausente enquanto a pessoa não coloca foto. */
+  fotoUrl?: string | null
+  /** 12 dígitos sorteados no cadastro. */
+  numeroCarteirinha: string
+  /** Só vem enquanto a verificação do CadÚnico vale. */
+  cadUnicoValidoAte?: string | null
+}
+
+export type AssuntoDaMensagem = 'DUVIDA' | 'PROBLEMA_COM_CAIXA' | 'SUGESTAO_OU_RECLAMACAO' | 'OUTRO'
+
+/** Mensagem da pessoa para a central, com a resposta quando houver. */
+export interface MensagemDeAtendimento {
+  id: number
+  assunto: AssuntoDaMensagem
+  texto: string
+  criadoEm: string
+  resposta?: string | null
+  respondidaEm?: string | null
+}
+
+/** A mesma mensagem, na mesa da central: com o nome de quem escreveu. */
+export interface MensagemNaCentral {
+  id: number
+  assunto: AssuntoDaMensagem
+  texto: string
+  criadoEm: string
+  nome: string
 }
 
 export interface MeuImpacto {

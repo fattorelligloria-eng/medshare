@@ -22,7 +22,9 @@ class TrocaDeSenhaTest {
 
     private final ServicoDeUsuario servico = new ServicoDeUsuario(
             usuarios, Mockito.mock(ServicoDeEndereco.class),
-            Mockito.mock(br.com.medshare.doacao.DoacaoRepository.class), codificador);
+            Mockito.mock(br.com.medshare.doacao.DoacaoRepository.class), codificador,
+            Mockito.mock(br.com.medshare.integracao.RepositorioDeFotos.class),
+            Mockito.mock(br.com.medshare.necessidade.VerificacaoCadUnicoRepository.class));
 
     private Usuario comSenha(String senha) {
         return new Usuario("Ana Doadora", "11122233344", "ana@medshare.test",
