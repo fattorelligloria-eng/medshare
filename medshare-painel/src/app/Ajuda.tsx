@@ -1,16 +1,15 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Marca } from '../componentes/Logo'
+import { Navigate } from 'react-router-dom'
 
 /**
- * Perguntas frequentes.
+ * Perguntas frequentes. Moram na tela de Atendimento, dentro de "Dúvidas
+ * frequentes"; este arquivo guarda só o texto.
  *
  * As respostas aqui são as regras de negócio ditas em português. Quando a RN02
  * mudar de 30 para outro número, esta tela mente — então cada resposta diz a
  * regra em vez de repetir o valor solto, e fica mais fácil achar o que
  * atualizar.
  */
-const PERGUNTAS = [
+export const PERGUNTAS = [
   {
     p: 'Que medicamento eu posso doar?',
     r: `Caixa lacrada, de fábrica, que nunca foi aberta. A validade precisa estar
@@ -70,45 +69,7 @@ const PERGUNTAS = [
   },
 ]
 
+/** O endereço antigo da ajuda continua funcionando: leva para o Atendimento. */
 export function Ajuda() {
-  const [aberta, definirAberta] = useState<number | null>(0)
-
-  return (
-    <>
-      <div className="topo-app">
-        <div className="cabecalho-app">
-          <Marca />
-        </div>
-      </div>
-
-      <div className="conteudo-app cresce" style={{ paddingTop: 28 }}>
-        <h1 className="humano" style={{ fontSize: '1.625rem' }}>Perguntas frequentes</h1>
-        <p style={{ margin: '8px 0 24px', fontSize: '0.9062rem', lineHeight: 1.5, color: 'var(--tinta-media)' }}>
-          O que as pessoas mais perguntam antes de doar pela primeira vez.
-        </p>
-
-        <div className="perguntas">
-          {PERGUNTAS.map(({ p, r }, i) => (
-            <div className={aberta === i ? 'pergunta aberta' : 'pergunta'} key={p}>
-              <h2>
-                <button
-                  type="button"
-                  aria-expanded={aberta === i}
-                  onClick={() => definirAberta(aberta === i ? null : i)}
-                >
-                  <span>{p}</span>
-                  <span className="seta" aria-hidden="true">{aberta === i ? '−' : '+'}</span>
-                </button>
-              </h2>
-              {aberta === i && <p>{r.replace(/\s+/g, ' ').trim()}</p>}
-            </div>
-          ))}
-        </div>
-
-        <p style={{ marginTop: 30, fontSize: '0.875rem', color: 'var(--tinta-media)' }}>
-          Não achou o que procurava? Veja <Link to="/app/sobre">sobre o MedShare</Link>.
-        </p>
-      </div>
-    </>
-  )
+  return <Navigate to="/app/atendimento" replace />
 }

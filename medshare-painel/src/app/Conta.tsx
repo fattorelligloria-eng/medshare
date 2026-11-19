@@ -1,9 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Acessibilidade } from '../componentes/Acessibilidade'
 import { QueroTambemReceber } from '../componentes/QueroTambemReceber'
-import { api } from '../api/cliente'
-import type { MeuImpacto, MeusDados } from '../api/tipos'
 import { useAutenticacao } from '../contexto/Autenticacao'
 import { AvisoDeErro, AvisoDeSucesso } from '../componentes/Aviso'
 import { Marca } from '../componentes/Logo'
@@ -12,44 +10,29 @@ import { DadosDoCadastro } from '../componentes/DadosDoCadastro'
 import { TrocaDeSenha } from '../componentes/TrocaDeSenha'
 import { Procuradores } from '../componentes/Procuradores'
 import { SecaoRecolhivel } from '../componentes/SecaoRecolhivel'
-import { Acessivel, Ficha, Senha } from '../componentes/Icones'
-import { iniciais } from '../formatos'
+import { FotoDePerfil } from '../componentes/FotoDePerfil'
+import { guardarMeusDados, useMeusDados } from '../componentes/MeusDados'
+import { Seta } from '../componentes/Icones'
+import { perfilDaPessoa } from '../formatos'
 
 /**
- * A conta.
+ * A conta, organizada como lista: "Sua conta", "Preferências" e "Sobre".
  *
- * Esta tela tinha o nome da pessoa e um botão de sair. Todo o resto do cadastro
- * — CPF, telefone, endereço inteiro — estava no banco desde o primeiro dia e
- * nunca apareceu. Agora aparece, e dá para corrigir.
+ * Cada linha ou leva a outra tela (foto, notificações, sobre) ou abre ali
+ * mesmo (dados do cadastro, senha, quem pode retirar, acessibilidade). Abrir
+ * no lugar é de propósito: corrigir o telefone não deveria tirar a pessoa da
+ * conta.
  *
- * As seções vêm na ordem de quem se pergunta "meus dados estão certos?", e não
- * na ordem em que foram programadas.
+ * O que muda a vida da pessoa no MedShare — passar a receber, o CadÚnico, o
+ * painel da farmácia — vem depois da lista, em cartões, e sair fica no fim.
  */
 export function Conta() {
   const { sessao, sair, temPapel } = useAutenticacao()
-  const [dados, definirDados] = useState<MeusDados | null>(null)
-  const [impacto, definirImpacto] = useState<MeuImpacto | null>(null)
-  const [erro, definirErro] = useState<unknown>(null)
+  const { dados, erro, recarregar } = useMeusDados()
   const [recado, definirRecado] = useState<string | null>(null)
-  const [carregando, definirCarregando] = useState(true)
-
-  const carregar = useCallback(() => {
-    definirCarregando(true)
-    definirErro(null)
-    api.get<MeusDados>('/usuarios/eu')
-      .then(definirDados)
-      .catch(definirErro)
-      .finally(() => definirCarregando(false))
-  }, [])
-
-  useEffect(() => { carregar() }, [carregar])
-
-  useEffect(() => {
-    if (!temPapel('DOADOR')) return
-    api.get<MeuImpacto>('/usuarios/eu/impacto').then(definirImpacto).catch(() => {})
-  }, [temPapel])
 
   const nome = dados?.nome ?? sessao?.nome ?? ''
+  const ehBeneficiario = temPapel('BENEFICIARIO')
 
   return (
     <>
@@ -62,107 +45,112 @@ export function Conta() {
       <div className="conteudo-app cresce" style={{ paddingTop: 16 }}>
         <h1 className="humano" style={{ fontSize: '1.75rem' }}>Conta</h1>
 
-        <div className="conta-grade">
-        <div className="conta-coluna">
         <div className="cartao-de-perfil" style={{ marginTop: 14 }}>
-          <span className="iniciais" aria-hidden="true">{iniciais(nome)}</span>
-          <p className="nome-completo">{nome}</p>
+          <FotoDePerfil url={dados?.fotoUrl} tamanho={56} />
+          <div>
+            <p className="nome-completo">{nome}</p>
+            <p className="perfil">{perfilDaPessoa(dados?.papeis ?? sessao?.papeis ?? [])}</p>
+            <Link to="/app/conta/foto" className="trocar-foto">
+              {dados?.fotoUrl ? 'Trocar foto' : 'Colocar foto'}
+            </Link>
+          </div>
         </div>
 
-        <AvisoDeErro erro={erro} aoTentarDeNovo={carregar} />
+        <AvisoDeErro erro={erro} aoTentarDeNovo={recarregar} />
         {recado && <AvisoDeSucesso>{recado}</AvisoDeSucesso>}
 
-        {/* --- o impacto, para quem doa ---
-            Sem valor em reais, de propósito: ver quanto custava a caixa doada
-            é o caminho mais curto para a pessoa se arrepender de ter doado. */}
-        {impacto && impacto.caixasDoadas > 0 && (
-          <section className="cartao-conta" aria-labelledby="t-impacto">
-            <h2 id="t-impacto" className="humano">Seu <em>impacto</em></h2>
-            <div className="numeros">
-              <div>
-                <span className="n">{impacto.caixasDoadas}</span>
-                <span className="r">{impacto.caixasDoadas === 1 ? 'caixa doada' : 'caixas doadas'}</span>
-              </div>
-              <div>
-                <span className="n">{impacto.caixasEntregues}</span>
-                <span className="r">
-                  {impacto.caixasEntregues === 1 ? 'chegou a alguém' : 'chegaram a alguém'}
-                </span>
-              </div>
+        <div className="conta-grade">
+          <div className="conta-coluna">
+            <h2 className="grupo-da-conta">Sua conta</h2>
+            <div className="lista-da-conta">
+              <Link to="/app/conta/foto" className="linha-da-conta">
+                <span><strong>Foto de perfil</strong><span>Aparece na sua carteirinha digital</span></span>
+                <Seta />
+              </Link>
+
+              <SecaoRecolhivel titulo="Dados do cadastro" abertaDeInicio={telaGrande()}>
+                {!dados && !erro && <EsqueletoDeBloco altura={220} />}
+                {dados && (
+                  <DadosDoCadastro
+                    dados={dados}
+                    aoSalvar={(novos) => {
+                      if (sessao) guardarMeusDados(sessao.usuarioId, novos)
+                      definirRecado('Cadastro atualizado.')
+                    }}
+                  />
+                )}
+              </SecaoRecolhivel>
+
+              <SecaoRecolhivel titulo="Trocar senha">
+                <TrocaDeSenha aoTrocar={() => definirRecado('Senha alterada.')} />
+              </SecaoRecolhivel>
+
+              {ehBeneficiario && (
+                <SecaoRecolhivel titulo="Quem pode retirar por você">
+                  <Procuradores />
+                </SecaoRecolhivel>
+              )}
             </div>
-          </section>
-        )}
 
-        {/* --- CadÚnico, para quem recebe --- */}
-        {temPapel('BENEFICIARIO') && (
-          <section className="cartao-conta" aria-labelledby="t-cadunico">
-            <h2 id="t-cadunico" className="humano">Verificação no CadÚnico</h2>
-            <p className="explicacao-secao">
-              Necessária para pedir medicamentos. Vale por 12 meses.
-            </p>
-            <Link to="/app/cadunico" className="botao secundario">Informar meu NIS</Link>
-          </section>
-        )}
+            {/* --- o que muda o que a pessoa faz no MedShare --- */}
+            {ehBeneficiario && (
+              <section className="cartao-conta" aria-labelledby="t-cadunico">
+                <h2 id="t-cadunico" className="humano">Verificação no CadÚnico</h2>
+                <p className="explicacao-secao">
+                  Necessária para pedir medicamentos. Vale por 12 meses.
+                </p>
+                <Link to="/app/cadunico" className="botao secundario">Informar meu NIS</Link>
+              </section>
+            )}
 
-        {!temPapel('BENEFICIARIO') && <QueroTambemReceber />}
+            {!ehBeneficiario && <QueroTambemReceber />}
 
-        {temPapel('BENEFICIARIO') && <Procuradores />}
+            {(temPapel('FARMACEUTICO') || temPapel('ADMIN')) && (
+              <section className="cartao-conta" aria-labelledby="t-trabalho">
+                <h2 id="t-trabalho" className="humano">Área de trabalho</h2>
+                <p className="explicacao-secao">
+                  O balcão da farmácia e a central de análise ficam no painel.
+                </p>
+                <Link to="/painel" className="botao secundario">Abrir o painel</Link>
+              </section>
+            )}
+          </div>
 
-        {(temPapel('FARMACEUTICO') || temPapel('ADMIN')) && (
-          <section className="cartao-conta" aria-labelledby="t-trabalho">
-            <h2 id="t-trabalho" className="humano">Área de trabalho</h2>
-            <p className="explicacao-secao">
-              O balcão da farmácia e a central de análise ficam no painel.
-            </p>
-            <Link to="/painel" className="botao secundario">Abrir o painel</Link>
-          </section>
-        )}
+          <div className="conta-coluna">
+            <h2 className="grupo-da-conta">Preferências</h2>
+            <div className="lista-da-conta">
+              {/* No computador estes controles ficam no menu lateral; no
+                  celular não existe menu lateral, e é aqui que a pessoa procura. */}
+              <SecaoRecolhivel titulo="Acessibilidade" className="so-no-celular">
+                <p className="explicacao-secao" style={{ marginTop: 0 }}>
+                  Tamanho da letra e alto contraste. Fica guardado neste aparelho.
+                </p>
+                <Acessibilidade />
+              </SecaoRecolhivel>
+              <Link to="/app/notificacoes" className="linha-da-conta">
+                <span><strong>Notificações</strong><span>Avisos sobre suas caixas e pedidos</span></span>
+                <Seta />
+              </Link>
+            </div>
 
-        </div>
+            <h2 className="grupo-da-conta">Sobre</h2>
+            <div className="lista-da-conta">
+              <Link to="/app/sobre" className="linha-da-conta">
+                <span><strong>Sobre o MedShare</strong><span>O que ele é e o que ele não é</span></span>
+                <Seta />
+              </Link>
+              <Link to="/app/atendimento" className="linha-da-conta">
+                <span><strong>Atendimento</strong><span>Dúvidas frequentes e fale com a central</span></span>
+                <Seta />
+              </Link>
+            </div>
 
-        <div className="conta-coluna">
-        {/* --- o que se consulta de vez em quando: fechado até a pessoa abrir.
-            No computador, onde sobra espaço, os dados já aparecem abertos. --- */}
-        <SecaoRecolhivel
-          titulo="Dados do cadastro"
-          icone={<Ficha cor="var(--verde)" />}
-          abertaDeInicio={telaGrande()}
-        >
-          {carregando && <EsqueletoDeBloco altura={220} />}
-          {dados && (
-            <DadosDoCadastro
-              dados={dados}
-              aoSalvar={(novos) => {
-                definirDados(novos)
-                definirRecado('Cadastro atualizado.')
-              }}
-            />
-          )}
-        </SecaoRecolhivel>
-
-        <SecaoRecolhivel titulo="Trocar senha" icone={<Senha tamanho={20} cor="var(--verde)" />}>
-          <TrocaDeSenha aoTrocar={() => definirRecado('Senha alterada.')} />
-        </SecaoRecolhivel>
-
-        {/* No computador estes controles ficam no menu lateral; no celular não
-            existe menu lateral, e é aqui que a pessoa vem procurar. */}
-        <SecaoRecolhivel
-          titulo="Acessibilidade"
-          icone={<Acessivel cor="var(--verde)" />}
-          className="so-no-celular"
-        >
-          <p className="explicacao-secao" style={{ marginTop: 0 }}>
-            Tamanho da letra e alto contraste. Fica guardado neste aparelho.
-          </p>
-          <Acessibilidade />
-        </SecaoRecolhivel>
-
-        {/* Fica no fim, e não no rodapé que gruda: sair não é a ação principal
-            desta tela. É o único lugar do aplicativo onde sair aparece. */}
-        <div style={{ margin: '18px 0 28px' }}>
-          <button className="sair-da-conta" onClick={sair}>Sair da conta</button>
-        </div>
-        </div>
+            {/* Fica no fim, e não no rodapé que gruda: sair não é a ação
+                principal desta tela. É o único lugar do aplicativo onde sair aparece. */}
+            <div style={{ margin: '22px 0 28px' }}>
+              <button className="sair-da-conta" onClick={sair}>Sair da conta</button>
+            </div>
+          </div>
         </div>
       </div>
     </>

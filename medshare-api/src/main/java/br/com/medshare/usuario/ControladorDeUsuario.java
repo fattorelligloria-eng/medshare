@@ -6,6 +6,7 @@ import br.com.medshare.seguranca.dto.RespostaDeLogin;
 import br.com.medshare.usuario.dto.MeuImpacto;
 import br.com.medshare.usuario.dto.MeusDados;
 import br.com.medshare.usuario.dto.PedidoDeAtualizacaoDeCadastro;
+import br.com.medshare.usuario.dto.PedidoDeFoto;
 import br.com.medshare.usuario.dto.PedidoDeNovaSenha;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -36,12 +37,23 @@ public class ControladorDeUsuario {
 
     @GetMapping("/eu")
     public MeusDados meusDados() {
-        return MeusDados.de(usuarioLogado.obrigatorio());
+        return servico.meusDados(usuarioLogado.obrigatorio());
     }
 
     @PutMapping("/eu")
     public MeusDados atualizar(@Valid @RequestBody PedidoDeAtualizacaoDeCadastro pedido) {
-        return MeusDados.de(servico.atualizar(usuarioLogado.obrigatorio(), pedido));
+        return servico.meusDados(servico.atualizar(usuarioLogado.obrigatorio(), pedido));
+    }
+
+    /** A foto vai antes pelo /api/fotos; aqui so se diz qual delas e a do perfil. */
+    @PutMapping("/eu/foto")
+    public MeusDados trocarFoto(@Valid @RequestBody PedidoDeFoto pedido) {
+        return servico.meusDados(servico.trocarFoto(usuarioLogado.obrigatorio(), pedido.url()));
+    }
+
+    @DeleteMapping("/eu/foto")
+    public MeusDados removerFoto() {
+        return servico.meusDados(servico.removerFoto(usuarioLogado.obrigatorio()));
     }
 
     /**

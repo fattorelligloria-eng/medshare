@@ -28,6 +28,14 @@ class GeradorDeCodigoTest {
     }
 
     @Test
+    @DisplayName("o numero da carteirinha tem 12 digitos, so numeros")
+    void numeroDaCarteirinha() {
+        for (int i = 0; i < 500; i++) {
+            assertThat(GeradorDeCodigo.numeroDeCarteirinha()).matches("[0-9]{12}");
+        }
+    }
+
+    @Test
     @DisplayName("nao repete codigo em 10 mil sorteios")
     void naoRepete() {
         Set<String> sorteados = new HashSet<>();

@@ -29,7 +29,9 @@ class TornarBeneficiarioTest {
         usuarios = mock(UsuarioRepository.class);
         servico = new ServicoDeUsuario(usuarios, mock(ServicoDeEndereco.class),
                 mock(br.com.medshare.doacao.DoacaoRepository.class),
-                mock(org.springframework.security.crypto.password.PasswordEncoder.class));
+                mock(org.springframework.security.crypto.password.PasswordEncoder.class),
+                mock(br.com.medshare.integracao.RepositorioDeFotos.class),
+                mock(br.com.medshare.necessidade.VerificacaoCadUnicoRepository.class));
     }
 
     @Test

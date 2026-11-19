@@ -1,7 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAutenticacao } from '../contexto/Autenticacao'
 import { Marca } from './Logo'
-import { Caixa, Escudo, Farmacia, Lupa, Pessoa, Receita, Sino } from './Icones'
+import { Caixa, Escudo, Farmacia, Fone, Lupa, Pessoa, Receita, Sino } from './Icones'
 
 /**
  * O painel de computador: balcão da farmácia e central de análise.
@@ -33,6 +33,7 @@ export function Layout() {
             <>
               <NavLink to="/painel/central" className={ativo}><Escudo /> Central de análise</NavLink>
               <NavLink to="/painel/farmacias" className={ativo}><Farmacia tamanho={20} /> Farmácias</NavLink>
+              <NavLink to="/painel/atendimento" className={ativo}><Fone tamanho={20} /> Atendimento</NavLink>
             </>
           )}
           <NavLink to="/painel/notificacoes" className={ativo}><Sino /> Notificações</NavLink>
@@ -40,7 +41,7 @@ export function Layout() {
             <NavLink to="/painel/rastreio" className={ativo}><Lupa tamanho={20} /> Rastreio</NavLink>
           )}
           {(temPapel('DOADOR') || temPapel('BENEFICIARIO')) && (
-            <NavLink to="/app/doacoes"><Pessoa tamanho={20} /> Abrir o aplicativo</NavLink>
+            <NavLink to="/app/inicio"><Pessoa tamanho={20} /> Abrir o aplicativo</NavLink>
           )}
         </nav>
 

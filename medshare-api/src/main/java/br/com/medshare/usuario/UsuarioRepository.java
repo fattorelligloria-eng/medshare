@@ -14,6 +14,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     boolean existsByCpf(String cpf);
 
+    boolean existsByNumeroCarteirinha(String numeroCarteirinha);
+
     @org.springframework.data.jpa.repository.Query("""
             SELECT DISTINCT u FROM Usuario u JOIN u.papeis p
             WHERE p = :papel AND u.ativo = TRUE
