@@ -57,7 +57,8 @@ class PapelPelaConfirmacaoDoNisTest {
                         new PropriedadesDoMedShare.Doacao(30, new BigDecimal("150.00")),
                         new PropriedadesDoMedShare.Reserva(120),
                         new PropriedadesDoMedShare.CadUnico(12)),
-                usuarios);
+                usuarios,
+                mock(br.com.medshare.doacao.EventoHistoricoRepository.class));
     }
 
     @Test

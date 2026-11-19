@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,4 +39,29 @@ public interface NecessidadeRepository extends JpaRepository<Necessidade, Long> 
             ORDER BY n.prioridade DESC, n.criadaEm ASC
             """)
     List<Necessidade> filaDoPrincipioAtivo(@Param("principioAtivo") String principioAtivo);
+
+    /**
+     * Quanta gente espera pelo mesmo principio ativo.
+     *
+     * Mesmo recorte da fila de verdade — ativa e fora de revisao — para o
+     * numero na tela nao divergir do numero que o matching enxerga.
+     */
+    @Query("""
+            SELECT COUNT(n) FROM Necessidade n
+            WHERE LOWER(TRIM(n.medicamento.principioAtivo)) = LOWER(TRIM(:principioAtivo))
+              AND n.ativa = TRUE
+              AND n.emRevisao = FALSE
+            """)
+    long contarNaFila(@Param("principioAtivo") String principioAtivo);
+
+    /** Quantos entraram na fila depois de uma data. */
+    @Query("""
+            SELECT COUNT(n) FROM Necessidade n
+            WHERE LOWER(TRIM(n.medicamento.principioAtivo)) = LOWER(TRIM(:principioAtivo))
+              AND n.ativa = TRUE
+              AND n.emRevisao = FALSE
+              AND n.criadaEm > :depoisDe
+            """)
+    long contarEntrantesApos(@Param("principioAtivo") String principioAtivo,
+                             @Param("depoisDe") OffsetDateTime depoisDe);
 }

@@ -1,9 +1,11 @@
 package br.com.medshare.necessidade;
 
 import br.com.medshare.comum.*;
+import br.com.medshare.doacao.EventoHistoricoRepository;
 import br.com.medshare.integracao.ConsultaDeCadUnico;
 import br.com.medshare.medicamento.Medicamento;
 import br.com.medshare.medicamento.MedicamentoRepository;
+import br.com.medshare.necessidade.dto.RaioXDaFila;
 import br.com.medshare.notificacao.ServicoDeNotificacao;
 import br.com.medshare.notificacao.TipoNotificacao;
 import br.com.medshare.reserva.ServicoDeOferta;
@@ -16,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 /**
@@ -36,6 +40,7 @@ public class ServicoDeNecessidade {
     private final ServicoDeOferta ofertas;
     private final PropriedadesDoMedShare propriedades;
     private final ServicoDeUsuario usuarios;
+    private final EventoHistoricoRepository eventos;
 
     public ServicoDeNecessidade(NecessidadeRepository necessidades, ReceitaRepository receitas,
                                 VerificacaoCadUnicoRepository verificacoes,
@@ -45,7 +50,8 @@ public class ServicoDeNecessidade {
                                 ServicoDeNotificacao notificacoes,
                                 ServicoDeOferta ofertas,
                                 PropriedadesDoMedShare propriedades,
-                                ServicoDeUsuario usuarios) {
+                                ServicoDeUsuario usuarios,
+                                EventoHistoricoRepository eventos) {
         this.necessidades = necessidades;
         this.receitas = receitas;
         this.verificacoes = verificacoes;
@@ -56,6 +62,7 @@ public class ServicoDeNecessidade {
         this.ofertas = ofertas;
         this.propriedades = propriedades;
         this.usuarios = usuarios;
+        this.eventos = eventos;
     }
 
     // --- RN08: CadUnico ------------------------------------------------------
@@ -158,6 +165,40 @@ public class ServicoDeNecessidade {
     }
 
     // --- UC04: pedido e receita ----------------------------------------------
+
+    /** A janela que a tela usa para dizer com que frequência aparecem caixas. */
+    private static final int DIAS_DA_JANELA = 30;
+
+    /**
+     * Os números honestos sobre a espera de um pedido.
+     *
+     * Não devolve posição na fila porque ela não existe antes de existir uma
+     * caixa: a ordem depende da farmácia onde ela aparecer. O que vai aqui é o
+     * que é verdade independente disso — quanta gente espera, quantas chegaram
+     * depois, e com que frequência caixas desse princípio ativo aparecem.
+     *
+     * Nada aqui identifica ninguém (RN05): são contagens e datas, nunca
+     * pessoas.
+     */
+    @Transactional(readOnly = true)
+    public RaioXDaFila raioXDaFila(Necessidade necessidade) {
+        String principioAtivo = necessidade.getMedicamento().getPrincipioAtivo();
+        OffsetDateTime desde = OffsetDateTime.now().minusDays(DIAS_DA_JANELA);
+
+        List<OffsetDateTime> apareceram = eventos.disponibilizacoesDesde(principioAtivo, desde);
+        Long diasDesdeAUltima = apareceram.isEmpty()
+                ? null
+                : ChronoUnit.DAYS.between(apareceram.get(0), OffsetDateTime.now());
+
+        return new RaioXDaFila(
+                necessidades.contarNaFila(principioAtivo),
+                necessidades.contarEntrantesApos(principioAtivo, necessidade.getCriadaEm()),
+                ChronoUnit.DAYS.between(necessidade.getCriadaEm(), OffsetDateTime.now()),
+                apareceram.size(),
+                diasDesdeAUltima,
+                DIAS_DA_JANELA,
+                necessidade.isPrioridade());
+    }
 
     /**
      * UC04 - registra o pedido.

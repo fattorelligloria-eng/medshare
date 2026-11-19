@@ -19,10 +19,16 @@ public record NecessidadeResumida(
         boolean emRevisao,
         String motivoRevisao,
         boolean prioridade,
-        OffsetDateTime criadaEm
+        OffsetDateTime criadaEm,
+        /** Nulo quando quem chamou não pediu o raio-x — ele custa consultas. */
+        RaioXDaFila fila
 ) {
 
     public static NecessidadeResumida de(Necessidade necessidade) {
+        return de(necessidade, null);
+    }
+
+    public static NecessidadeResumida de(Necessidade necessidade, RaioXDaFila fila) {
         var receita = necessidade.getReceita();
         return new NecessidadeResumida(
                 necessidade.getId(),
@@ -34,6 +40,7 @@ public record NecessidadeResumida(
                 necessidade.isEmRevisao(),
                 necessidade.getMotivoRevisao(),
                 necessidade.isPrioridade(),
-                necessidade.getCriadaEm());
+                necessidade.getCriadaEm(),
+                fila);
     }
 }

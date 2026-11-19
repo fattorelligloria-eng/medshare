@@ -62,10 +62,17 @@ public class ControladorDeNecessidade {
                 .body(NecessidadeResumida.de(necessidade));
     }
 
+    /**
+     * Os pedidos da pessoa, cada um com o raio-x da espera.
+     *
+     * O raio-x vai junto e nao num endpoint separado porque a tela mostra os
+     * dois sempre, e a RN04 limita a um pedido ativo por principio ativo — sao
+     * poucas linhas, nao uma lista que cresce sem fim.
+     */
     @GetMapping
     public List<NecessidadeResumida> minhasNecessidades() {
         return servico.ativasDe(usuarioLogado.obrigatorio()).stream()
-                .map(NecessidadeResumida::de)
+                .map(n -> NecessidadeResumida.de(n, servico.raioXDaFila(n)))
                 .toList();
     }
 

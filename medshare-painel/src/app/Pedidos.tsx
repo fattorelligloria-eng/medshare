@@ -7,6 +7,7 @@ import { AvisoDeErro } from '../componentes/Aviso'
 import { Marca } from '../componentes/Logo'
 import { BotaoDeNotificacoes } from '../componentes/BotaoDeNotificacoes'
 import { Lugar, Mais } from '../componentes/Icones'
+import { RaioXDaFila } from '../componentes/RaioXDaFila'
 import { data, dataComHora, primeiroNome } from '../formatos'
 
 /**
@@ -141,10 +142,13 @@ export function Pedidos() {
                 </Link>
               </>
             ) : p.temReceitaValida ? (
-              <p className="explicacao">
-                Receita válida até {data(p.validadeDaReceita)}.{' '}
-                {p.prioridade ? 'Você está na frente da fila.' : 'Você está na fila; avisamos quando chegar.'}
-              </p>
+              <>
+                <p className="explicacao">
+                  Receita válida até {data(p.validadeDaReceita)}. Estamos de olho:
+                  quando uma caixa aparecer, você é avisada antes de qualquer outra coisa.
+                </p>
+                {p.fila && <RaioXDaFila dados={p.fila} />}
+              </>
             ) : (
               <>
                 <p className="explicacao">

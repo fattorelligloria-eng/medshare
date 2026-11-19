@@ -217,6 +217,25 @@ export interface Necessidade {
   /** UC07 A2 — perdeu uma caixa por validade e está na frente da fila. */
   prioridade: boolean
   criadaEm: string
+  /** O retrato honesto da espera. Nulo nos endpoints que não o calculam. */
+  fila?: RaioXDaFila | null
+}
+
+/**
+ * Os números da espera.
+ *
+ * Repare no que não existe aqui: posição na fila. Ela não é definida neste
+ * sistema — a ordem depende da farmácia onde a próxima caixa aparecer. O
+ * servidor tem um teste que quebra se alguém acrescentar esse campo.
+ */
+export interface RaioXDaFila {
+  pessoasNaFila: number
+  entraramDepoisDeVoce: number
+  diasEsperando: number
+  caixasRecentes: number
+  diasDesdeAUltima: number | null
+  diasDaJanela: number
+  prioridade: boolean
 }
 
 export interface Procurador {

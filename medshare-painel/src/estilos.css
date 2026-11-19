@@ -1456,3 +1456,93 @@ button:focus-visible,
   animation: brilho 1.4s infinite;
 }
 @media (prefers-reduced-motion: reduce) { .carregando-mapa::after { animation: none; } }
+
+/* =============================================================================
+   Raio-x da fila
+   ========================================================================== */
+
+.raio-x {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: var(--raio);
+  background: var(--fundo-app);
+}
+
+.selo-prioridade {
+  margin: 0 0 12px;
+  padding: 9px 12px;
+  border-radius: var(--raio);
+  background: var(--verde-claro);
+  color: var(--verde-escuro);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* Uma <dl> de verdade: leitor de tela lê "rótulo, valor" em par, o que é
+   exatamente o que estes números são. */
+.numeros-da-fila {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 26px;
+  margin: 0;
+}
+.numeros-da-fila > div { min-width: 0; }
+.numeros-da-fila dt {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tinta-fraca);
+}
+.numeros-da-fila dd {
+  margin: 3px 0 0;
+  font-family: Fraunces, Georgia, serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--tinta);
+}
+
+.frequencia {
+  margin: 14px 0 0;
+  font-size: 0.8438rem;
+  line-height: 1.5;
+  color: var(--tinta-media);
+}
+
+.como-funciona { margin-top: 12px; border-top: 1px solid var(--linha); padding-top: 10px; }
+.como-funciona > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--verde-escuro);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+.como-funciona .seta { font-size: 1.125rem; line-height: 1; }
+.como-funciona > button:focus-visible { outline: 2px solid var(--verde); outline-offset: 3px; }
+
+.explicacao-da-ordem { padding: 6px 0 2px; }
+.explicacao-da-ordem p {
+  margin: 8px 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--tinta-media);
+}
+.explicacao-da-ordem ol {
+  margin: 10px 0;
+  padding-left: 20px;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--tinta-media);
+}
+.explicacao-da-ordem strong { color: var(--tinta); }
+
+:root[data-contraste='alto'] .raio-x { border: 2px solid #000000; }
