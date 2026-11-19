@@ -85,7 +85,7 @@ export function DetalheDaDoacao() {
 
   return (
     <>
-      <CabecalhoInterno titulo={codigo} para="/app/doacoes" />
+      <CabecalhoInterno titulo="Doação" para="/app/doacoes" />
 
       <div className="conteudo-app cresce" style={{ paddingTop: 22 }}>
         <AvisoDeErro erro={erro} />
@@ -95,6 +95,7 @@ export function DetalheDaDoacao() {
           <>
             <Status status={detalhe.doacao.status} />
             <h1 className="humano" style={{ fontSize: '1.6875rem' }}>{detalhe.doacao.medicamento}</h1>
+            <p className="codigo" style={{ margin: '4px 0 0' }}>{detalhe.doacao.codigo}</p>
             <p style={{ margin: '10px 0 0', fontSize: '0.9062rem', lineHeight: 1.5, color: 'var(--tinta-media)' }}>
               {explicar(detalhe.doacao.status)}
             </p>
@@ -159,7 +160,7 @@ export function DetalheDaDoacao() {
 
                 <button
                   type="button"
-                  className="texto-botao nao-imprimir"
+                  className="texto-botao perigo-texto nao-imprimir"
                   style={{ marginTop: 14 }}
                   onClick={cancelarAgendamento}
                 >

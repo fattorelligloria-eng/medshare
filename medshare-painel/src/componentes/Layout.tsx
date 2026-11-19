@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAutenticacao } from '../contexto/Autenticacao'
 import { Marca } from './Logo'
+import { Caixa, Escudo, Farmacia, Lupa, Pessoa, Receita, Sino } from './Icones'
 
 /**
  * O painel de computador: balcão da farmácia e central de análise.
@@ -14,49 +15,43 @@ import { Marca } from './Logo'
  */
 export function Layout() {
   const { sessao, sair, temPapel } = useAutenticacao()
+  const ativo = ({ isActive }: { isActive: boolean }) => (isActive ? 'ativo' : '')
 
   return (
     <div className="painel">
       <aside className="lateral">
-        <Marca tamanho={30} />
+        <Marca />
 
-        <nav>
+        <nav aria-label="Painel">
           {temPapel('FARMACEUTICO') && (
             <>
-              <NavLink to="/painel/balcao" className={({ isActive }) => (isActive ? 'ativo' : '')}>
-                Balcão
-              </NavLink>
-              <NavLink to="/painel/retirada" className={({ isActive }) => (isActive ? 'ativo' : '')}>
-                Retirada
-              </NavLink>
+              <NavLink to="/painel/balcao" className={ativo}><Caixa tamanho={20} /> Balcão</NavLink>
+              <NavLink to="/painel/retirada" className={ativo}><Receita tamanho={20} /> Retirada</NavLink>
             </>
           )}
           {temPapel('ADMIN') && (
             <>
-              <NavLink to="/painel/central" className={({ isActive }) => (isActive ? 'ativo' : '')}>
-                Central de análise
-              </NavLink>
-              <NavLink to="/painel/farmacias" className={({ isActive }) => (isActive ? 'ativo' : '')}>
-                Farmácias
-              </NavLink>
+              <NavLink to="/painel/central" className={ativo}><Escudo /> Central de análise</NavLink>
+              <NavLink to="/painel/farmacias" className={ativo}><Farmacia tamanho={20} /> Farmácias</NavLink>
             </>
           )}
-          <NavLink to="/painel/notificacoes" className={({ isActive }) => (isActive ? 'ativo' : '')}>
-            Notificações
-          </NavLink>
+          <NavLink to="/painel/notificacoes" className={ativo}><Sino /> Notificações</NavLink>
           {(temPapel('FARMACEUTICO') || temPapel('ADMIN')) && (
-            <NavLink to="/painel/rastreio" className={({ isActive }) => (isActive ? 'ativo' : '')}>
-              Rastreio
-            </NavLink>
+            <NavLink to="/painel/rastreio" className={ativo}><Lupa tamanho={20} /> Rastreio</NavLink>
           )}
           {(temPapel('DOADOR') || temPapel('BENEFICIARIO')) && (
-            <NavLink to="/app/doacoes">Abrir o aplicativo</NavLink>
+            <NavLink to="/app/doacoes"><Pessoa tamanho={20} /> Abrir o aplicativo</NavLink>
           )}
         </nav>
 
+        {/* Nome completo e o papel de quem está no balcão; sair fica pequeno e
+            vermelho, no fim — é uma saída, não um destino. */}
         <div className="rodape">
-          <p className="quem">{sessao?.nome}</p>
-          <button className="secundario" onClick={sair}>Sair</button>
+          <p className="quem">
+            <strong>{sessao?.nome}</strong>
+            <span>{temPapel('ADMIN') ? 'Equipe MedShare · central' : 'Farmacêutica · farmácia parceira'}</span>
+          </p>
+          <button className="sair-da-conta" onClick={sair}>Sair</button>
         </div>
       </aside>
 

@@ -2,7 +2,15 @@ import { useState } from 'react'
 import { api } from '../api/cliente'
 import type { EnderecoDoCep, MeusDados, Municipio } from '../api/tipos'
 import { AvisoDeErro } from './Aviso'
+import { data } from '../formatos'
 import { useEffect } from 'react'
+
+const NOME_DO_PAPEL: Record<string, string> = {
+  DOADOR: 'doadora',
+  BENEFICIARIO: 'recebe medicamentos',
+  FARMACEUTICO: 'farmacêutica',
+  ADMIN: 'central de análise',
+}
 
 /**
  * Os dados do cadastro: ver e corrigir.
@@ -94,6 +102,11 @@ export function DadosDoCadastro(
           <div><dt>CPF</dt><dd>{dados.cpfMascarado ?? '—'}</dd></div>
           <div><dt>E-mail</dt><dd>{dados.email}</dd></div>
           <div><dt>Telefone</dt><dd>{dados.telefone || '—'}</dd></div>
+          <div>
+            <dt>Perfil</dt>
+            <dd>{dados.papeis.map((p) => NOME_DO_PAPEL[p] ?? p.toLowerCase()).join(' · ')}</dd>
+          </div>
+          <div><dt>No MedShare desde</dt><dd>{data(dados.membroDesde)}</dd></div>
           {dados.endereco && (
             <>
               <div>

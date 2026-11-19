@@ -95,7 +95,7 @@ export function Farmacias() {
       </div>
 
       <div className="conteudo-app cresce" style={{ paddingTop: 28 }}>
-        <h1 className="humano" style={{ fontSize: '1.625rem' }}>Farmácias parceiras</h1>
+        <h1 className="humano" style={{ fontSize: '1.625rem' }}>Farmácias <em>parceiras</em></h1>
         <p style={{ margin: '8px 0 20px', fontSize: '0.9062rem', lineHeight: 1.5, color: 'var(--tinta-media)' }}>
           Da mais perto para a mais longe, a partir do endereço do seu cadastro.
           É numa delas que você entrega a caixa — e é lá que um farmacêutico

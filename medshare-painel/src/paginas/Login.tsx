@@ -3,7 +3,7 @@ import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAutenticacao } from '../contexto/Autenticacao'
 import { AvisoDeErro } from '../componentes/Aviso'
-import { Logo } from '../componentes/Logo'
+import { Marca } from '../componentes/Logo'
 
 /**
  * Entrada.
@@ -35,20 +35,20 @@ export function Login() {
   return (
     <div className="entrada">
       <div className="cartao-entrada">
+        <Marca />
 
+        <div className="meio-da-entrada">
           <div>
-            <Logo tamanho={52} />
-
-            <h1 className="humano" style={{ fontSize: '1.9375rem', marginTop: 26, lineHeight: 1.15 }}>
-              Remédio que sobrou<br />de um tratamento
+            <h1 className="humano titulo-entrada">
+              <em>Compartilhar</em> também é cuidar.
             </h1>
-            <p style={{ margin: '12px 0 0', fontSize: '0.9688rem', lineHeight: 1.5, color: 'var(--tinta-media)' }}>
-              chegando a quem não tem como comprar. Doador e quem recebe nunca
-              se encontram: tudo passa por uma farmácia parceira.
+            <p className="subtitulo-entrada">
+              Remédio que sobrou de um tratamento, chegando a quem não tem como
+              comprar. Tudo passa por uma farmácia parceira.
             </p>
           </div>
 
-          <form onSubmit={enviar} style={{ paddingTop: 30 }}>
+          <form onSubmit={enviar}>
             <AvisoDeErro erro={erro} />
 
             <label className="campo">
@@ -58,7 +58,7 @@ export function Login() {
                 value={email}
                 onChange={(e) => definirEmail(e.target.value)}
                 autoComplete="username"
-                placeholder="voce@exemplo.com"
+                placeholder="natasha@email.com"
                 required
               />
             </label>
@@ -77,18 +77,18 @@ export function Login() {
             <button className="principal" disabled={enviando || !email || !senha}>
               {enviando ? 'Entrando…' : 'Entrar'}
             </button>
-
-            <div style={{ textAlign: 'center', marginTop: 16 }}>
-              <button
-                type="button"
-                className="texto-botao"
-                onClick={() => navegar('/cadastro')}
-              >
-                Ainda não tenho conta
-              </button>
-            </div>
           </form>
+        </div>
 
+        <div className="link-de-cadastro">
+          <button
+            type="button"
+            className="texto-botao"
+            onClick={() => navegar('/cadastro')}
+          >
+            Ainda não tenho conta
+          </button>
+        </div>
       </div>
     </div>
   )

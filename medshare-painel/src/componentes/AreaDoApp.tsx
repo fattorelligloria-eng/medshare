@@ -48,7 +48,7 @@ function Casca({ comNavegacao = false }: { comNavegacao?: boolean }) {
   return (
     <div className="area-app">
       <aside className="menu-app">
-        <Marca tamanho={30} />
+        <Marca />
 
         <nav aria-label="Menu principal">
           {ehDoador && (

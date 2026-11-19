@@ -25,7 +25,7 @@ const ABAS: { chave: Aba; nome: string; cabe: (d: Doacao) => boolean }[] = [
     // "Recusadas" ficou errado quando os estados foram renomeados: a aba junta
     // caixa não aceita, reprovada no balcão, vencida e cancelada — e cancelada
     // foi decisão da própria pessoa, ninguém recusou nada.
-    nome: 'Não seguiram',
+    nome: 'Encerradas',
     cabe: (d) => ['RECUSADA', 'REJEITADA', 'CANCELADA', 'DESCARTADA'].includes(d.status),
   },
 ]
@@ -87,28 +87,11 @@ export function Doacoes() {
 
       <div className="conteudo-app" style={{ paddingTop: 28 }}>
         <h1 className="humano" style={{ fontSize: '1.625rem', margin: '0 0 12px' }}>
-          Oi, {primeiroNome(sessao?.nome ?? '')}
+          Oi, <em>{primeiroNome(sessao?.nome ?? '')}</em>
         </h1>
 
         {doacoes.length > 0 ? (
-          <>
-            <div className="impacto">
-              <span className="numero">{doacoes.length}</span>
-              <p>
-                {doacoes.length === 1 ? 'caixa sua já' : 'caixas suas já'}
-                <br />
-                {doacoes.length === 1 ? 'saiu de casa' : 'saíram de casa'}
-              </p>
-            </div>
-
-            {entregues.length > 0 && (
-              <p style={{ margin: '14px 0 0', fontSize: '0.875rem', color: 'var(--tinta-media)' }}>
-                {entregues.length === 1
-                  ? 'Uma delas já chegou a alguém.'
-                  : `${entregues.length} delas já chegaram a alguém.`}
-              </p>
-            )}
-          </>
+          <Impacto doadas={doacoes.length} entregues={entregues.length} />
         ) : !carregando && (
           <p style={{ margin: 0, fontSize: '0.9688rem', lineHeight: 1.5, color: 'var(--tinta-media)' }}>
             Sobrou caixa lacrada de um tratamento? Ela pode ser o tratamento de
@@ -221,7 +204,7 @@ export function Doacoes() {
 
             {daAba.length === 0 && (
               <p className="nada-no-filtro">
-                Nenhuma doação {aba === 'andamento' ? 'em andamento' : aba === 'concluidas' ? 'concluída' : 'recusada'} por aqui.
+                Nenhuma doação {aba === 'andamento' ? 'em andamento' : aba === 'concluidas' ? 'concluída' : 'encerrada'} por aqui.
               </p>
             )}
 
@@ -270,5 +253,40 @@ export function Doacoes() {
         </div>
       )}
     </>
+  )
+}
+
+/**
+ * O número que importa é o de quem foi ajudado: caixa que chegou a alguém.
+ * Enquanto nenhuma chegou, o destaque é o que a pessoa já fez — as caixas que
+ * saíram de casa — para a tela nunca mostrar "0 chegaram a alguém".
+ */
+function Impacto({ doadas, entregues }: { doadas: number; entregues: number }) {
+  if (entregues === 0) {
+    return (
+      <div className="impacto">
+        <span className="numero">{doadas}</span>
+        <p>
+          <span className="frase">
+            {doadas === 1 ? 'caixa sua já saiu de casa' : 'caixas suas já saíram de casa'}
+          </span>
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="impacto">
+      <span className="numero">{entregues}</span>
+      <p>
+        <span className="frase">
+          {entregues === 1 ? 'caixa' : 'caixas'}{' '}
+          <em>{entregues === 1 ? 'chegou a alguém' : 'chegaram a alguém'}</em>
+        </span>
+        <span className="de-quantas">
+          De {doadas} que já {doadas === 1 ? 'saiu' : 'saíram'} da sua casa.
+        </span>
+      </p>
+    </div>
   )
 }
