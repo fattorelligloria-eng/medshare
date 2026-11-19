@@ -85,11 +85,23 @@ export function Doacoes() {
         </div>
       </div>
 
-      <div className="conteudo-app" style={{ paddingTop: 28 }}>
+      {/* No computador: saudação e o botão principal na mesma linha, e embaixo
+          duas colunas — o resumo à esquerda, a lista à direita. No celular a
+          ordem do HTML é a mesma de antes e tudo empilha. */}
+      <div className="conteudo-app cabeca-doacoes" style={{ paddingTop: 28 }}>
         <h1 className="humano" style={{ fontSize: '1.625rem', margin: '0 0 12px' }}>
           Oi, <em>{primeiroNome(sessao?.nome ?? '')}</em>
         </h1>
+        {doacoes.length > 0 && (
+          <Link to="/app/doacoes/nova" className="botao principal so-no-computador">
+            <Mais cor="#fff" /> Doar um medicamento
+          </Link>
+        )}
+      </div>
 
+      <div className="colunas-doacoes">
+      <div className="coluna-resumo">
+      <div className="conteudo-app">
         {doacoes.length > 0 ? (
           <Impacto doadas={doacoes.length} entregues={entregues.length} />
         ) : !carregando && (
@@ -159,6 +171,9 @@ export function Doacoes() {
         </div>
       )}
 
+      </div>
+
+      <div className="coluna-lista">
       <div className="conteudo-app cresce" style={{ paddingTop: 26 }}>
         <AvisoDeErro erro={erro} aoTentarDeNovo={carregar} />
 
@@ -245,8 +260,11 @@ export function Doacoes() {
         )}
       </div>
 
+      </div>
+      </div>
+
       {doacoes.length > 0 && (
-        <div className="rodape-acao">
+        <div className="rodape-acao so-no-celular-acao">
           <Link to="/app/doacoes/nova" className="botao principal">
             <Mais cor="#fff" /> Doar um medicamento
           </Link>
