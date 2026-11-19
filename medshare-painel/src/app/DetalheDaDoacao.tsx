@@ -92,15 +92,17 @@ export function DetalheDaDoacao() {
         {carregando && <p style={{ color: 'var(--tinta-fraca)', fontSize: '0.875rem' }}>Carregando…</p>}
 
         {detalhe && (
-          <>
+          <div className="detalhe-grade">
+            <div className="detalhe-cabeca">
             <Status status={detalhe.doacao.status} />
             <h1 className="humano" style={{ fontSize: '1.6875rem' }}>{detalhe.doacao.medicamento}</h1>
             <p className="codigo" style={{ margin: '4px 0 0' }}>{detalhe.doacao.codigo}</p>
             <p style={{ margin: '10px 0 0', fontSize: '0.9062rem', lineHeight: 1.5, color: 'var(--tinta-media)' }}>
               {explicar(detalhe.doacao.status)}
             </p>
+            </div>
 
-            <div style={{ margin: '22px 0', paddingTop: 20, borderTop: '1px solid var(--linha)' }}>
+            <div className="detalhe-dados" style={{ margin: '22px 0', paddingTop: 20, borderTop: '1px solid var(--linha)' }}>
               <div className="grade">
                 <div className="dado">
                   <p className="rotulo">Princípio ativo</p>
@@ -123,6 +125,7 @@ export function DetalheDaDoacao() {
               </div>
             </div>
 
+            <div className="detalhe-acao">
             {detalhe.doacao.status === 'PRE_VALIDADA' && (
               <Link to={`/app/doacoes/${codigo}/agendar`} className="botao principal" style={{ marginBottom: 24 }}>
                 Escolher farmácia e horário
@@ -198,6 +201,9 @@ export function DetalheDaDoacao() {
               </section>
             )}
 
+            </div>
+
+            <div className="detalhe-historico">
             <p className="rotulo" style={{ marginBottom: 4 }}>Por onde passou</p>
             <p style={{ margin: '0 0 16px', fontSize: '0.8125rem', color: 'var(--tinta-media)' }}>
               Registro completo e imutável desta caixa.
@@ -215,7 +221,8 @@ export function DetalheDaDoacao() {
                 </li>
               ))}
             </ul>
-          </>
+            </div>
+          </div>
         )}
       </div>
       <div style={{ height: 26, flexShrink: 0 }} />

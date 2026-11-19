@@ -13,15 +13,17 @@ export function SecaoRecolhivel({
   titulo,
   icone,
   className = '',
+  abertaDeInicio = false,
   children,
 }: {
   titulo: string
   icone: ReactNode
   className?: string
+  abertaDeInicio?: boolean
   children: ReactNode
 }) {
   return (
-    <details className={`secao-recolhivel ${className}`.trim()}>
+    <details className={`secao-recolhivel ${className}`.trim()} open={abertaDeInicio}>
       <summary>
         {icone}
         {titulo}

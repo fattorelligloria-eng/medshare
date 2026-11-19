@@ -4,6 +4,7 @@ import { Marca } from './Logo'
 import { useAutenticacao } from '../contexto/Autenticacao'
 import { useNaoLidas } from './BotaoDeNotificacoes'
 import { Acessibilidade } from './Acessibilidade'
+import { iniciais } from '../formatos'
 
 /**
  * A casca das telas do cidadão.
@@ -46,7 +47,7 @@ function Casca({ comNavegacao = false }: { comNavegacao?: boolean }) {
   const ativo = ({ isActive }: { isActive: boolean }) => (isActive ? 'ativo' : '')
 
   return (
-    <div className="area-app">
+    <div className={comNavegacao ? 'area-app' : 'area-app interna'}>
       <aside className="menu-app">
         <Marca />
 
@@ -87,8 +88,14 @@ function Casca({ comNavegacao = false }: { comNavegacao?: boolean }) {
             embora — e não é isso que o aplicativo quer de ninguém. Ele agora
             vive no fim da tela de Conta, que é onde se procura por ele. */}
         <div className="rodape">
-          <Acessibilidade />
-          <NavLink to="/app/conta" className="quem">{sessao?.nome}</NavLink>
+          <div className="cartao-acessibilidade">
+            <p className="rotulo">Acessibilidade</p>
+            <Acessibilidade />
+          </div>
+          <NavLink to="/app/conta" className="quem">
+            <span className="iniciais" aria-hidden="true">{iniciais(sessao?.nome ?? '')}</span>
+            <span className="nome">{sessao?.nome}</span>
+          </NavLink>
         </div>
       </aside>
 

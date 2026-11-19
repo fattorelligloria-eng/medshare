@@ -13,6 +13,7 @@ import { TrocaDeSenha } from '../componentes/TrocaDeSenha'
 import { Procuradores } from '../componentes/Procuradores'
 import { SecaoRecolhivel } from '../componentes/SecaoRecolhivel'
 import { Acessivel, Ficha, Senha } from '../componentes/Icones'
+import { iniciais } from '../formatos'
 
 /**
  * A conta.
@@ -61,6 +62,8 @@ export function Conta() {
       <div className="conteudo-app cresce" style={{ paddingTop: 16 }}>
         <h1 className="humano" style={{ fontSize: '1.75rem' }}>Conta</h1>
 
+        <div className="conta-grade">
+        <div className="conta-coluna">
         <div className="cartao-de-perfil" style={{ marginTop: 14 }}>
           <span className="iniciais" aria-hidden="true">{iniciais(nome)}</span>
           <p className="nome-completo">{nome}</p>
@@ -115,8 +118,16 @@ export function Conta() {
           </section>
         )}
 
-        {/* --- o que se consulta de vez em quando: fechado até a pessoa abrir --- */}
-        <SecaoRecolhivel titulo="Dados do cadastro" icone={<Ficha cor="var(--verde)" />}>
+        </div>
+
+        <div className="conta-coluna">
+        {/* --- o que se consulta de vez em quando: fechado até a pessoa abrir.
+            No computador, onde sobra espaço, os dados já aparecem abertos. --- */}
+        <SecaoRecolhivel
+          titulo="Dados do cadastro"
+          icone={<Ficha cor="var(--verde)" />}
+          abertaDeInicio={telaGrande()}
+        >
           {carregando && <EsqueletoDeBloco altura={220} />}
           {dados && (
             <DadosDoCadastro
@@ -151,16 +162,14 @@ export function Conta() {
         <div style={{ margin: '18px 0 28px' }}>
           <button className="sair-da-conta" onClick={sair}>Sair da conta</button>
         </div>
+        </div>
+        </div>
       </div>
     </>
   )
 }
 
-/** "Glória Fattorelli" vira "GF": a primeira letra do primeiro e do último nome. */
-function iniciais(nome: string): string {
-  const partes = nome.trim().split(/\s+/).filter(Boolean)
-  if (partes.length === 0) return ''
-  const primeira = partes[0][0]
-  const ultima = partes.length > 1 ? partes[partes.length - 1][0] : ''
-  return (primeira + ultima).toUpperCase()
+/** Computador: a mesma largura em que o menu lateral aparece (estilos.css, 900px). */
+function telaGrande(): boolean {
+  return typeof window !== 'undefined' && window.matchMedia('(min-width: 901px)').matches
 }
