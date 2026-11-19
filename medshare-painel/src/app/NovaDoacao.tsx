@@ -163,7 +163,7 @@ export function NovaDoacao() {
   return (
     <>
       <CabecalhoInterno
-        titulo={PASSOS[passo]}
+        titulo="Nova doação"
         para={passo === 0 ? '/app/doacoes' : undefined}
         aoVoltar={passo === 0 ? undefined : () => definirPasso((p) => p - 1)}
       />

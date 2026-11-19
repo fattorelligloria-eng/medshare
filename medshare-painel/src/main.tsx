@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { ProvedorDeAutenticacao } from './contexto/Autenticacao'
 import { App } from './App'
 import './estilos.css'
+import './tema.css'
 
 createRoot(document.getElementById('raiz')!).render(
   <StrictMode>

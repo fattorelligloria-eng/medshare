@@ -166,3 +166,32 @@ export const Menos = ({ tamanho = 18, cor = 'currentColor' }: Props) => (
 export const Fechar = ({ tamanho = 18, cor = 'currentColor' }: Props) => (
   <svg {...base(tamanho, cor)}><path d="M18 6 6 18M6 6l12 12" /></svg>
 )
+
+export const Seta = ({ tamanho = 18, cor = 'currentColor' }: Props) => (
+  <svg {...base(tamanho, cor)}><path d="m9 6 6 6-6 6" /></svg>
+)
+
+export const Ficha = ({ tamanho = 20, cor = 'currentColor' }: Props) => (
+  <svg {...base(tamanho, cor)}>
+    <rect x="3" y="4" width="18" height="16" rx="3" />
+    <circle cx="9" cy="11" r="2.5" />
+    <path d="M5.5 17c.6-2 2-3 3.5-3s2.9 1 3.5 3" />
+    <path d="M15 10h3M15 14h3" />
+  </svg>
+)
+
+export const Acessivel = ({ tamanho = 20, cor = 'currentColor' }: Props) => (
+  <svg {...base(tamanho, cor)}>
+    <circle cx="12" cy="4.5" r="1.8" />
+    <path d="M5 8.5h14" />
+    <path d="M12 8.5V14" />
+    <path d="m8.5 21 3.5-7 3.5 7" />
+  </svg>
+)
+
+export const Escudo = ({ tamanho = 20, cor = 'currentColor' }: Props) => (
+  <svg {...base(tamanho, cor)}>
+    <path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3Z" />
+    <path d="m9 12 2 2 4-4" />
+  </svg>
+)

@@ -11,14 +11,8 @@ import { EsqueletoDeBloco } from '../componentes/Esqueleto'
 import { DadosDoCadastro } from '../componentes/DadosDoCadastro'
 import { TrocaDeSenha } from '../componentes/TrocaDeSenha'
 import { Procuradores } from '../componentes/Procuradores'
-import { data, reais } from '../formatos'
-
-const NOME_DO_PAPEL: Record<string, string> = {
-  DOADOR: 'doadora',
-  BENEFICIARIO: 'recebe medicamentos',
-  FARMACEUTICO: 'farmacêutica',
-  ADMIN: 'central de análise',
-}
+import { SecaoRecolhivel } from '../componentes/SecaoRecolhivel'
+import { Acessivel, Ficha, Senha } from '../componentes/Icones'
 
 /**
  * A conta.
@@ -54,6 +48,8 @@ export function Conta() {
     api.get<MeuImpacto>('/usuarios/eu/impacto').then(definirImpacto).catch(() => {})
   }, [temPapel])
 
+  const nome = dados?.nome ?? sessao?.nome ?? ''
+
   return (
     <>
       <div className="topo-app">
@@ -62,22 +58,23 @@ export function Conta() {
         </div>
       </div>
 
-      <div className="conteudo-app cresce" style={{ paddingTop: 28 }}>
-        <h1 className="humano" style={{ fontSize: '1.625rem' }}>{dados?.nome ?? sessao?.nome}</h1>
-        <p style={{ margin: '6px 0 0', fontSize: '0.875rem', color: 'var(--tinta-media)' }}>
-          {(dados?.papeis ?? sessao?.papeis ?? [])
-            .map((p) => NOME_DO_PAPEL[p] ?? p.toLowerCase())
-            .join(' · ')}
-          {dados && ` · no MedShare desde ${data(dados.membroDesde)}`}
-        </p>
+      <div className="conteudo-app cresce" style={{ paddingTop: 16 }}>
+        <h1 className="humano" style={{ fontSize: '1.75rem' }}>Conta</h1>
+
+        <div className="cartao-de-perfil" style={{ marginTop: 14 }}>
+          <span className="iniciais" aria-hidden="true">{iniciais(nome)}</span>
+          <p className="nome-completo">{nome}</p>
+        </div>
 
         <AvisoDeErro erro={erro} aoTentarDeNovo={carregar} />
         {recado && <AvisoDeSucesso>{recado}</AvisoDeSucesso>}
 
-        {/* --- o impacto, para quem doa --- */}
+        {/* --- o impacto, para quem doa ---
+            Sem valor em reais, de propósito: ver quanto custava a caixa doada
+            é o caminho mais curto para a pessoa se arrepender de ter doado. */}
         {impacto && impacto.caixasDoadas > 0 && (
           <section className="cartao-conta" aria-labelledby="t-impacto">
-            <h2 id="t-impacto" className="humano">Seu impacto</h2>
+            <h2 id="t-impacto" className="humano">Seu <em>impacto</em></h2>
             <div className="numeros">
               <div>
                 <span className="n">{impacto.caixasDoadas}</span>
@@ -90,31 +87,8 @@ export function Conta() {
                 </span>
               </div>
             </div>
-            {impacto.valorDosTratamentos != null && (
-              <p className="nota">
-                {impacto.caixasEntregues === 1
-                  ? `Alguém começou um tratamento de ${reais(impacto.valorDosTratamentos)} que não tinha como comprar.`
-                  : `${impacto.caixasEntregues} pessoas começaram tratamentos que não cabiam no orçamento delas — ${reais(impacto.valorDosTratamentos)} no total.`}
-              </p>
-            )}
           </section>
         )}
-
-        {/* --- os dados do cadastro --- */}
-        {carregando && <div style={{ marginTop: 26 }}><EsqueletoDeBloco altura={220} /></div>}
-
-        {dados && (
-          <DadosDoCadastro
-            dados={dados}
-            aoSalvar={(novos) => {
-              definirDados(novos)
-              definirRecado('Cadastro atualizado.')
-            }}
-          />
-        )}
-
-        {/* --- senha --- */}
-        <TrocaDeSenha aoTrocar={() => definirRecado('Senha alterada.')} />
 
         {/* --- CadÚnico, para quem recebe --- */}
         {temPapel('BENEFICIARIO') && (
@@ -141,24 +115,52 @@ export function Conta() {
           </section>
         )}
 
+        {/* --- o que se consulta de vez em quando: fechado até a pessoa abrir --- */}
+        <SecaoRecolhivel titulo="Dados do cadastro" icone={<Ficha cor="var(--verde)" />}>
+          {carregando && <EsqueletoDeBloco altura={220} />}
+          {dados && (
+            <DadosDoCadastro
+              dados={dados}
+              aoSalvar={(novos) => {
+                definirDados(novos)
+                definirRecado('Cadastro atualizado.')
+              }}
+            />
+          )}
+        </SecaoRecolhivel>
+
+        <SecaoRecolhivel titulo="Trocar senha" icone={<Senha tamanho={20} cor="var(--verde)" />}>
+          <TrocaDeSenha aoTrocar={() => definirRecado('Senha alterada.')} />
+        </SecaoRecolhivel>
+
         {/* No computador estes controles ficam no menu lateral; no celular não
             existe menu lateral, e é aqui que a pessoa vem procurar. */}
-        <section className="cartao-conta so-no-celular" aria-labelledby="t-acesso">
-          <h2 id="t-acesso" className="humano">Acessibilidade</h2>
-          <p className="explicacao-secao">
+        <SecaoRecolhivel
+          titulo="Acessibilidade"
+          icone={<Acessivel cor="var(--verde)" />}
+          className="so-no-celular"
+        >
+          <p className="explicacao-secao" style={{ marginTop: 0 }}>
             Tamanho da letra e alto contraste. Fica guardado neste aparelho.
           </p>
           <Acessibilidade />
-        </section>
+        </SecaoRecolhivel>
 
         {/* Fica no fim, e não no rodapé que gruda: sair não é a ação principal
-            desta tela, e grudado ele cobria os dados enquanto a pessoa rolava.
-            Agora é o único lugar do aplicativo onde sair aparece — o menu
-            lateral não tem mais esse botão. */}
-        <section className="cartao-conta" style={{ paddingBottom: 28 }}>
+            desta tela. É o único lugar do aplicativo onde sair aparece. */}
+        <div style={{ margin: '18px 0 28px' }}>
           <button className="sair-da-conta" onClick={sair}>Sair da conta</button>
-        </section>
+        </div>
       </div>
     </>
   )
+}
+
+/** "Glória Fattorelli" vira "GF": a primeira letra do primeiro e do último nome. */
+function iniciais(nome: string): string {
+  const partes = nome.trim().split(/\s+/).filter(Boolean)
+  if (partes.length === 0) return ''
+  const primeira = partes[0][0]
+  const ultima = partes.length > 1 ? partes[partes.length - 1][0] : ''
+  return (primeira + ultima).toUpperCase()
 }

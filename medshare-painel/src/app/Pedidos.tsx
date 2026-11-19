@@ -84,7 +84,7 @@ export function Pedidos() {
 
       <div className="conteudo-app" style={{ paddingTop: 28 }}>
         <p className="humano" style={{ fontSize: '1.625rem', margin: '0 0 10px' }}>
-          Oi, {primeiroNome(sessao?.nome ?? '')}
+          Oi, <em>{primeiroNome(sessao?.nome ?? '')}</em>
         </p>
         <p style={{ margin: 0, fontSize: '0.9375rem', lineHeight: 1.5, color: 'var(--tinta-media)' }}>
           Quando uma caixa do que você precisa aparecer, ela é oferecida a você aqui e no sino.

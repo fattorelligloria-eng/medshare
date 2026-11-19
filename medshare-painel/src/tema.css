@@ -1,0 +1,583 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,500;1,9..144,600&display=swap');
+
+/* =============================================================================
+   Tema "vidro claro"
+
+   O redesenho aprovado na tela de design: fundo verde-claro com brilhos,
+   cartões de vidro fosco, Plus Jakarta Sans nos títulos e Fraunces em itálico
+   só na palavra que merece destaque.
+
+   Fica num arquivo separado de propósito. O estilos.css continua dizendo como
+   cada tela se organiza; este aqui diz como ela se veste. Desfazer o redesenho
+   é apagar uma linha no main.tsx.
+
+   Alto contraste continua mandando: os tokens daqui perdem para
+   :root[data-contraste='alto'] (seletor mais específico), e tudo que é
+   enfeite — brilho, transparência, desfoque — só vale fora do alto contraste.
+   ========================================================================== */
+
+:root {
+  --tinta: #06372B;
+  --tinta-media: #3E5C51;
+  --tinta-fraca: #5B7468;
+  --fundo-app: #EEF6F2;
+  --linha: #DCE7E2;
+
+  /* Negativo agora é vermelho. Os nomes ficaram "terracota" para não mexer em
+     todo arquivo que já usa as variáveis; o que mudou foi a cor. Este tom dá
+     5,1:1 sobre o fundo claro — um vermelho mais aberto não passaria no AA. */
+  --terracota: #C8251B;
+  --terracota-texto: #B42318;
+  --terracota-tenue: #FEE4E2;
+
+  --raio: 14px;
+  --raio-g: 24px;
+
+  --fonte: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --fonte-destaque: Fraunces, Georgia, serif;
+
+  --vidro: rgba(255, 255, 255, 0.62);
+  --vidro-forte: rgba(255, 255, 255, 0.85);
+  --vidro-borda: rgba(255, 255, 255, 0.95);
+  --sombra-vidro: 0 24px 50px -32px rgba(6, 55, 43, 0.35);
+  --borda-controle: #C9D8D1;
+  --degrade: linear-gradient(135deg, #0A8568, #07614B);
+  --sombra-botao: 0 14px 28px -14px rgba(7, 97, 75, 0.65);
+  --destaque-suave: rgba(43, 211, 154, 0.18);
+}
+
+:root[data-contraste='alto'] {
+  --vidro: #FFFFFF;
+  --vidro-forte: #FFFFFF;
+  --vidro-borda: #000000;
+  --sombra-vidro: none;
+  --borda-controle: #000000;
+  --degrade: var(--verde);
+  --sombra-botao: none;
+  --destaque-suave: #FFFFFF;
+}
+
+/* --- fundo com brilho: menta no alto, água à direita, lilás embaixo --- */
+body {
+  font-family: var(--fonte);
+  background: var(--fundo-app);
+}
+:root:not([data-contraste='alto']) body {
+  background:
+    radial-gradient(60vmax 45vmax at 0% 0%, rgba(143, 240, 200, 0.55), transparent 62%),
+    radial-gradient(50vmax 45vmax at 100% 25%, rgba(110, 214, 228, 0.32), transparent 62%),
+    radial-gradient(50vmax 40vmax at 40% 105%, rgba(196, 186, 255, 0.26), transparent 62%),
+    var(--fundo-app);
+  background-attachment: fixed;
+}
+.area-app, .tela, .painel, .entrada { background: transparent; }
+
+/* --- títulos: a mesma voz do nome MedShare --- */
+.humano,
+.titulo-area h1,
+.bloco h2,
+.item h3,
+.vazio h3,
+.escolha .titulo {
+  font-family: var(--fonte);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+.humano em,
+.titulo-area h1 em,
+.marca em {
+  font-family: var(--fonte-destaque);
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--verde-escuro);
+}
+.leaflet-container { font-family: var(--fonte); }
+
+/* --- marca: logo de vidro + "Med" reto e "Share" em itálico --- */
+.marca { gap: 10px; }
+.marca .logo { display: block; flex-shrink: 0; }
+.marca span { font-size: 1.375rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+.marca em { color: var(--verde); }
+
+/* --- vidro: o mesmo cartão em todo lugar --- */
+.item,
+.bloco,
+.proximo-passo,
+.cartao-conta,
+.raio-x,
+.secao-recolhivel,
+.cartao-de-perfil,
+.cartao-entrada,
+.impacto {
+  background: var(--vidro);
+  border: 1px solid var(--vidro-borda);
+  border-radius: var(--raio-g);
+  box-shadow: var(--sombra-vidro);
+}
+:root:not([data-contraste='alto']) .item,
+:root:not([data-contraste='alto']) .bloco,
+:root:not([data-contraste='alto']) .secao-recolhivel,
+:root:not([data-contraste='alto']) .cartao-entrada,
+:root:not([data-contraste='alto']) .nav-app,
+:root:not([data-contraste='alto']) .menu-app,
+:root:not([data-contraste='alto']) .lateral {
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+/* --- botões --- */
+.principal {
+  background: var(--degrade);
+  box-shadow: var(--sombra-botao);
+  border-radius: 16px;
+  font-weight: 800;
+}
+.principal:hover:not(:disabled) { background: var(--verde-escuro); }
+.secundario {
+  background: var(--vidro-forte);
+  border-color: var(--borda-controle);
+  border-radius: 16px;
+}
+.perigo {
+  border-width: 1.5px;
+  border-radius: 16px;
+  font-weight: 800;
+}
+.texto-botao.perigo-texto { color: var(--terracota-texto); font-weight: 700; }
+
+/* --- campos --- */
+input[type='text'], input[type='email'], input[type='password'],
+input[type='tel'], input[type='date'], input[type='number'], input[type='search'], select, textarea {
+  border-color: var(--borda-controle);
+  background: var(--vidro-forte);
+  border-radius: var(--raio);
+}
+input[type='password'] { letter-spacing: 0.12em; }
+input::placeholder, textarea::placeholder { color: #6B8378; }
+.marcar {
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: var(--raio);
+  background: var(--vidro-forte);
+}
+.marcar input { margin: 0; width: 22px; height: 22px; }
+
+/* --- status: etiqueta cheia, que se lê de longe --- */
+.status {
+  display: inline-flex;
+  gap: 7px;
+  padding: 5px 11px;
+  border-radius: 999px;
+}
+.status .ponto { width: 7px; height: 7px; }
+.status .texto { font-size: 0.8125rem; font-weight: 800; letter-spacing: 0; text-transform: none; }
+.status.andamento { background: var(--verde-escuro); }
+.status.andamento .texto { color: #FFFFFF; }
+.status.andamento .ponto { background: #8FF0C8; }
+.status.atencao { background: var(--terracota-tenue); }
+.status.atencao .ponto { background: var(--terracota); }
+.status.neutro { background: rgba(6, 55, 43, 0.08); }
+.status.neutro .texto { color: var(--tinta); }
+:root[data-contraste='alto'] .status { border: 1px solid #000000; }
+
+.etiqueta { padding: 4px 10px; font-weight: 800; }
+.etiqueta.fechada { background: var(--terracota-tenue); color: var(--terracota-texto); }
+
+/* --- área do aplicativo --- */
+.menu-app {
+  background: var(--vidro);
+  border-right: 1px solid var(--vidro-borda);
+}
+.menu-app nav a { border-radius: 14px; padding: 11px 13px; font-weight: 600; }
+.menu-app nav a.ativo { background: var(--destaque-suave); font-weight: 800; }
+.tela { background: transparent; }
+
+/* O topo sobe: logo e sino ficam no alto, alinhados. */
+.topo-app { padding-top: 24px; }
+.cabecalho-app .icone-botao {
+  width: 44px;
+  height: 44px;
+  border-radius: 15px;
+  background: var(--vidro-forte);
+  border: 1px solid var(--vidro-borda);
+}
+
+/* --- navegação de baixo: uma pílula de vidro flutuando --- */
+@media (max-width: 900px) {
+  .topo-app { padding: 18px 18px 0; }
+  .conteudo-app { padding: 0 18px; }
+
+  .nav-app {
+    bottom: 12px;
+    gap: 6px;
+    margin: 0 12px 12px;
+    padding: 7px;
+    border: 1px solid var(--vidro-borda);
+    border-radius: 26px;
+    background: rgba(255, 255, 255, 0.78);
+    box-shadow: 0 20px 40px -12px rgba(6, 55, 43, 0.28);
+  }
+  .rodape-acao {
+    bottom: 96px;
+    padding: 12px 18px;
+    background: none;
+  }
+}
+.nav-app a {
+  flex: 1;
+  min-height: 56px;
+  justify-content: center;
+  gap: 3px;
+  border-radius: 19px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--tinta-media);
+}
+.nav-app a.ativo { background: var(--destaque-suave); color: var(--verde-escuro); font-weight: 800; }
+
+/* --- Doações --- */
+.impacto {
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+}
+.impacto .numero {
+  font-family: var(--fonte);
+  font-size: 3.375rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+.impacto p { margin: 0; display: flex; flex-direction: column; gap: 2px; }
+.impacto .frase { font-size: 1.0625rem; font-weight: 800; line-height: 1.25; }
+.impacto .frase em { font-family: var(--fonte-destaque); font-style: italic; font-weight: 600; color: var(--verde-escuro); }
+.impacto .de-quantas { font-size: 0.8125rem; color: var(--tinta-media); }
+
+.proximo-passo {
+  background: linear-gradient(150deg, rgba(220, 239, 230, 0.95), var(--vidro));
+  border-color: rgba(10, 133, 104, 0.32);
+}
+:root[data-contraste='alto'] .proximo-passo { background: #FFFFFF; border: 2px solid #000000; }
+.proximo-passo .rotulo { font-weight: 800; }
+.proximo-passo h2 { font-size: 1.1875rem; }
+.acoes-passo .botao { background: var(--vidro-forte); }
+
+.faixa-boa {
+  background: var(--vidro);
+  border: 1px solid rgba(10, 133, 104, 0.25);
+  border-radius: 18px;
+}
+
+/* As abas viram um trilho de vidro; a marcada se alarga para o número caber. */
+.filtro {
+  flex-wrap: nowrap;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 16px;
+  background: var(--vidro);
+  border: 1px solid var(--vidro-borda);
+}
+.filtro button {
+  flex: 1 1 0;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  white-space: nowrap;
+}
+.filtro button.marcado {
+  flex-grow: 1.4;
+  background: var(--destaque-suave);
+  color: var(--tinta);
+  font-weight: 800;
+}
+:root[data-contraste='alto'] .filtro button.marcado { border: 2px solid #000000; }
+
+.item {
+  padding: 16px 18px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--vidro-borda);
+}
+.item:last-child { border-bottom: 1px solid var(--vidro-borda); }
+.item h3 { font-size: 1.0625rem; margin-top: 2px; }
+
+/* --- Nova doação: as etapas viram traços que vão escurecendo --- */
+.passos { gap: 6px; margin-bottom: 20px; }
+.passos li { align-items: stretch; gap: 6px; }
+.passos li::before {
+  position: static;
+  width: auto;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--borda-controle);
+}
+.passos li:first-child::before { display: block; }
+.passos li.feito::before { background: #2BD39A; }
+.passos li.atual::before { background: var(--degrade); }
+.passos .bolinha { display: none; }
+.passos .nome { text-align: left; font-size: 0.75rem; font-weight: 600; }
+.passos li.feito .nome { color: var(--verde-escuro); font-weight: 700; }
+.passos li.atual .nome { color: var(--tinta); font-weight: 800; }
+:root[data-contraste='alto'] .passos li.atual::before { background: #000000; }
+
+.resumo-medicamento {
+  padding: 14px 16px;
+  border: 1px solid var(--vidro-borda);
+  border-radius: 20px;
+  background: var(--vidro);
+}
+
+/* --- Detalhe da doação --- */
+.comprovante {
+  padding: 20px;
+  border-radius: 28px;
+  background: linear-gradient(160deg, rgba(220, 239, 230, 0.95), var(--vidro));
+  border: 1px solid rgba(10, 133, 104, 0.32);
+  box-shadow: var(--sombra-vidro);
+}
+:root[data-contraste='alto'] .comprovante { background: #FFFFFF; border: 2px solid #000000; }
+.codigo-grande { background: var(--vidro-forte); }
+.area-do-qr .qr { box-shadow: 0 0 0 6px rgba(10, 133, 104, 0.1), 0 0 40px rgba(43, 211, 154, 0.3); border-radius: 20px; }
+.tempo li::before { background: #2BD39A; box-shadow: 0 0 0 4px rgba(43, 211, 154, 0.2); }
+.tempo li::after { background: rgba(10, 133, 104, 0.3); width: 2px; left: 3.5px; }
+.tempo.com-responsavel .responsavel {
+  align-self: flex-start;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(6, 55, 43, 0.07);
+  font-weight: 700;
+  color: var(--tinta-media);
+}
+
+/* --- Conta --- */
+.cartao-de-perfil {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+}
+.cartao-de-perfil .iniciais {
+  flex: 0 0 56px;
+  height: 56px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #2BD39A, #0A8568 60%, #07614B);
+  color: #FFFFFF;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+:root[data-contraste='alto'] .cartao-de-perfil .iniciais { background: #000000; }
+.cartao-de-perfil h1 { margin: 0; font-size: 1.1875rem; }
+
+.cartao-conta {
+  margin-top: 14px;
+  padding: 18px;
+  border-top: 1px solid var(--vidro-borda);
+}
+.cartao-conta .numeros .n {
+  font-family: var(--fonte);
+  font-weight: 800;
+  letter-spacing: -0.05em;
+}
+
+/* Dados, senha e acessibilidade: uma linha que abre. */
+.secao-recolhivel { margin-top: 14px; overflow: hidden; }
+.secao-recolhivel > summary {
+  list-style: none;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 18px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.secao-recolhivel > summary::-webkit-details-marker { display: none; }
+.secao-recolhivel > summary .seta { margin-left: auto; transition: transform .15s ease; }
+.secao-recolhivel[open] > summary .seta { transform: rotate(90deg); }
+.secao-recolhivel > summary:focus-visible { outline: 3px solid var(--verde-escuro); outline-offset: -3px; }
+.secao-recolhivel .dentro { padding: 0 18px 18px; }
+/* O título de dentro já está na linha que abre; repetir seria ruído. */
+.secao-recolhivel .cartao-conta {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+.secao-recolhivel .cartao-conta > h2,
+.secao-recolhivel .topo-cartao h2 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .secao-recolhivel > summary .seta { transition: none; }
+}
+
+.sair-da-conta {
+  margin-top: 6px;
+  padding: 14px 18px;
+  border: 1.5px solid var(--terracota);
+  border-radius: 16px;
+  background: var(--vidro);
+  font-weight: 800;
+}
+
+/* --- Entrada --- */
+.cartao-entrada {
+  border-radius: 28px;
+  padding: 36px 32px 28px;
+}
+.entrada .titulo-entrada {
+  margin: 0;
+  font-size: 2.375rem;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+}
+.entrada .titulo-entrada em {
+  display: block;
+  padding-right: 0.1em;
+  background: linear-gradient(90deg, #07614B, #0A8568 45%, #0B7F86);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+:root[data-contraste='alto'] .entrada .titulo-entrada em { background: none; color: #000000; }
+.entrada .subtitulo-entrada { margin: 14px 0 0; font-size: 0.9375rem; line-height: 1.6; color: var(--tinta-media); }
+@media (max-width: 560px) {
+  .entrada { background: transparent; }
+  .cartao-entrada {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding: 24px 24px 28px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .cartao-entrada .meio-da-entrada {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 36px;
+  }
+  .cartao-entrada form {
+    padding: 22px 20px;
+    border-radius: 26px;
+    background: var(--vidro);
+    border: 1px solid var(--vidro-borda);
+    box-shadow: var(--sombra-vidro);
+  }
+}
+
+/* --- Painel da farmácia e da central --- */
+.painel { gap: 24px; padding: 24px; box-sizing: border-box; }
+.lateral {
+  position: sticky;
+  top: 24px;
+  align-self: flex-start;
+  min-height: calc(100vh - 48px);
+  box-sizing: border-box;
+  padding: 20px 16px;
+  border: 1px solid var(--vidro-borda);
+  border-radius: 28px;
+  background: var(--vidro);
+  box-shadow: var(--sombra-vidro);
+}
+.lateral nav a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  box-sizing: border-box;
+  padding: 0 14px;
+  border-radius: 15px;
+  font-weight: 600;
+  color: var(--tinta-media);
+}
+.lateral nav a.ativo { background: var(--destaque-suave); color: var(--verde-escuro); font-weight: 800; }
+.lateral .rodape {
+  padding: 14px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--vidro-forte);
+}
+.lateral .quem { margin: 0 0 10px; color: var(--tinta); }
+.lateral .quem strong { display: block; font-size: 0.875rem; }
+.lateral .quem span { font-size: 0.75rem; color: var(--tinta-media); }
+.lateral .sair-da-conta { margin: 0; padding: 9px 12px; font-size: 0.8125rem; }
+
+.area { padding: 12px 8px 40px; max-width: 1040px; }
+.titulo-area h1 { font-size: 2.25rem; letter-spacing: -0.04em; }
+.titulo-area p { font-size: 1rem; }
+.bloco { padding: 22px; }
+.bloco h2 { font-size: 1.375rem; }
+.grade { gap: 8px; }
+.dado {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--vidro-forte);
+}
+.dado .valor { font-weight: 700; }
+.dado:has(.valor.divergente) {
+  background: var(--terracota-tenue);
+  box-shadow: inset 0 0 0 1px rgba(200, 37, 27, 0.35);
+}
+.dado:has(.valor.divergente) .rotulo { color: var(--terracota-texto); }
+
+@media (max-width: 860px) {
+  .painel { padding: 12px; gap: 12px; }
+  .lateral { position: static; min-height: 0; }
+}
+
+/* --- detalhes que completam as telas acima --- */
+:root:not([data-contraste='alto']) .marca .logo { filter: drop-shadow(0 6px 14px rgba(10, 133, 104, 0.35)); }
+.lateral .marca { margin-bottom: 24px; padding: 0 6px; }
+
+.impacto .numero {
+  background: linear-gradient(180deg, #0A8568, #07614B);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+:root[data-contraste='alto'] .impacto .numero { background: none; color: #000000; }
+
+.cartao-de-perfil .nome-completo { margin: 0; font-size: 1.1875rem; font-weight: 800; letter-spacing: -0.02em; }
+
+.cartao-entrada .meio-da-entrada { display: flex; flex-direction: column; gap: 28px; margin-top: 32px; }
+.cartao-entrada .link-de-cadastro { display: flex; justify-content: center; margin-top: 12px; }
+.cartao-entrada .link-de-cadastro .texto-botao { min-height: 44px; font-weight: 700; font-size: 0.9375rem; }
+
+/* A aba marcada das Farmácias usa "ativo"; a das Doações, "marcado". */
+.filtro button.ativo {
+  flex-grow: 1.4;
+  background: var(--destaque-suave);
+  color: var(--tinta);
+  font-weight: 800;
+}
+:root[data-contraste='alto'] .filtro button.ativo { border: 2px solid #000000; }
+
+/* O que rola por baixo da barra de baixo some num esmaecido, em vez de
+   aparecer cortado entre a barra e a borda da tela. */
+@media (max-width: 900px) {
+  .nav-app::before {
+    content: '';
+    position: absolute;
+    inset: -28px -12px -24px;
+    z-index: -1;
+    background: linear-gradient(to bottom, rgba(238, 246, 242, 0), var(--fundo-app) 45%);
+    pointer-events: none;
+  }
+}
